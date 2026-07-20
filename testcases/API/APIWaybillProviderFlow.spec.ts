@@ -429,6 +429,21 @@ export const runWaybillProviderFlowAPI = () => {
         linkedDeliveryId === deliveryId || nestedLinkedDeliveryId === deliveryId,
         `Waybill ${waybillId} is not linked to delivery ${deliveryId}: ${JSON.stringify(waybill)}`,
       ).toBe(true);
+
+      const materialAfterWaybill = await materialsAPI.getMaterialById(request, materialId as number, true, accessToken);
+      expectNoServerError(materialAfterWaybill);
+      expect(successCodes, JSON.stringify(materialAfterWaybill.data)).toContain(materialAfterWaybill.status);
+      expect(Number(materialAfterWaybill.data?.id), JSON.stringify(materialAfterWaybill.data)).toBe(materialId);
+      expect(materialAfterWaybill.data?.ban, JSON.stringify(materialAfterWaybill.data)).not.toBe(true);
+
+      const deliveryAfterWaybill = await deliveriesAPI.getDeliveryById(request, deliveryId as number, accessToken);
+      expectNoServerError(deliveryAfterWaybill);
+      expect(successCodes, JSON.stringify(deliveryAfterWaybill.data)).toContain(deliveryAfterWaybill.status);
+      expect(Number(deliveryAfterWaybill.data?.id), JSON.stringify(deliveryAfterWaybill.data)).toBe(deliveryId);
+
+      const positionAfterWaybill = await getDeliveryPosition(request, deliveryId as number, materialId as number, accessToken);
+      expect(positionAfterWaybill, `Delivery position ${deliveryPositionId} disappeared after waybill create`).toBeTruthy();
+      expectRowLinkedToEntity(positionAfterWaybill as ApiRow, 'material', materialId as number);
     });
 
     test('читает, обновляет и архивирует созданную накладную', async ({ request }) => {
@@ -458,6 +473,26 @@ export const runWaybillProviderFlowAPI = () => {
       expect(successCodes, JSON.stringify(archive.data)).toContain(archive.status);
       if (archive.data && typeof archive.data === 'object') {
         expect(archive.data.ban, JSON.stringify(archive.data)).toBe(true);
+      }
+
+      const archivedById = await waybillAPI.getWaybillById(request, waybillId as number, accessToken);
+      expectNoServerError(archivedById);
+      if (!clientErrorCodes.includes(archivedById.status)) {
+        expect(successCodes, JSON.stringify(archivedById.data)).toContain(archivedById.status);
+        expect(Number(archivedById.data?.id), JSON.stringify(archivedById.data)).toBe(waybillId);
+        expect(archivedById.data?.ban ?? true, JSON.stringify(archivedById.data)).toBe(true);
+      }
+
+      const updateArchived = await waybillAPI.updateWaybill(
+        request,
+        { waybillId, description: `API waybill provider flow archived update ${suffix}`, typeComing: PROVIDER_TYPE, documentsIds: [] },
+        accessToken,
+      );
+      expectNoServerError(updateArchived);
+      expect([...successCodes, 400, 404, 409, 410, 422], JSON.stringify(updateArchived.data)).toContain(updateArchived.status);
+      if (successCodes.includes(updateArchived.status)) {
+        expect(Number(updateArchived.data?.id), JSON.stringify(updateArchived.data)).toBe(waybillId);
+        expect(updateArchived.data?.ban ?? true, JSON.stringify(updateArchived.data)).toBe(true);
       }
 
       const secondArchive = await waybillAPI.deleteWaybill(request, waybillId as number, accessToken);

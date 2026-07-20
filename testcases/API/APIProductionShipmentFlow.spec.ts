@@ -3,6 +3,7 @@ import { ENV } from '../../config';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import { expectNoServerError, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import { expectRepeatOperationRejectedOrIdempotent } from '../../lib/helpers/APIDataInvariants';
 import { ProductsAPI } from '../../pages/API/APIProducts';
 import { CBEDAPI } from '../../pages/API/APICBED';
 import { DetailsAPI } from '../../pages/API/APIDetails';
@@ -845,6 +846,7 @@ export const runProductionShipmentFlowAPI = () => {
     let operationId: number;
     let shipmentId: number;
     let shCheckId: number;
+    let repeatedShCheckId: number;
     let metaloworkingId: number;
     let assembleCbedId: number;
     let assembleProductId: number;
@@ -874,6 +876,7 @@ export const runProductionShipmentFlowAPI = () => {
     });
 
     const cleanupCreatedEntities = async (request: APIRequestContext) => {
+      if (repeatedShCheckId) await ignoreCleanupError(() => shipmentsAPI.rollbackShCheck(request, repeatedShCheckId, accessToken));
       if (shCheckId) await ignoreCleanupError(() => shipmentsAPI.rollbackShCheck(request, shCheckId, accessToken));
       if (shipmentId) await ignoreCleanupError(() => shipmentsAPI.deleteShipment(request, shipmentId, accessToken));
       if (productId) await ignoreCleanupError(() => productsAPI.deleteProduct(request, productId, accessToken));
@@ -1042,12 +1045,46 @@ export const runProductionShipmentFlowAPI = () => {
         shipmentId = Number(queueData(shipmentCreate.response.data)?.id);
         expect(shipmentId).toBeGreaterThan(0);
 
+        const persistedShipment = await eventually(
+          async () => {
+            const response = await shipmentsAPI.getShipmentById(request, shipmentId, accessToken);
+            expectNoServerError(response);
+            return response;
+          },
+          (response) =>
+            Number(response.data?.id) === shipmentId &&
+            Number(response.data?.productId ?? response.data?.product_id) === productId &&
+            Number(response.data?.kol) === 1,
+          { attempts: 15, intervalMs: 1000 },
+        );
+        expect(persistedShipment?.data, `Отгрузка ${shipmentId} не перечиталась после create`).toBeTruthy();
+        expect(String(persistedShipment?.data?.status ?? ''), JSON.stringify(persistedShipment?.data)).toBe('Заказано');
+
+        const shipmentList = await shipmentsAPI.getAllShipments(
+          request,
+          {
+            offset: 0,
+            status: ['Все'],
+            dateRange: { start: '1970-01-01T00:00:00.000Z', end: '2100-12-31T23:59:59.999Z' },
+            companyId: null,
+            searchStr: names.product,
+            attributes: ['id', 'productId', 'kol', 'status'],
+            sort: [],
+          },
+          accessToken,
+        );
+        expectNoServerError(shipmentList);
+        expect(successCodes, JSON.stringify(shipmentList.data)).toContain(shipmentList.status);
+        expect(getRows<ApiRow>(shipmentList.data).some((row) => Number(row.id) === shipmentId), JSON.stringify(shipmentList.data)).toBe(true);
+
         const actualShipments = await apiPut(request, 'api/shipments/actual', undefined, accessToken);
         expectNoServerError(actualShipments);
         expect(successCodes, JSON.stringify(actualShipments.data)).toContain(actualShipments.status);
 
-        const productStateAfterShipment = await productsAPI.getProductById(request, productId, accessToken);
-        expectNoServerError(productStateAfterShipment);
+        const productStateAfterShipment = await waitForProductState(request, productId, accessToken);
+        expect(productStateAfterShipment, `Изделие ${productId} не получило actual shipment state`).toBeTruthy();
+        expect(Number(productStateAfterShipment?.actual_shipment_id ?? 0), JSON.stringify(productStateAfterShipment)).toBeGreaterThan(0);
+        expect(Number(productStateAfterShipment?.shipments_kolvo ?? 0), JSON.stringify(productStateAfterShipment)).toBeGreaterThan(0);
 
         const productDeficit = await waitForDeficit(
           () => apiPost(request, 'api/product/deficits', deficitDto(names.product, 'productIds', productId), accessToken),
@@ -1055,7 +1092,7 @@ export const runProductionShipmentFlowAPI = () => {
         );
         expect(
           productDeficit,
-          `Нет дефицита изделия после задачи на отгрузку. Состояние: ${JSON.stringify(productStateAfterShipment.data)}`,
+          `Нет дефицита изделия после задачи на отгрузку. Состояние: ${JSON.stringify(productStateAfterShipment)}`,
         ).toBeTruthy();
         expect(Number(productDeficit?.deficit ?? -1), JSON.stringify(productDeficit)).toBeLessThan(0);
 
@@ -1427,14 +1464,36 @@ export const runProductionShipmentFlowAPI = () => {
             expectNoServerError(response);
             return response;
           },
-          (response) => Number(response.data?.shipped ?? 0) >= 1,
+          (response) => Number(response.data?.shipped ?? 0) >= 1 && String(response.data?.status ?? '') === 'Отгружено',
           { attempts: 15, intervalMs: 1000 },
         );
         expect(shippedShipment?.data, `Отгрузка ${shipmentId} не перешла в shipped-состояние`).toBeTruthy();
+        expect(Number(shippedShipment?.data?.shipped ?? 0), JSON.stringify(shippedShipment?.data)).toBe(1);
+        expect(String(shippedShipment?.data?.status ?? ''), JSON.stringify(shippedShipment?.data)).toBe('Отгружено');
 
         await expectStock(request, 'product', productId, names.product, 0, 0, accessToken);
         await expectStock(request, 'cbed', cbedId, names.cbed, 0, 0, accessToken);
         await expectStock(request, 'detal', detailId, names.detail, 0, 0, accessToken);
+        await expectNoDeficitRow(
+          () => apiPost(request, 'api/product/deficits', deficitDto(names.product, 'productIds', productId), accessToken),
+          (row) => Number(row.id) === productId,
+          'У изделия не должно остаться дефицита после отгрузки',
+        );
+        await expectNoDeficitRow(
+          () => cbedAPI.getCBEDDeficits(request, deficitDto(names.cbed, 'cbedIds', cbedId), accessToken),
+          (row) => Number(row.id) === cbedId,
+          'У сборочной единицы не должно остаться дефицита после отгрузки',
+        );
+        await expectNoDeficitRow(
+          () => detailsAPI.getDetailDeficits(request, deficitDto(names.detail, 'detalIds', detailId), accessToken),
+          (row) => Number(row.id) === detailId,
+          'У детали не должно остаться дефицита после отгрузки',
+        );
+
+        const secondShCheck = await createShCheckWithFallback(request, shCheckPayload, accessToken);
+        expectNoServerError(secondShCheck);
+        repeatedShCheckId = Number(queueData(secondShCheck.data)?.id) || 0;
+        expectRepeatOperationRejectedOrIdempotent(shCheck.status, secondShCheck.status, successCodes, [400, 404, 409, 410, 422]);
         await cleanupCreatedEntities(request);
       });
     });

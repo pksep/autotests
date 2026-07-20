@@ -12,6 +12,7 @@ import {
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import { expectRepeatOperationRejectedOrIdempotent } from '../../lib/helpers/APIDataInvariants';
 
 type BuyerLike = Record<string, any>;
 
@@ -167,6 +168,7 @@ export const runBuyerAPINew = () => {
       expect(updated?.id).toBe(buyerId);
       expect(updated?.attention).toBe(true);
       expect(await waitForBuyerInActiveSearch(request, buyerName, buyerId as number, false, accessToken)).toBe(true);
+      expect(await waitForBuyerInActiveSearch(request, updatedBuyerName, buyerId as number, true, accessToken)).toBe(true);
 
       const byId = await buyerAPI.getById(request, buyerId as number, accessToken);
       expect(successCodes, JSON.stringify(byId.data)).toContain(byId.status);
@@ -179,8 +181,9 @@ export const runBuyerAPINew = () => {
     test('архивирует покупателя и проверяет архивную выдачу', async ({ request }) => {
       test.skip(!buyerId, 'Покупатель не создан на этом окружении');
       expect(buyerId).toBeTruthy();
+      const currentBuyerId = buyerId as number;
 
-      const archive = await buyerAPI.banBuyer(request, buyerId as number, accessToken);
+      const archive = await buyerAPI.banBuyer(request, currentBuyerId, accessToken);
       expect(successCodes).toContain(archive.status);
       expectNoServerError(archive);
 
@@ -188,14 +191,44 @@ export const runBuyerAPINew = () => {
         const response = await buyerAPI.getBuyersArchive(request, { searchString: updatedBuyerName }, accessToken);
         expectNoServerError(response);
         return response;
-      }, (response) => getRows<BuyerLike>(response.data).some((row) => row.id === buyerId));
+      }, (response) => getRows<BuyerLike>(response.data).some((row) => row.id === currentBuyerId));
 
       expect(archived, `Buyer ${updatedBuyerName} was not found in archive`).toBeTruthy();
-      const archivedRow = getRows<BuyerLike>(archived!.data).find((row) => row.id === buyerId);
+      const archivedRow = getRows<BuyerLike>(archived!.data).find((row) => row.id === currentBuyerId);
       expect(archivedRow, JSON.stringify(archived!.data)).toBeTruthy();
       expect(archivedRow?.name, JSON.stringify(archivedRow)).toBe(updatedBuyerName);
       expect(archivedRow?.ban, JSON.stringify(archivedRow)).toBe(true);
-      expect(await waitForBuyerInActiveSearch(request, updatedBuyerName, buyerId as number, false, accessToken)).toBe(true);
+      expect(await waitForBuyerInActiveSearch(request, updatedBuyerName, currentBuyerId, false, accessToken)).toBe(true);
+
+      const archivedById = await buyerAPI.getById(request, currentBuyerId, accessToken);
+      expectNoServerError(archivedById);
+      if (!clientErrorCodes.includes(archivedById.status)) {
+        expect(successCodes, JSON.stringify(archivedById.data)).toContain(archivedById.status);
+        expect(Number(archivedById.data?.id), JSON.stringify(archivedById.data)).toBe(currentBuyerId);
+        expect(archivedById.data?.ban, JSON.stringify(archivedById.data)).toBe(true);
+      }
+
+      const secondArchive = await buyerAPI.banBuyer(request, currentBuyerId, accessToken);
+      expectNoServerError(secondArchive);
+      expectRepeatOperationRejectedOrIdempotent(archive.status, secondArchive.status, successCodes, [400, 404, 409, 410, 422]);
+
+      const updateArchived = await buyerAPI.updateBuyer(
+        request,
+        buyerPayload(updatedBuyerName.replace('API Buyer ', ''), {
+          id: currentBuyerId,
+          name: updatedBuyerName,
+          description: 'Post-archive update by Buyer API autotest',
+          attention: true,
+        }),
+        accessToken,
+      );
+      expectNoServerError(updateArchived);
+      expect([...successCodes, 400, 404, 409, 410, 422], JSON.stringify(updateArchived.data)).toContain(updateArchived.status);
+
+      const archiveAfterUpdate = await buyerAPI.banBuyer(request, currentBuyerId, accessToken);
+      expectNoServerError(archiveAfterUpdate);
+      expectRepeatOperationRejectedOrIdempotent(archive.status, archiveAfterUpdate.status, successCodes, [400, 404, 409, 410, 422]);
+      expect(await waitForBuyerInActiveSearch(request, updatedBuyerName, currentBuyerId, false, accessToken)).toBe(true);
       buyerId = undefined;
     });
   });

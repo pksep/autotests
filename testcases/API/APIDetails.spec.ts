@@ -17,6 +17,10 @@ import {
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import {
+  expectArchivedOnlyInArchiveSelection,
+  expectRepeatOperationRejectedOrIdempotent,
+} from '../../lib/helpers/APIDataInvariants';
 
 type ApiResult = {
   status: number;
@@ -277,6 +281,42 @@ export const runDetailsAPINew = () => {
       expect(updated?.id).toBe(createdDetailId);
       expect(updated?.name).toBe(updatedPayload.name);
       expect(updated?.attention).toBe(true);
+
+      const byIdAfterUpdate = await detailsAPI.getDetailById(
+        request,
+        { id: createdDetailId, modelsInclude: [], attributes: [] },
+        accessToken,
+      );
+      expect(successCodes, JSON.stringify(byIdAfterUpdate.data)).toContain(byIdAfterUpdate.status);
+      expect(byIdAfterUpdate.data?.designation, JSON.stringify(byIdAfterUpdate.data)).toBe(updatedDesignation);
+
+      const oldDesignationSearch = await detailsAPI.getPaginationDetails(
+        request,
+        detailPaginationDto({ searchString: createdDesignation }),
+        testUserId,
+        accessToken,
+      );
+      expect(oldDesignationSearch.status).toBe(201);
+      expect(
+        getRows<DetailLike>(oldDesignationSearch.data).some(
+          (detail) => detail.id === createdDetailId && detail.designation === createdDesignation,
+        ),
+        JSON.stringify(oldDesignationSearch.data),
+      ).toBe(false);
+
+      const remainsAfterUpdate = await detailsAPI.getDetailRemains(
+        request,
+        remainsDto({ searchString: updatedDesignation }),
+        accessToken,
+      );
+      expectNoServerError(remainsAfterUpdate);
+      if (!clientErrorCodes.includes(remainsAfterUpdate.status)) {
+        expect(successCodes).toContain(remainsAfterUpdate.status);
+        expect(
+          getRows<DetailLike>(remainsAfterUpdate.data).some((row) => row.id === createdDetailId),
+          JSON.stringify(remainsAfterUpdate.data),
+        ).toBe(true);
+      }
     });
 
     test('возвращает include, отгрузки и техпроцесс для обновленной детали без серверных ошибок', async ({ request }) => {
@@ -310,9 +350,33 @@ export const runDetailsAPINew = () => {
       expect(archiveSearch.status).toBe(201);
       expect(await waitForDetailInArchive(request, updatedDesignation, createdDetailId as number, accessToken)).toBe(true);
       expect(await waitForDetailInActiveSearch(request, updatedDesignation, createdDetailId as number, false, accessToken)).toBe(true);
+      const activeSearch = await detailsAPI.getPaginationDetails(
+        request,
+        detailPaginationDto({ searchString: updatedDesignation }),
+        testUserId,
+        accessToken,
+      );
+      expect(activeSearch.status).toBe(201);
+      expectArchivedOnlyInArchiveSelection(
+        getRows<DetailLike>(activeSearch.data),
+        getRows<DetailLike>(archiveSearch.data),
+        createdDetailId as number,
+      );
 
       const secondArchiveResponse = await detailsAPI.deleteDetail(request, String(createdDetailId), testUserId, accessToken);
       expectNoServerError(secondArchiveResponse);
+      expectRepeatOperationRejectedOrIdempotent(archiveResponse.status, secondArchiveResponse.status, successCodes, [400, 404, 409, 410, 422]);
+
+      const updateArchived = await detailsAPI.updateDetail(
+        request,
+        { ...updatedPayload, id: createdDetailId, description: `Post-archive update ${updatedDesignation}` },
+        testUserId,
+        accessToken,
+      );
+      expectNoServerError(updateArchived);
+      expect([...successCodes, 400, 404, 409, 410, 422], JSON.stringify(updateArchived.data)).toContain(updateArchived.status);
+      expect(await waitForDetailInArchive(request, updatedDesignation, createdDetailId as number, accessToken)).toBe(true);
+      expect(await waitForDetailInActiveSearch(request, updatedDesignation, createdDetailId as number, false, accessToken)).toBe(true);
 
       createdDetailId = undefined;
     });

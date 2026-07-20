@@ -16,6 +16,7 @@ import {
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import { expectRepeatOperationRejectedOrIdempotent } from '../../lib/helpers/APIDataInvariants';
 import {
   materialResponseSchema,
   paginationOf,
@@ -450,6 +451,58 @@ export const runMaterialsAPINew = () => {
       expect(updated?.id).toBe(createdMaterialId);
       expect(updated?.name).toBe(updatedName);
       expect(updated?.attention).toBe(true);
+
+      const attentionFiltered = await materialsAPI.getMaterialsPagination(
+        request,
+        materialPaginationDto({ searchString: updatedName, filterByAttention: true }),
+        accessToken,
+      );
+      expectNoServerError(attentionFiltered);
+      expect(successCodes, JSON.stringify(attentionFiltered.data)).toContain(attentionFiltered.status);
+      expect(getRows<MaterialLike>(attentionFiltered.data).some((row) => row.id === createdMaterialId), JSON.stringify(attentionFiltered.data)).toBe(true);
+
+      const byIdAfterUpdate = await materialsAPI.getMaterialById(request, createdMaterialId as number, true, accessToken);
+      expectNoServerError(byIdAfterUpdate);
+      if (!clientErrorCodes.includes(byIdAfterUpdate.status)) {
+        expect(successCodes, JSON.stringify(byIdAfterUpdate.data)).toContain(byIdAfterUpdate.status);
+        expect(Number(byIdAfterUpdate.data?.id), JSON.stringify(byIdAfterUpdate.data)).toBe(createdMaterialId);
+        expect(byIdAfterUpdate.data?.name, JSON.stringify(byIdAfterUpdate.data)).toBe(updatedName);
+      }
+
+      const noAuthUpdate = await materialsAPI.createAndUpdateMaterial(
+        request,
+        { ...updatedPayload, id: createdMaterialId, attention: false, description: 'No-auth update probe' },
+      );
+      expectClientError(noAuthUpdate);
+
+      const afterNoAuthUpdate = await materialsAPI.getMaterialById(request, createdMaterialId as number, true, accessToken);
+      expectNoServerError(afterNoAuthUpdate);
+      if (!clientErrorCodes.includes(afterNoAuthUpdate.status)) {
+        expect(successCodes, JSON.stringify(afterNoAuthUpdate.data)).toContain(afterNoAuthUpdate.status);
+        expect(afterNoAuthUpdate.data?.attention, JSON.stringify(afterNoAuthUpdate.data)).toBe(true);
+      }
+
+      const oldNameSearch = await materialsAPI.getMaterialsPagination(
+        request,
+        materialPaginationDto({ searchString: createdName }),
+        accessToken,
+      );
+      expectNoServerError(oldNameSearch);
+      expect(
+        getRows<MaterialLike>(oldNameSearch.data).some((material) => material.id === createdMaterialId && material.name === createdName),
+        JSON.stringify(oldNameSearch.data),
+      ).toBe(false);
+
+      const aliasesAfterUpdate = await materialsAPI.getMaterialAliases(request, createdMaterialId as number, accessToken);
+      expectNoServerError(aliasesAfterUpdate);
+      if (!clientErrorCodes.includes(aliasesAfterUpdate.status)) {
+        expect(successCodes).toContain(aliasesAfterUpdate.status);
+        expectArrayResponse(aliasesAfterUpdate.data);
+        expect(
+          getRows<MaterialLike>(aliasesAfterUpdate.data).some((alias) => String(alias.alias ?? '').includes('-UPD')),
+          JSON.stringify(aliasesAfterUpdate.data),
+        ).toBe(true);
+      }
       activeMaterialName = updatedName;
     });
 
@@ -470,6 +523,32 @@ export const runMaterialsAPINew = () => {
         expect(successCodes).toContain(subtypeById.status);
         expect(Number(subtypeById.data?.id), JSON.stringify(subtypeById.data)).toBe(createdSubtypeId);
         expectSubtypeMaterialShape(subtypeById.data);
+      }
+
+      const noAuthTypeUpdate = await materialsAPI.updateTypeMaterial(
+        request,
+        { id: createdTypeId, name: `${createdTypeName} NoAuth` },
+      );
+      expectClientError(noAuthTypeUpdate);
+
+      const typeAfterNoAuth = await materialsAPI.getOneTypeMaterial(request, createdTypeId as number, accessToken);
+      expectNoServerError(typeAfterNoAuth);
+      if (!clientErrorCodes.includes(typeAfterNoAuth.status)) {
+        expect(successCodes).toContain(typeAfterNoAuth.status);
+        expect(typeAfterNoAuth.data?.name, JSON.stringify(typeAfterNoAuth.data)).toBe(createdTypeName);
+      }
+
+      const noAuthSubtypeUpdate = await materialsAPI.updateSubtypeMaterial(
+        request,
+        { id: createdSubtypeId, name: `${createdSubtypeName} NoAuth` },
+      );
+      expectClientError(noAuthSubtypeUpdate);
+
+      const subtypeAfterNoAuth = await materialsAPI.getSubtypeMaterialById(request, createdSubtypeId as number, accessToken);
+      expectNoServerError(subtypeAfterNoAuth);
+      if (!clientErrorCodes.includes(subtypeAfterNoAuth.status)) {
+        expect(successCodes).toContain(subtypeAfterNoAuth.status);
+        expect(subtypeAfterNoAuth.data?.name, JSON.stringify(subtypeAfterNoAuth.data)).toBe(createdSubtypeName);
       }
 
       const includeResponse = await materialsAPI.getIncludeForMaterial(request, {
@@ -514,6 +593,10 @@ export const runMaterialsAPINew = () => {
       expect(createdMaterialId).toBeTruthy();
       const materialId = createdMaterialId as number;
 
+      const noAuthArchive = await materialsAPI.banMaterial(request, materialId);
+      expectClientError(noAuthArchive);
+      expect(await waitForMaterialInActiveSearch(request, activeMaterialName, materialId, true, accessToken)).toBe(true);
+
       const archiveResponse = await materialsAPI.banMaterial(request, materialId, accessToken);
       expect(successCodes).toContain(archiveResponse.status);
       expectNoServerError(archiveResponse);
@@ -523,6 +606,30 @@ export const runMaterialsAPINew = () => {
       ).toBe(true);
 
       expect(await waitForMaterialInArchive(request, activeMaterialName, materialId, accessToken)).toBe(true);
+
+      const archiveSearch = await materialsAPI.getArchivedMaterials(request, { searchString: activeMaterialName }, accessToken);
+      expectNoServerError(archiveSearch);
+      if (!clientErrorCodes.includes(archiveSearch.status)) {
+        expect(successCodes).toContain(archiveSearch.status);
+        expect(
+          getRows<MaterialLike>(archiveSearch.data).some((row) => row.id === materialId),
+          JSON.stringify(archiveSearch.data),
+        ).toBe(true);
+      }
+
+      const providerPagination = await materialsAPI.getMaterialsProviderPagination(
+        request,
+        materialProviderPaginationDto({ searchString: activeMaterialName }),
+        accessToken,
+      );
+      expectNoServerError(providerPagination);
+      if (!clientErrorCodes.includes(providerPagination.status)) {
+        expect(successCodes).toContain(providerPagination.status);
+        expect(
+          getRows<MaterialLike>(providerPagination.data).some((row) => row.id === materialId && row.ban !== true),
+          JSON.stringify(providerPagination.data),
+        ).toBe(false);
+      }
 
       const archivedById = await materialsAPI.getMaterialById(request, materialId, true, accessToken);
       expectNoServerError(archivedById);
@@ -534,6 +641,32 @@ export const runMaterialsAPINew = () => {
 
       const secondArchiveResponse = await materialsAPI.banMaterial(request, materialId, accessToken);
       expectNoServerError(secondArchiveResponse);
+      expectRepeatOperationRejectedOrIdempotent(archiveResponse.status, secondArchiveResponse.status, successCodes, [400, 404, 409, 410, 422]);
+
+      const updateArchived = await materialsAPI.createAndUpdateMaterial(
+        request,
+        { ...updatedPayload, id: materialId, description: `Post-archive update ${activeMaterialName}` },
+        accessToken,
+      );
+      expectNoServerError(updateArchived);
+      expect([...successCodes, 400, 404, 409, 410, 422], JSON.stringify(updateArchived.data)).toContain(updateArchived.status);
+
+      const noAuthUpdateArchived = await materialsAPI.createAndUpdateMaterial(
+        request,
+        { ...updatedPayload, id: materialId, attention: false, description: `No-auth archived update ${activeMaterialName}` },
+      );
+      expectClientError(noAuthUpdateArchived);
+
+      expect(await waitForMaterialInActiveSearch(request, activeMaterialName, materialId, false, accessToken)).toBe(true);
+      const attentionAfterArchive = await materialsAPI.getMaterialsPagination(
+        request,
+        materialPaginationDto({ searchString: activeMaterialName, filterByAttention: true }),
+        accessToken,
+      );
+      expectNoServerError(attentionAfterArchive);
+      expect(successCodes, JSON.stringify(attentionAfterArchive.data)).toContain(attentionAfterArchive.status);
+      expect(getRows<MaterialLike>(attentionAfterArchive.data).some((row) => row.id === materialId), JSON.stringify(attentionAfterArchive.data)).toBe(false);
+      expect(await waitForMaterialInArchive(request, activeMaterialName, materialId, accessToken)).toBe(true);
       createdMaterialId = undefined;
     });
 
@@ -544,16 +677,30 @@ export const runMaterialsAPINew = () => {
       const subtypeId = createdSubtypeId as number;
       const typeId = createdTypeId as number;
 
+      const noAuthArchiveSubtype = await materialsAPI.removeSubtypeMaterial(request, subtypeId);
+      expectClientError(noAuthArchiveSubtype);
+      expect(await waitForSubtypeMaterialInActiveSearch(request, createdSubtypeName, subtypeId, true, accessToken)).toBe(true);
+
       const archiveSubtype = await materialsAPI.removeSubtypeMaterial(request, subtypeId, accessToken);
       expectNoServerError(archiveSubtype);
       expect(successCodes, JSON.stringify(archiveSubtype.data)).toContain(archiveSubtype.status);
       expect(await waitForSubtypeMaterialInActiveSearch(request, createdSubtypeName, subtypeId, false, accessToken)).toBe(true);
+      const secondArchiveSubtype = await materialsAPI.removeSubtypeMaterial(request, subtypeId, accessToken);
+      expectNoServerError(secondArchiveSubtype);
+      expectRepeatOperationRejectedOrIdempotent(archiveSubtype.status, secondArchiveSubtype.status, successCodes, [400, 404, 409, 410, 422]);
       createdSubtypeId = undefined;
+
+      const noAuthArchiveType = await materialsAPI.removeTypeMaterial(request, typeId);
+      expectClientError(noAuthArchiveType);
+      expect(await waitForTypeMaterialInActiveSearch(request, createdTypeName, typeId, true, accessToken)).toBe(true);
 
       const archiveType = await materialsAPI.removeTypeMaterial(request, typeId, accessToken);
       expectNoServerError(archiveType);
       expect(successCodes, JSON.stringify(archiveType.data)).toContain(archiveType.status);
       expect(await waitForTypeMaterialInActiveSearch(request, createdTypeName, typeId, false, accessToken)).toBe(true);
+      const secondArchiveType = await materialsAPI.removeTypeMaterial(request, typeId, accessToken);
+      expectNoServerError(secondArchiveType);
+      expectRepeatOperationRejectedOrIdempotent(archiveType.status, secondArchiveType.status, successCodes, [400, 404, 409, 410, 422]);
       createdTypeId = undefined;
     });
   });

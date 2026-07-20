@@ -15,6 +15,7 @@ import {
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import { expectRepeatOperationRejectedOrIdempotent } from '../../lib/helpers/APIDataInvariants';
 import logger from '../../lib/utils/logger';
 
 const deficitsAPI = new DeficitsAPI(null);
@@ -588,6 +589,20 @@ export const runDeficitsAPINew = () => {
       );
       expect(activeSearch, `Материал ${materialId} остался в активной выдаче`).toBeTruthy();
 
+      const archiveSearch = await materialsAPI.getArchivedMaterials(
+        request,
+        { searchString: createdMaterialName },
+        accessToken,
+      );
+      expectNoServerError(archiveSearch);
+      if (!clientErrorCodes.includes(archiveSearch.status)) {
+        expect(successCodes, JSON.stringify(archiveSearch.data)).toContain(archiveSearch.status);
+        expect(
+          getRows<ApiRow>(archiveSearch.data).some((row) => Number(row.id) === materialId),
+          JSON.stringify(archiveSearch.data),
+        ).toBe(true);
+      }
+
       for (const working of ['metall', 'assemble']) {
         const materialDeficits = await deficitsAPI.getMaterialDeficits(request, { working }, accessToken);
         expectNoServerError(materialDeficits);
@@ -596,6 +611,10 @@ export const runDeficitsAPINew = () => {
           JSON.stringify(materialDeficits.data),
         ).toBe(false);
       }
+
+      const secondArchive = await materialsAPI.banMaterial(request, materialId, accessToken);
+      expectNoServerError(secondArchive);
+      expectRepeatOperationRejectedOrIdempotent(archive.status, secondArchive.status, successCodes, [400, 404, 409, 410, 422]);
 
       createdMaterialId = undefined;
     });

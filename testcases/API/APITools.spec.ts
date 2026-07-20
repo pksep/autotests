@@ -12,6 +12,7 @@ import {
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import { expectRepeatOperationRejectedOrIdempotent } from '../../lib/helpers/APIDataInvariants';
 
 type ApiRow = Record<string, any>;
 
@@ -174,6 +175,28 @@ export const runToolsAPINew = () => {
         expect(successCodes).toContain(subtypeById.status);
         expect(subtypeById.data?.id, JSON.stringify(subtypeById.data)).toBe(subtypeId);
       }
+
+      const noAuthTypeUpdate = await toolsAPI.updateToolType(request, { id: typeId, name: `${typeName} NoAuth`, instance_type: TOOLS_INSTANCE });
+      expectClientError(noAuthTypeUpdate);
+
+      const typeAfterNoAuth = await toolsAPI.getToolTypeById(request, typeId as number, accessToken);
+      expectNoServerError(typeAfterNoAuth);
+      if (!clientErrorCodes.includes(typeAfterNoAuth.status)) {
+        expect(successCodes).toContain(typeAfterNoAuth.status);
+        expect(typeAfterNoAuth.data?.id, JSON.stringify(typeAfterNoAuth.data)).toBe(typeId);
+        if (typeAfterNoAuth.data?.name !== undefined) expect(typeAfterNoAuth.data.name, JSON.stringify(typeAfterNoAuth.data)).toBe(typeName);
+      }
+
+      const noAuthSubtypeUpdate = await toolsAPI.updateToolSubtype(request, { id: subtypeId, name: `${subtypeName} NoAuth` });
+      expectClientError(noAuthSubtypeUpdate);
+
+      const subtypeAfterNoAuth = await toolsAPI.getToolSubtypeById(request, subtypeId as number, accessToken);
+      expectNoServerError(subtypeAfterNoAuth);
+      if (!clientErrorCodes.includes(subtypeAfterNoAuth.status)) {
+        expect(successCodes).toContain(subtypeAfterNoAuth.status);
+        expect(subtypeAfterNoAuth.data?.id, JSON.stringify(subtypeAfterNoAuth.data)).toBe(subtypeId);
+        if (subtypeAfterNoAuth.data?.name !== undefined) expect(subtypeAfterNoAuth.data.name, JSON.stringify(subtypeAfterNoAuth.data)).toBe(subtypeName);
+      }
     });
 
     test('создает, читает и обновляет наименование инструмента', async ({ request }) => {
@@ -214,6 +237,15 @@ export const runToolsAPINew = () => {
       expect(updated, `Tool ${updatedName} was not found after update`).toBeTruthy();
       expect(updated?.id).toBe(toolId);
 
+      const attentionFiltered = await toolsAPI.getToolPagination(
+        request,
+        toolsPaginationDto({ isFilteredByAttention: true, searchString: updatedName }),
+        accessToken,
+      );
+      expectNoServerError(attentionFiltered);
+      expect(successCodes, JSON.stringify(attentionFiltered.data)).toContain(attentionFiltered.status);
+      expect(getRows<ApiRow>(attentionFiltered.data).some((row) => row.id === toolId), JSON.stringify(attentionFiltered.data)).toBe(true);
+
       const persisted = await toolsAPI.getOneTool(request, toolId, accessToken);
       expectNoServerError(persisted);
       if (!clientErrorCodes.includes(persisted.status)) {
@@ -223,12 +255,35 @@ export const runToolsAPINew = () => {
         expect(persisted.data?.attention, JSON.stringify(persisted.data)).toBe(true);
         expect(persisted.data?.description, JSON.stringify(persisted.data)).toBe('Updated by API autotest');
       }
+
+      const noAuthUpdate = await toolsAPI.updateTool(
+        request,
+        toolPayload(suffix, typeId as number, subtypeId as number, {
+          id: toolId,
+          name: updatedName,
+          attention: false,
+          description: 'No-auth update probe',
+        }),
+      );
+      expectClientError(noAuthUpdate);
+
+      const persistedAfterNoAuth = await toolsAPI.getOneTool(request, toolId, accessToken);
+      expectNoServerError(persistedAfterNoAuth);
+      if (!clientErrorCodes.includes(persistedAfterNoAuth.status)) {
+        expect(successCodes).toContain(persistedAfterNoAuth.status);
+        expect(persistedAfterNoAuth.data?.attention, JSON.stringify(persistedAfterNoAuth.data)).toBe(true);
+        expect(persistedAfterNoAuth.data?.description, JSON.stringify(persistedAfterNoAuth.data)).toBe('Updated by API autotest');
+      }
       toolName = updatedName;
     });
 
     test('архивирует наименование инструмента и служебные типы', async ({ request }) => {
       expect(toolId).toBeTruthy();
       const currentToolId = toolId as number;
+
+      const noAuthArchive = await toolsAPI.banTool(request, currentToolId);
+      expectClientError(noAuthArchive);
+      expect(await waitForToolAbsentFromActivePagination(request, currentToolId, toolName, accessToken)).toBe(false);
 
       const archiveTool = await toolsAPI.banTool(request, currentToolId, accessToken);
       expectNoServerError(archiveTool);
@@ -253,14 +308,80 @@ export const runToolsAPINew = () => {
       }
 
       expect(await waitForToolAbsentFromActivePagination(request, currentToolId, toolName, accessToken)).toBe(true);
+
+      const secondArchiveTool = await toolsAPI.banTool(request, currentToolId, accessToken);
+      expectNoServerError(secondArchiveTool);
+      expectRepeatOperationRejectedOrIdempotent(archiveTool.status, secondArchiveTool.status, successCodes, [400, 404, 409, 410, 422]);
+
+      const updateArchived = await toolsAPI.updateTool(
+        request,
+        toolPayload(suffix, typeId as number, subtypeId as number, {
+          id: currentToolId,
+          name: toolName,
+          attention: true,
+          description: 'Post-archive update by API autotest',
+        }),
+        accessToken,
+      );
+      expectNoServerError(updateArchived);
+      expect([...successCodes, 400, 404, 409, 410, 422], JSON.stringify(updateArchived.data)).toContain(updateArchived.status);
+
+      const noAuthUpdateArchived = await toolsAPI.updateTool(
+        request,
+        toolPayload(suffix, typeId as number, subtypeId as number, {
+          id: currentToolId,
+          name: toolName,
+          attention: false,
+          description: 'No-auth archived update probe',
+        }),
+      );
+      expectClientError(noAuthUpdateArchived);
+
+      const archiveAfterUpdate = await toolsAPI.banTool(request, currentToolId, accessToken);
+      expectNoServerError(archiveAfterUpdate);
+      expectRepeatOperationRejectedOrIdempotent(archiveTool.status, archiveAfterUpdate.status, successCodes, [400, 404, 409, 410, 422]);
+
+      const archivedAfterUpdate = await eventually(async () => {
+        const response = await toolsAPI.getArchivedTools(request, { searchString: toolName }, accessToken);
+        expectNoServerError(response);
+        return response;
+      }, (response) => getRows<ApiRow>(response.data).some((row) => row.id === currentToolId));
+      expect(archivedAfterUpdate, `Tool ${toolName} was not found in archive after post-archive update`).toBeTruthy();
+      expect(await waitForToolAbsentFromActivePagination(request, currentToolId, toolName, accessToken)).toBe(true);
+      const attentionAfterArchive = await toolsAPI.getToolPagination(
+        request,
+        toolsPaginationDto({ isFilteredByAttention: true, searchString: toolName }),
+        accessToken,
+      );
+      expectNoServerError(attentionAfterArchive);
+      expect(successCodes, JSON.stringify(attentionAfterArchive.data)).toContain(attentionAfterArchive.status);
+      expect(getRows<ApiRow>(attentionAfterArchive.data).some((row) => row.id === currentToolId), JSON.stringify(attentionAfterArchive.data)).toBe(false);
+      const allAfterArchive = await toolsAPI.getAllTools(request, accessToken);
+      expectNoServerError(allAfterArchive);
+      if (!clientErrorCodes.includes(allAfterArchive.status)) {
+        expect(successCodes, JSON.stringify(allAfterArchive.data)).toContain(allAfterArchive.status);
+        expect(getRows<ApiRow>(allAfterArchive.data).some((row) => row.id === currentToolId), JSON.stringify(allAfterArchive.data)).toBe(false);
+      }
       toolId = undefined;
+
+      const noAuthArchiveSubtype = await toolsAPI.removeToolSubtype(request, subtypeId as number);
+      expectClientError(noAuthArchiveSubtype);
 
       const archiveSubtype = await toolsAPI.removeToolSubtype(request, subtypeId as number, accessToken);
       expectNoServerError(archiveSubtype);
+      const secondArchiveSubtype = await toolsAPI.removeToolSubtype(request, subtypeId as number, accessToken);
+      expectNoServerError(secondArchiveSubtype);
+      expectRepeatOperationRejectedOrIdempotent(archiveSubtype.status, secondArchiveSubtype.status, successCodes, [400, 404, 409, 410, 422]);
       subtypeId = undefined;
+
+      const noAuthArchiveType = await toolsAPI.removeToolType(request, typeId as number);
+      expectClientError(noAuthArchiveType);
 
       const archiveType = await toolsAPI.removeToolType(request, typeId as number, accessToken);
       expectNoServerError(archiveType);
+      const secondArchiveType = await toolsAPI.removeToolType(request, typeId as number, accessToken);
+      expectNoServerError(secondArchiveType);
+      expectRepeatOperationRejectedOrIdempotent(archiveType.status, secondArchiveType.status, successCodes, [400, 404, 409, 410, 422]);
       typeId = undefined;
     });
   });

@@ -433,6 +433,38 @@ export const runStockOrderAPINew = () => {
         expect(updatedItemResponse.data?.description, JSON.stringify(updatedItemResponse.data)).toBe('Updated item by API autotest');
       }
 
+      if (entity) {
+        const byObjectAfterItemUpdate = await stockOrderAPI.getByObject(request, entity.id, entity.type, accessToken);
+        expectNoServerError(byObjectAfterItemUpdate);
+        if (!clientErrorCodes.includes(byObjectAfterItemUpdate.status)) {
+          expect(successCodes).toContain(byObjectAfterItemUpdate.status);
+          const byObjectRows = getRows<StockOrderItemLike>(byObjectAfterItemUpdate.data);
+          expectRowsContainStockOrderId(byObjectRows, createdStockOrderId as number, byObjectAfterItemUpdate.data);
+          expect(
+            byObjectRows.some(
+              (row) =>
+                Number(row.id) === createdStockOrderItemId ||
+                Number(row.stock_order_item_id ?? row.stockOrderItemId) === createdStockOrderItemId,
+            ),
+            JSON.stringify(byObjectAfterItemUpdate.data),
+          ).toBe(true);
+        }
+
+        if (!clientErrorCodes.includes(updateItemResponse.status)) {
+          const repeatUpdateItem = await stockOrderAPI.updateItem(
+            request,
+            {
+              id: createdStockOrderItemId,
+              description: 'Updated item by API autotest',
+              countShipments: Number(items[0].count_shipments || 1),
+            },
+            accessToken,
+          );
+          expectNoServerError(repeatUpdateItem);
+          expectRepeatOperationRejectedOrIdempotent(updateItemResponse.status, repeatUpdateItem.status, successCodes, [400, 404, 409, 410, 422]);
+        }
+      }
+
       const readinessResponse = await stockOrderAPI.setWarehouseReadinessDate(
         request,
         {
@@ -524,6 +556,15 @@ export const runStockOrderAPINew = () => {
       if (entity) {
         const byEntity = await stockOrderAPI.getItemsByEntity(request, entity.type, entity.id, accessToken);
         expectNoServerError(byEntity);
+        if (!clientErrorCodes.includes(byEntity.status)) {
+          expect(successCodes).toContain(byEntity.status);
+          const activeRows = getRows<StockOrderItemLike>(byEntity.data).filter((row) => {
+            const rowStockOrderId = Number(row.stock_order?.id ?? row.stockOrder?.id ?? row.stock_order_id ?? row.stockOrderId);
+            const rowStockOrderBan = row.stock_order?.ban ?? row.stockOrder?.ban ?? row.ban;
+            return rowStockOrderId === stockOrderId && rowStockOrderBan !== true;
+          });
+          expect(activeRows, JSON.stringify(byEntity.data)).toHaveLength(0);
+        }
       }
 
       createdStockOrderId = undefined;

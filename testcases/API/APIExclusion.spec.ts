@@ -4,6 +4,7 @@ import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import { clientErrorCodes, expectNoServerError, expectClientError, expectPaginationContract, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import { expectRepeatOperationRejectedOrIdempotent } from '../../lib/helpers/APIDataInvariants';
 
 type ExclusionLike = Record<string, any>;
 
@@ -74,6 +75,25 @@ const waitForExclusionAbsentFromPagination = async (
   return Boolean(response);
 };
 
+const waitForExclusionValueAbsentFromPagination = async (
+  request: any,
+  exclusionId: number,
+  exclusion: string,
+  accessToken?: string,
+): Promise<boolean> => {
+  const response = await eventually(async () => {
+    const page = await exclusionAPI.getExclusionPagination(
+      request,
+      paginationDto({ searchString: exclusion }),
+      accessToken,
+    );
+    expectNoServerError(page);
+    return page;
+  }, (page) => !getRows<ExclusionLike>(page.data).some((row) => row.id === exclusionId && row.exclusion === exclusion));
+
+  return Boolean(response);
+};
+
 export const runExclusionAPINew = () => {
   logger.info('Starting Exclusion API coverage suite');
 
@@ -138,6 +158,7 @@ export const runExclusionAPINew = () => {
       const updatedInPage = await findExclusionInPagination(request, exclusionId as number, updatedValue, accessToken);
       expect(updatedInPage, `Exclusion ${updatedValue} was not found in pagination after update`).toBeTruthy();
       expect(updatedInPage?.id).toBe(exclusionId);
+      expect(await waitForExclusionValueAbsentFromPagination(request, exclusionId as number, createdValue, accessToken)).toBe(true);
 
       const byId = await exclusionAPI.getExclusionById(request, exclusionId as number, accessToken);
       expect(successCodes, JSON.stringify(byId.data)).toContain(byId.status);
@@ -162,6 +183,24 @@ export const runExclusionAPINew = () => {
         expect(successCodes, JSON.stringify(byId.data)).toContain(byId.status);
         expect(byId.data?.ban, JSON.stringify(byId.data)).toBe(true);
       }
+
+      const secondArchive = await exclusionAPI.banExclusionById(request, currentExclusionId, accessToken);
+      expectNoServerError(secondArchive);
+      expectRepeatOperationRejectedOrIdempotent(archive.status, secondArchive.status, successCodes, [400, 404, 409, 410, 422]);
+
+      const updateArchived = await exclusionAPI.updateExclusion(
+        request,
+        currentExclusionId,
+        { exclusion: updatedValue, exclusionType: 'article' },
+        accessToken,
+      );
+      expectNoServerError(updateArchived);
+      expect([...successCodes, 400, 404, 409, 410, 422], JSON.stringify(updateArchived.data)).toContain(updateArchived.status);
+
+      const archiveAfterUpdate = await exclusionAPI.banExclusionById(request, currentExclusionId, accessToken);
+      expectNoServerError(archiveAfterUpdate);
+      expectRepeatOperationRejectedOrIdempotent(archive.status, archiveAfterUpdate.status, successCodes, [400, 404, 409, 410, 422]);
+      expect(await waitForExclusionAbsentFromPagination(request, currentExclusionId, updatedValue, accessToken)).toBe(true);
 
       exclusionId = undefined;
     });

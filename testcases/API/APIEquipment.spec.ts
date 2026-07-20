@@ -15,6 +15,7 @@ import {
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import { expectRepeatOperationRejectedOrIdempotent } from '../../lib/helpers/APIDataInvariants';
 
 type ApiRow = Record<string, any>;
 
@@ -201,6 +202,26 @@ export const runEquipmentAPINew = () => {
         expect(successCodes).toContain(subtypeById.status);
         expect(subtypeById.data?.name, JSON.stringify(subtypeById.data)).toBe(subtypeName);
       }
+
+      const noAuthTypeUpdate = await equipmentAPI.updateEquipmentType(request, { id: typeId, name: `${typeName} NoAuth` });
+      expectClientError(noAuthTypeUpdate);
+
+      const typeAfterNoAuth = await equipmentAPI.getEquipmentTypeById(request, typeId as number, accessToken);
+      expectNoServerError(typeAfterNoAuth);
+      if (!clientErrorCodes.includes(typeAfterNoAuth.status)) {
+        expect(successCodes).toContain(typeAfterNoAuth.status);
+        expect(typeAfterNoAuth.data?.name, JSON.stringify(typeAfterNoAuth.data)).toBe(typeName);
+      }
+
+      const noAuthSubtypeUpdate = await equipmentAPI.updateEquipmentSubtype(request, { id: subtypeId, name: `${subtypeName} NoAuth` });
+      expectClientError(noAuthSubtypeUpdate);
+
+      const subtypeAfterNoAuth = await equipmentAPI.getEquipmentSubtypeById(request, subtypeId as number, accessToken);
+      expectNoServerError(subtypeAfterNoAuth);
+      if (!clientErrorCodes.includes(subtypeAfterNoAuth.status)) {
+        expect(successCodes).toContain(subtypeAfterNoAuth.status);
+        expect(subtypeAfterNoAuth.data?.name, JSON.stringify(subtypeAfterNoAuth.data)).toBe(subtypeName);
+      }
     });
 
     test('создает оборудование и находит его в пагинации', async ({ request }) => {
@@ -258,6 +279,33 @@ export const runEquipmentAPINew = () => {
       const updated = await findEquipmentByName(request, updatedEquipmentName, accessToken);
       expect(updated, `Equipment ${updatedEquipmentName} was not found after update`).toBeTruthy();
       expect(updated?.id).toBe(equipmentId);
+
+      const attentionFiltered = await equipmentAPI.getEquipmentPagination(
+        request,
+        equipmentPaginationDto({ isFilteredByAttention: true, searchString: updatedEquipmentName }),
+        accessToken,
+      );
+      expectNoServerError(attentionFiltered);
+      expect(successCodes, JSON.stringify(attentionFiltered.data)).toContain(attentionFiltered.status);
+      expect(getRows<ApiRow>(attentionFiltered.data).some((row) => row.id === equipmentId), JSON.stringify(attentionFiltered.data)).toBe(true);
+
+      const noAuthUpdate = await equipmentAPI.updateEquipment(
+        request,
+        equipmentPayload(updatedEquipmentName.replace('API Equipment ', ''), typeId as number, subtypeId as number, {
+          id: equipmentId,
+          name: updatedEquipmentName,
+          attention: false,
+          description: 'No-auth update probe',
+        }),
+      );
+      expectClientError(noAuthUpdate);
+
+      const persistedAfterNoAuth = await equipmentAPI.getEquipmentById(request, equipmentId as number, accessToken);
+      expectNoServerError(persistedAfterNoAuth);
+      if (!clientErrorCodes.includes(persistedAfterNoAuth.status)) {
+        expect(successCodes, JSON.stringify(persistedAfterNoAuth.data)).toContain(persistedAfterNoAuth.status);
+        expect(persistedAfterNoAuth.data?.attention, JSON.stringify(persistedAfterNoAuth.data)).toBe(true);
+      }
       equipmentName = updatedEquipmentName;
     });
 
@@ -401,6 +449,10 @@ export const runEquipmentAPINew = () => {
       expect(equipmentId).toBeTruthy();
       const currentEquipmentId = equipmentId as number;
 
+      const noAuthArchive = await equipmentAPI.banEquipment(request, currentEquipmentId);
+      expectClientError(noAuthArchive);
+      expect(await waitForEquipmentAbsentFromActivePagination(request, currentEquipmentId, equipmentName, accessToken)).toBe(false);
+
       const archive = await equipmentAPI.banEquipment(request, currentEquipmentId, accessToken);
       expect(successCodes, JSON.stringify(archive.data)).toContain(archive.status);
       expectNoServerError(archive);
@@ -426,6 +478,68 @@ export const runEquipmentAPINew = () => {
       }
 
       expect(await waitForEquipmentAbsentFromActivePagination(request, currentEquipmentId, equipmentName, accessToken)).toBe(true);
+
+      const secondArchive = await equipmentAPI.banEquipment(request, currentEquipmentId, accessToken);
+      expectNoServerError(secondArchive);
+      expectRepeatOperationRejectedOrIdempotent(archive.status, secondArchive.status, successCodes, [400, 404, 409, 410, 422]);
+
+      const updateArchived = await equipmentAPI.updateEquipment(
+        request,
+        equipmentPayload(equipmentName.replace('API Equipment ', ''), typeId as number, subtypeId as number, {
+          id: currentEquipmentId,
+          name: equipmentName,
+          attention: true,
+          description: 'Post-archive update by API autotest',
+          typeOperationIds: typeOperationId ? JSON.stringify([typeOperationId]) : '[]',
+        }),
+        accessToken,
+      );
+      expectNoServerError(updateArchived);
+      expect([...successCodes, 400, 404, 409, 410, 422], JSON.stringify(updateArchived.data)).toContain(updateArchived.status);
+
+      const noAuthUpdateArchived = await equipmentAPI.updateEquipment(
+        request,
+        equipmentPayload(equipmentName.replace('API Equipment ', ''), typeId as number, subtypeId as number, {
+          id: currentEquipmentId,
+          name: equipmentName,
+          attention: false,
+          description: 'No-auth archived update probe',
+          typeOperationIds: typeOperationId ? JSON.stringify([typeOperationId]) : '[]',
+        }),
+      );
+      expectClientError(noAuthUpdateArchived);
+
+      const archiveAfterUpdate = await equipmentAPI.banEquipment(request, currentEquipmentId, accessToken);
+      expectNoServerError(archiveAfterUpdate);
+      expectRepeatOperationRejectedOrIdempotent(archive.status, archiveAfterUpdate.status, successCodes, [400, 404, 409, 410, 422]);
+
+      const archivedAfterUpdate = await eventually(async () => {
+        const response = await equipmentAPI.getArchivedEquipment(request, { searchString: equipmentName }, accessToken);
+        expectNoServerError(response);
+        return response;
+      }, (response) => getRows<ApiRow>(response.data).some((row) => row.id === currentEquipmentId));
+      expect(archivedAfterUpdate, `Equipment ${equipmentName} was not found in archive after post-archive update`).toBeTruthy();
+      expect(await waitForEquipmentAbsentFromActivePagination(request, currentEquipmentId, equipmentName, accessToken)).toBe(true);
+      const attentionAfterArchive = await equipmentAPI.getEquipmentPagination(
+        request,
+        equipmentPaginationDto({ isFilteredByAttention: true, searchString: equipmentName }),
+        accessToken,
+      );
+      expectNoServerError(attentionAfterArchive);
+      expect(successCodes, JSON.stringify(attentionAfterArchive.data)).toContain(attentionAfterArchive.status);
+      expect(getRows<ApiRow>(attentionAfterArchive.data).some((row) => row.id === currentEquipmentId), JSON.stringify(attentionAfterArchive.data)).toBe(false);
+      const lightAfterArchive = await equipmentAPI.getAllEquipment(request, true, accessToken);
+      const fullAfterArchive = await equipmentAPI.getAllEquipment(request, false, accessToken);
+      expectNoServerError(lightAfterArchive);
+      expectNoServerError(fullAfterArchive);
+      if (!clientErrorCodes.includes(lightAfterArchive.status)) {
+        expect(successCodes, JSON.stringify(lightAfterArchive.data)).toContain(lightAfterArchive.status);
+        expect(getRows<ApiRow>(lightAfterArchive.data).some((row) => row.id === currentEquipmentId), JSON.stringify(lightAfterArchive.data)).toBe(false);
+      }
+      if (!clientErrorCodes.includes(fullAfterArchive.status)) {
+        expect(successCodes, JSON.stringify(fullAfterArchive.data)).toContain(fullAfterArchive.status);
+        expect(getRows<ApiRow>(fullAfterArchive.data).some((row) => row.id === currentEquipmentId), JSON.stringify(fullAfterArchive.data)).toBe(false);
+      }
       equipmentId = undefined;
     });
 
@@ -434,6 +548,14 @@ export const runEquipmentAPINew = () => {
       expect(subtypeId).toBeTruthy();
       const currentTypeId = typeId as number;
       const currentSubtypeId = subtypeId as number;
+
+      const noAuthArchiveSubtype = await equipmentAPI.removeEquipmentSubtype(request, currentSubtypeId);
+      expectClientError(noAuthArchiveSubtype);
+      const activeSubtypeBeforeArchive = await equipmentAPI.getSubtypePagination(request, equipmentPaginationDto({ searchString: subtypeName }), accessToken);
+      expectNoServerError(activeSubtypeBeforeArchive);
+      if (!clientErrorCodes.includes(activeSubtypeBeforeArchive.status)) {
+        expect(getRows<ApiRow>(activeSubtypeBeforeArchive.data).some((row) => row.id === currentSubtypeId), JSON.stringify(activeSubtypeBeforeArchive.data)).toBe(true);
+      }
 
       const archiveSubtype = await equipmentAPI.removeEquipmentSubtype(request, currentSubtypeId, accessToken);
       expectNoServerError(archiveSubtype);
@@ -458,10 +580,15 @@ export const runEquipmentAPINew = () => {
         expect(getRows<ApiRow>(activeTypes.data).some((row) => row.id === currentTypeId), JSON.stringify(activeTypes.data)).toBe(false);
       }
 
+      const noAuthArchiveType = await equipmentAPI.removeEquipmentType(request, currentTypeId);
+      expectClientError(noAuthArchiveType);
+
       const secondArchiveSubtype = await equipmentAPI.removeEquipmentSubtype(request, currentSubtypeId, accessToken);
       expectNoServerError(secondArchiveSubtype);
+      expectRepeatOperationRejectedOrIdempotent(archiveSubtype.status, secondArchiveSubtype.status, successCodes, [400, 404, 409, 410, 422]);
       const secondArchiveType = await equipmentAPI.removeEquipmentType(request, currentTypeId, accessToken);
       expectNoServerError(secondArchiveType);
+      expectRepeatOperationRejectedOrIdempotent(archiveType.status, secondArchiveType.status, successCodes, [400, 404, 409, 410, 422]);
 
       subtypeId = undefined;
       typeId = undefined;

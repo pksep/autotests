@@ -15,6 +15,7 @@ import {
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import { expectRepeatOperationRejectedOrIdempotent } from '../../lib/helpers/APIDataInvariants';
 
 type EntityLike = Record<string, any>;
 
@@ -183,6 +184,15 @@ export const runContactsAPINew = () => {
       expect(updated?.attention).toBe(true);
       expect(await waitForContactInActiveSearch(request, contactName, contactId as number, false, accessToken)).toBe(true);
 
+      const attentionFiltered = await contactsAPI.getContactsPagination(
+        request,
+        contactPaginationDto({ searchString: updatedContactName, isSortedByAttention: true }),
+        accessToken,
+      );
+      expectNoServerError(attentionFiltered);
+      expect(successCodes, JSON.stringify(attentionFiltered.data)).toContain(attentionFiltered.status);
+      expect(getRows<EntityLike>(attentionFiltered.data).some((row) => row.id === contactId), JSON.stringify(attentionFiltered.data)).toBe(true);
+
       const byId = await contactsAPI.getContactById(request, contactId as number, accessToken);
       expect(successCodes, JSON.stringify(byId.data)).toContain(byId.status);
       expect(byId.data?.id, JSON.stringify(byId.data)).toBe(contactId);
@@ -196,6 +206,31 @@ export const runContactsAPINew = () => {
         expect(Array.isArray(include.data?.companies), JSON.stringify(include.data)).toBe(true);
         expect(include.data.companies.some((company: EntityLike) => company.id === companyId), JSON.stringify(include.data)).toBe(true);
       }
+
+      const noAuthUpdate = await contactsAPI.updateContact(
+        request,
+        contactPayload(updatedContactName.replace('API Contact ', ''), [companyId as number], {
+          id: contactId,
+          initial: updatedContactName,
+          position: 'No-auth update probe',
+          attention: false,
+        }),
+      );
+      expectUnauthorizedOrForbidden(noAuthUpdate);
+
+      const afterNoAuthUpdate = await contactsAPI.getContactById(request, contactId as number, accessToken);
+      expectNoServerError(afterNoAuthUpdate);
+      expect(successCodes, JSON.stringify(afterNoAuthUpdate.data)).toContain(afterNoAuthUpdate.status);
+      expect(afterNoAuthUpdate.data?.position, JSON.stringify(afterNoAuthUpdate.data)).toBe('QA contact updated');
+
+      const attentionAfterNoAuth = await contactsAPI.getContactsPagination(
+        request,
+        contactPaginationDto({ searchString: updatedContactName, isSortedByAttention: true }),
+        accessToken,
+      );
+      expectNoServerError(attentionAfterNoAuth);
+      expect(successCodes, JSON.stringify(attentionAfterNoAuth.data)).toContain(attentionAfterNoAuth.status);
+      expect(getRows<EntityLike>(attentionAfterNoAuth.data).some((row) => row.id === contactId), JSON.stringify(attentionAfterNoAuth.data)).toBe(true);
     });
 
     test('архивирует контакт и проверяет архивную выдачу', async ({ request }) => {
@@ -228,6 +263,54 @@ export const runContactsAPINew = () => {
         expect(Number(archivedById.data?.id), JSON.stringify(archivedById.data)).toBe(contactId);
         expect(archivedById.data?.ban, JSON.stringify(archivedById.data)).toBe(true);
       }
+
+      const companyInclude = await companiesAPI.getInclude(request, { id: companyId, includes: ['contacts'] }, accessToken);
+      expectNoServerError(companyInclude);
+      if (!clientErrorCodes.includes(companyInclude.status)) {
+        expect(successCodes).toContain(companyInclude.status);
+        expect(Array.isArray(companyInclude.data?.contacts), JSON.stringify(companyInclude.data)).toBe(true);
+        expect(
+          companyInclude.data.contacts.some((contact: EntityLike) => contact.id === contactId && contact.ban !== true),
+          JSON.stringify(companyInclude.data),
+        ).toBe(false);
+      }
+
+      const secondArchive = await contactsAPI.banContact(request, contactId as number, accessToken);
+      expectNoServerError(secondArchive);
+      expectRepeatOperationRejectedOrIdempotent(response.status, secondArchive.status, successCodes, [400, 404, 409, 410, 422]);
+
+      const bulkArchive = await contactsAPI.banContactsBulk(request, [contactId as number, 999999999], accessToken);
+      expectNoServerError(bulkArchive);
+      expectRepeatOperationRejectedOrIdempotent(response.status, bulkArchive.status, successCodes, [400, 404, 409, 410, 422]);
+
+      const noAuthArchive = await contactsAPI.banContact(request, contactId as number);
+      expectUnauthorizedOrForbidden(noAuthArchive);
+
+      const updateArchived = await contactsAPI.updateContact(
+        request,
+        contactPayload(updatedContactName.replace('API Contact ', ''), [], {
+          id: contactId,
+          initial: updatedContactName,
+          position: 'QA contact archived update',
+          attention: true,
+        }),
+        accessToken,
+      );
+      expectNoServerError(updateArchived);
+      expect([...successCodes, 400, 404, 409, 410, 422], JSON.stringify(updateArchived.data)).toContain(updateArchived.status);
+
+      const noAuthUpdateArchived = await contactsAPI.updateContact(
+        request,
+        contactPayload(updatedContactName.replace('API Contact ', ''), [], {
+          id: contactId,
+          initial: updatedContactName,
+          position: 'No-auth archived update probe',
+          attention: false,
+        }),
+      );
+      expectUnauthorizedOrForbidden(noAuthUpdateArchived);
+
+      expect(await waitForContactInActiveSearch(request, updatedContactName, contactId as number, false, accessToken)).toBe(true);
       contactId = undefined;
     });
   });
@@ -288,6 +371,66 @@ export const runContactsAPINew = () => {
     test('не пропускает мутации без авторизации', async ({ request }) => {
       const response = await contactsAPI.createContact(request, contactPayload(uniqueApiSuffix('noauth')));
       expectUnauthorizedOrForbidden(response);
+    });
+
+    test('bulk archive архивирует несколько валидных контактов без активных хвостов', async ({ request }) => {
+      const suffix = uniqueApiSuffix('bulk-contact');
+      const firstName = `API Contact ${suffix} A`;
+      const secondName = `API Contact ${suffix} B`;
+      const createdIds: number[] = [];
+
+      try {
+        const first = await contactsAPI.createContact(
+          request,
+          contactPayload(`${suffix} A`, [], { initial: firstName }),
+          accessToken,
+        );
+        expect(successCodes, JSON.stringify(first.data)).toContain(first.status);
+        expectNoServerError(first);
+        createdIds.push(Number(first.data?.id));
+
+        const second = await contactsAPI.createContact(
+          request,
+          contactPayload(`${suffix} B`, [], { initial: secondName }),
+          accessToken,
+        );
+        expect(successCodes, JSON.stringify(second.data)).toContain(second.status);
+        expectNoServerError(second);
+        createdIds.push(Number(second.data?.id));
+
+        const bulk = await contactsAPI.banContactsBulk(request, createdIds, accessToken);
+        expectNoServerError(bulk);
+        expect(successCodes, JSON.stringify(bulk.data)).toContain(bulk.status);
+
+        for (const [index, id] of createdIds.entries()) {
+          const name = index === 0 ? firstName : secondName;
+          expect(await waitForContactInActiveSearch(request, name, id, false, accessToken)).toBe(true);
+
+          const archived = await contactsAPI.getContactsPagination(
+            request,
+            contactPaginationDto({ searchString: name, isBan: true }),
+            accessToken,
+          );
+          expectNoServerError(archived);
+          if (!clientErrorCodes.includes(archived.status)) {
+            expect(successCodes, JSON.stringify(archived.data)).toContain(archived.status);
+          }
+
+          const byId = await contactsAPI.getContactById(request, id, accessToken);
+          expectNoServerError(byId);
+          if (clientErrorCodes.includes(byId.status)) {
+            expectMissingResource(byId);
+          } else {
+            expect(successCodes, JSON.stringify(byId.data)).toContain(byId.status);
+            expect(byId.data?.ban, JSON.stringify(byId.data)).toBe(true);
+          }
+        }
+      } finally {
+        for (const id of createdIds) {
+          const cleanup = await contactsAPI.banContact(request, id, accessToken);
+          expectNoServerError(cleanup);
+        }
+      }
     });
 
     test('обрабатывает защитные поисковые строки без 5xx', async ({ request }) => {

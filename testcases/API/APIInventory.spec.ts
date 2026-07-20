@@ -4,6 +4,7 @@ import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import { clientErrorCodes, expectNoServerError, expectClientError, expectPaginationContract, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import { expectRepeatOperationRejectedOrIdempotent } from '../../lib/helpers/APIDataInvariants';
 
 type ApiRow = Record<string, any>;
 
@@ -169,6 +170,28 @@ export const runInventoryAPINew = () => {
         expect(successCodes).toContain(subtypeById.status);
         expect(subtypeById.data?.id, JSON.stringify(subtypeById.data)).toBe(subtypeId);
       }
+
+      const noAuthTypeUpdate = await inventoryAPI.updateInventoryType(request, { id: typeId, name: `${typeName} NoAuth` });
+      expectClientError(noAuthTypeUpdate);
+
+      const typeAfterNoAuth = await inventoryAPI.getInventoryTypeById(request, typeId as number, accessToken);
+      expectNoServerError(typeAfterNoAuth);
+      if (!clientErrorCodes.includes(typeAfterNoAuth.status)) {
+        expect(successCodes).toContain(typeAfterNoAuth.status);
+        expect(typeAfterNoAuth.data?.id, JSON.stringify(typeAfterNoAuth.data)).toBe(typeId);
+        if (typeAfterNoAuth.data?.name !== undefined) expect(typeAfterNoAuth.data.name, JSON.stringify(typeAfterNoAuth.data)).toBe(typeName);
+      }
+
+      const noAuthSubtypeUpdate = await inventoryAPI.updateInventorySubtype(request, { id: subtypeId, name: `${subtypeName} NoAuth` });
+      expectClientError(noAuthSubtypeUpdate);
+
+      const subtypeAfterNoAuth = await inventoryAPI.getInventorySubtypeById(request, subtypeId as number, accessToken);
+      expectNoServerError(subtypeAfterNoAuth);
+      if (!clientErrorCodes.includes(subtypeAfterNoAuth.status)) {
+        expect(successCodes).toContain(subtypeAfterNoAuth.status);
+        expect(subtypeAfterNoAuth.data?.id, JSON.stringify(subtypeAfterNoAuth.data)).toBe(subtypeId);
+        if (subtypeAfterNoAuth.data?.name !== undefined) expect(subtypeAfterNoAuth.data.name, JSON.stringify(subtypeAfterNoAuth.data)).toBe(subtypeName);
+      }
     });
 
     test('создает, читает и обновляет наименование инвентаря', async ({ request }) => {
@@ -213,6 +236,15 @@ export const runInventoryAPINew = () => {
       expect(updated, `Inventory ${updatedName} was not found after update`).toBeTruthy();
       expect(updated?.id).toBe(inventoryId);
 
+      const attentionFiltered = await inventoryAPI.getInventoryPagination(
+        request,
+        inventoryPaginationDto({ isFilteredByAttention: true, searchString: updatedName }),
+        accessToken,
+      );
+      expectNoServerError(attentionFiltered);
+      expect(successCodes, JSON.stringify(attentionFiltered.data)).toContain(attentionFiltered.status);
+      expect(getRows<ApiRow>(attentionFiltered.data).some((row) => row.id === inventoryId), JSON.stringify(attentionFiltered.data)).toBe(true);
+
       const persisted = await inventoryAPI.getOneInventory(request, inventoryId, accessToken);
       expectNoServerError(persisted);
       if (!clientErrorCodes.includes(persisted.status)) {
@@ -222,12 +254,35 @@ export const runInventoryAPINew = () => {
         expect(persisted.data?.attention, JSON.stringify(persisted.data)).toBe(true);
         expect(persisted.data?.description, JSON.stringify(persisted.data)).toBe('Updated by API autotest');
       }
+
+      const noAuthUpdate = await inventoryAPI.updateInventory(
+        request,
+        inventoryPayload(suffix, typeId as number, subtypeId as number, {
+          id: inventoryId,
+          name: updatedName,
+          attention: false,
+          description: 'No-auth update probe',
+        }),
+      );
+      expectClientError(noAuthUpdate);
+
+      const persistedAfterNoAuth = await inventoryAPI.getOneInventory(request, inventoryId, accessToken);
+      expectNoServerError(persistedAfterNoAuth);
+      if (!clientErrorCodes.includes(persistedAfterNoAuth.status)) {
+        expect(successCodes).toContain(persistedAfterNoAuth.status);
+        expect(persistedAfterNoAuth.data?.attention, JSON.stringify(persistedAfterNoAuth.data)).toBe(true);
+        expect(persistedAfterNoAuth.data?.description, JSON.stringify(persistedAfterNoAuth.data)).toBe('Updated by API autotest');
+      }
       inventoryName = updatedName;
     });
 
     test('архивирует наименование инвентаря и служебные типы', async ({ request }) => {
       expect(inventoryId).toBeTruthy();
       const currentInventoryId = inventoryId as number;
+
+      const noAuthArchive = await inventoryAPI.banInventory(request, currentInventoryId);
+      expectClientError(noAuthArchive);
+      expect(await waitForInventoryAbsentFromActivePagination(request, currentInventoryId, inventoryName, accessToken)).toBe(false);
 
       const archiveInventory = await inventoryAPI.banInventory(request, currentInventoryId, accessToken);
       expectNoServerError(archiveInventory);
@@ -244,14 +299,80 @@ export const runInventoryAPINew = () => {
       expect(archived, `Inventory ${inventoryName} was not found in archive`).toBeTruthy();
 
       expect(await waitForInventoryAbsentFromActivePagination(request, currentInventoryId, inventoryName, accessToken)).toBe(true);
+
+      const secondArchiveInventory = await inventoryAPI.banInventory(request, currentInventoryId, accessToken);
+      expectNoServerError(secondArchiveInventory);
+      expectRepeatOperationRejectedOrIdempotent(archiveInventory.status, secondArchiveInventory.status, successCodes, [400, 404, 409, 410, 422]);
+
+      const updateArchived = await inventoryAPI.updateInventory(
+        request,
+        inventoryPayload(suffix, typeId as number, subtypeId as number, {
+          id: currentInventoryId,
+          name: inventoryName,
+          attention: true,
+          description: 'Post-archive update by API autotest',
+        }),
+        accessToken,
+      );
+      expectNoServerError(updateArchived);
+      expect([...successCodes, 400, 404, 409, 410, 422], JSON.stringify(updateArchived.data)).toContain(updateArchived.status);
+
+      const noAuthUpdateArchived = await inventoryAPI.updateInventory(
+        request,
+        inventoryPayload(suffix, typeId as number, subtypeId as number, {
+          id: currentInventoryId,
+          name: inventoryName,
+          attention: false,
+          description: 'No-auth archived update probe',
+        }),
+      );
+      expectClientError(noAuthUpdateArchived);
+
+      const archiveAfterUpdate = await inventoryAPI.banInventory(request, currentInventoryId, accessToken);
+      expectNoServerError(archiveAfterUpdate);
+      expectRepeatOperationRejectedOrIdempotent(archiveInventory.status, archiveAfterUpdate.status, successCodes, [400, 404, 409, 410, 422]);
+
+      const archivedAfterUpdate = await eventually(async () => {
+        const response = await inventoryAPI.getArchivedInventory(request, { searchString: inventoryName }, accessToken);
+        expectNoServerError(response);
+        return response;
+      }, (response) => getRows<ApiRow>(response.data).some((row) => row.id === currentInventoryId));
+      expect(archivedAfterUpdate, `Inventory ${inventoryName} was not found in archive after post-archive update`).toBeTruthy();
+      expect(await waitForInventoryAbsentFromActivePagination(request, currentInventoryId, inventoryName, accessToken)).toBe(true);
+      const attentionAfterArchive = await inventoryAPI.getInventoryPagination(
+        request,
+        inventoryPaginationDto({ isFilteredByAttention: true, searchString: inventoryName }),
+        accessToken,
+      );
+      expectNoServerError(attentionAfterArchive);
+      expect(successCodes, JSON.stringify(attentionAfterArchive.data)).toContain(attentionAfterArchive.status);
+      expect(getRows<ApiRow>(attentionAfterArchive.data).some((row) => row.id === currentInventoryId), JSON.stringify(attentionAfterArchive.data)).toBe(false);
+      const allAfterArchive = await inventoryAPI.getAllInventory(request, accessToken);
+      expectNoServerError(allAfterArchive);
+      if (!clientErrorCodes.includes(allAfterArchive.status)) {
+        expect(successCodes, JSON.stringify(allAfterArchive.data)).toContain(allAfterArchive.status);
+        expect(getRows<ApiRow>(allAfterArchive.data).some((row) => row.id === currentInventoryId), JSON.stringify(allAfterArchive.data)).toBe(false);
+      }
       inventoryId = undefined;
+
+      const noAuthArchiveSubtype = await inventoryAPI.removeInventorySubtype(request, subtypeId as number);
+      expectClientError(noAuthArchiveSubtype);
 
       const archiveSubtype = await inventoryAPI.removeInventorySubtype(request, subtypeId as number, accessToken);
       expectNoServerError(archiveSubtype);
+      const secondArchiveSubtype = await inventoryAPI.removeInventorySubtype(request, subtypeId as number, accessToken);
+      expectNoServerError(secondArchiveSubtype);
+      expectRepeatOperationRejectedOrIdempotent(archiveSubtype.status, secondArchiveSubtype.status, successCodes, [400, 404, 409, 410, 422]);
       subtypeId = undefined;
+
+      const noAuthArchiveType = await inventoryAPI.removeInventoryType(request, typeId as number);
+      expectClientError(noAuthArchiveType);
 
       const archiveType = await inventoryAPI.removeInventoryType(request, typeId as number, accessToken);
       expectNoServerError(archiveType);
+      const secondArchiveType = await inventoryAPI.removeInventoryType(request, typeId as number, accessToken);
+      expectNoServerError(secondArchiveType);
+      expectRepeatOperationRejectedOrIdempotent(archiveType.status, secondArchiveType.status, successCodes, [400, 404, 409, 410, 422]);
       typeId = undefined;
     });
   });

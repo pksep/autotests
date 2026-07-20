@@ -15,6 +15,10 @@ import {
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import {
+  expectArchivedOnlyInArchiveSelection,
+  expectRepeatOperationRejectedOrIdempotent,
+} from '../../lib/helpers/APIDataInvariants';
 
 type ApiResult = {
   status: number;
@@ -260,6 +264,42 @@ export const runCBEDAPINew = () => {
       expect(updated?.id).toBe(createdCbedId);
       expect(updated?.name).toBe(updatedPayload.name);
       expect(updated?.attention).toBe(true);
+
+      const byIdAfterUpdate = await cbedAPI.getOneCBEDById(
+        request,
+        { id: createdCbedId, modelsInclude: [], attributes: [] },
+        accessToken,
+      );
+      expect(successCodes, JSON.stringify(byIdAfterUpdate.data)).toContain(byIdAfterUpdate.status);
+      expect(byIdAfterUpdate.data?.designation, JSON.stringify(byIdAfterUpdate.data)).toBe(updatedDesignation);
+
+      const oldDesignationSearch = await cbedAPI.getCBEDPagination(
+        request,
+        cbedPaginationDto({ searchString: createdDesignation }),
+        testUserId,
+        accessToken,
+      );
+      expect(oldDesignationSearch.status).toBe(201);
+      expect(
+        getRows<CbedLike>(oldDesignationSearch.data).some(
+          (cbed) => cbed.id === createdCbedId && cbed.designation === createdDesignation,
+        ),
+        JSON.stringify(oldDesignationSearch.data),
+      ).toBe(false);
+
+      const remainsAfterUpdate = await cbedAPI.getCBEDRemains(
+        request,
+        remainsDto({ searchString: updatedDesignation }),
+        accessToken,
+      );
+      expectNoServerError(remainsAfterUpdate);
+      if (!clientErrorCodes.includes(remainsAfterUpdate.status)) {
+        expect(successCodes).toContain(remainsAfterUpdate.status);
+        expect(
+          getRows<CbedLike>(remainsAfterUpdate.data).some((row) => row.id === createdCbedId),
+          JSON.stringify(remainsAfterUpdate.data),
+        ).toBe(true);
+      }
     });
 
     test('возвращает include, принадлежность, graph и техпроцесс без серверных ошибок', async ({ request }) => {
@@ -295,9 +335,33 @@ export const runCBEDAPINew = () => {
       const archived = await waitForArchivedCbed(request, createdCbedId as number, updatedDesignation, accessToken);
       expect(archived, `CBED ${updatedDesignation} was not found in archive after ban`).toBeTruthy();
       expect(await waitForCbedInActiveSearch(request, createdCbedId as number, updatedDesignation, false, accessToken)).toBe(true);
+      const activeSearch = await cbedAPI.getCBEDPagination(
+        request,
+        cbedPaginationDto({ searchString: updatedDesignation }),
+        testUserId,
+        accessToken,
+      );
+      expect(activeSearch.status).toBe(201);
+      expectArchivedOnlyInArchiveSelection(
+        getRows<CbedLike>(activeSearch.data),
+        archived ? [archived] : [],
+        createdCbedId as number,
+      );
 
       const secondArchiveResponse = await cbedAPI.banCBED(request, createdCbedId as number, testUserId, accessToken);
       expectNoServerError(secondArchiveResponse);
+      expectRepeatOperationRejectedOrIdempotent(archiveResponse.status, secondArchiveResponse.status, successCodes, [400, 404, 409, 410, 422]);
+
+      const updateArchived = await cbedAPI.updateCBED(
+        request,
+        { ...updatedPayload, id: createdCbedId, description: `Post-archive update ${updatedDesignation}` },
+        testUserId,
+        accessToken,
+      );
+      expectNoServerError(updateArchived);
+      expect([...successCodes, 400, 404, 409, 410, 422], JSON.stringify(updateArchived.data)).toContain(updateArchived.status);
+      expect(await waitForArchivedCbed(request, createdCbedId as number, updatedDesignation, accessToken)).toBeTruthy();
+      expect(await waitForCbedInActiveSearch(request, createdCbedId as number, updatedDesignation, false, accessToken)).toBe(true);
 
       createdCbedId = undefined;
     });

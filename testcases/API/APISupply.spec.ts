@@ -23,6 +23,14 @@ export const runSupplyAPINew = () => {
       expectNoServerError(response);
       if (!clientErrorCodes.includes(response.status)) {
         expect(successCodes, JSON.stringify(response.data)).toContain(response.status);
+        expect(String(response.data ?? ''), JSON.stringify(response.data)).toBeTruthy();
+      }
+
+      const repeat = await supplyAPI.getNewNumberOrder(request, accessToken);
+      expectNoServerError(repeat);
+      if (!clientErrorCodes.includes(repeat.status)) {
+        expect(successCodes, JSON.stringify(repeat.data)).toContain(repeat.status);
+        expect(String(repeat.data ?? ''), JSON.stringify(repeat.data)).toBeTruthy();
       }
     });
 

@@ -66,6 +66,15 @@ export const runMovingAPINew = () => {
         const created = await findMovingByDescription(request, description, accessToken);
         expect(created, `Moving ${description} unexpectedly appeared in list after no-op create`).toBeUndefined();
       }
+
+      const repeat = await movingAPI.createMoving(request, movingDto({ description, cause }), accessToken);
+      expectNoServerError(repeat);
+      if (!clientErrorCodes.includes(repeat.status)) {
+        expect(successCodes, JSON.stringify(repeat.data)).toContain(repeat.status);
+
+        const createdAfterRepeat = await findMovingByDescription(request, description, accessToken);
+        expect(createdAfterRepeat, `Moving ${description} unexpectedly appeared in list after repeated no-op create`).toBeUndefined();
+      }
     });
 
     test('невалидное перемещение не считается успешным', async ({ request }) => {

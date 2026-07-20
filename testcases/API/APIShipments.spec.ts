@@ -22,6 +22,7 @@ import {
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 import {
+  expectArchivedOnlyInArchiveSelection,
   expectNonNegativeQuantities,
   expectRepeatOperationRejectedOrIdempotent,
   expectRowsLinkedToEntity,
@@ -723,6 +724,28 @@ export const runShipmentsAPINew = () => {
         accessToken,
       );
       expect(hydrated?.description, JSON.stringify(hydrated)).toBe(updatedDescription);
+
+      const byIdAfterUpdate = await shipmentsAPI.getShipmentById(request, createdShipmentId as number, accessToken);
+      expectNoServerError(byIdAfterUpdate);
+      expect(successCodes, JSON.stringify(byIdAfterUpdate.data)).toContain(byIdAfterUpdate.status);
+      expect(byIdAfterUpdate.data?.description, JSON.stringify(byIdAfterUpdate.data)).toBe(updatedDescription);
+
+      const listAfterUpdate = await shipmentsAPI.getShipmentsListPagination(
+        request,
+        true,
+        shipmentsListPaginationDto({ searchString: updatedDescription, shipmentIds: [createdShipmentId] }),
+        accessToken,
+      );
+      expectNoServerError(listAfterUpdate);
+      if (!clientErrorCodes.includes(listAfterUpdate.status)) {
+        expect(successCodes, JSON.stringify(listAfterUpdate.data)).toContain(listAfterUpdate.status);
+        expect(
+          getRows<ApiRow>(listAfterUpdate.data).some(
+            (shipment) => Number(shipment.id) === createdShipmentId && shipment.description === updatedDescription,
+          ),
+          JSON.stringify(listAfterUpdate.data),
+        ).toBe(true);
+      }
     });
 
     test('проверяет прикладные ручки на созданной отгрузке', async ({ request }) => {
@@ -841,11 +864,48 @@ export const runShipmentsAPINew = () => {
       if (!clientErrorCodes.includes(archivedById.status) && successCodes.includes(archivedById.status)) {
         expect(Number(archivedById.data?.id), JSON.stringify(archivedById.data)).toBe(shipmentId);
         expect(archivedById.data?.ban ?? archivedById.data?.isDeleted ?? true, JSON.stringify(archivedById.data)).not.toBe(false);
+        expect(String(archivedById.data?.status ?? ''), JSON.stringify(archivedById.data)).toBe('Удалено');
+      }
+      const archiveSearch = String(archivedById.data?.number_order || updatedDescription);
+
+      const activePagination = await shipmentsAPI.getAllShipments(
+        request,
+        shipmentsPaginationDto({ searchStr: archiveSearch, status: ['Все'] }),
+        accessToken,
+      );
+      const archivedPagination = await shipmentsAPI.getAllShipments(
+        request,
+        shipmentsPaginationDto({ searchStr: archiveSearch, status: ['Удалено'] }),
+        accessToken,
+      );
+      expectNoServerError(activePagination);
+      expectNoServerError(archivedPagination);
+      if (!clientErrorCodes.includes(activePagination.status) && !clientErrorCodes.includes(archivedPagination.status)) {
+        expect(successCodes, JSON.stringify(activePagination.data)).toContain(activePagination.status);
+        expect(successCodes, JSON.stringify(archivedPagination.data)).toContain(archivedPagination.status);
+        expectArchivedOnlyInArchiveSelection(
+          getRows<ApiRow>(activePagination.data).filter((shipment) => shipment.status !== 'Удалено'),
+          getRows<ApiRow>(archivedPagination.data),
+          shipmentId,
+        );
       }
 
       const secondArchive = await shipmentsAPI.deleteShipment(request, shipmentId, accessToken);
       expectNoServerError(secondArchive);
       expectRepeatOperationRejectedOrIdempotent(archive.status, secondArchive.status, successCodes, [400, 404, 409, 410, 422]);
+
+      const updateArchived = await shipmentsAPI.updateShipment(
+        request,
+        shipmentPayload(`API shipment lifecycle archived update ${suffix}`, activeProduct as ApiRow, buyerId, { id: shipmentId }),
+        accessToken,
+      );
+      expectNoServerError(updateArchived);
+      expect([...successCodes, 400, 404, 409, 410, 422], JSON.stringify(updateArchived.data)).toContain(updateArchived.status);
+      if (successCodes.includes(updateArchived.status)) {
+        expect(Number(updateArchived.data?.id), JSON.stringify(updateArchived.data)).toBe(shipmentId);
+        expect(String(updateArchived.data?.status ?? ''), JSON.stringify(updateArchived.data)).toBe('Удалено');
+        expect(updateArchived.data?.ban ?? true, JSON.stringify(updateArchived.data)).not.toBe(false);
+      }
       createdShipmentId = undefined;
     });
   });

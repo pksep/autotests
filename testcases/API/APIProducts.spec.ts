@@ -18,6 +18,10 @@ import {
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import {
+  expectArchivedOnlyInArchiveSelection,
+  expectRepeatOperationRejectedOrIdempotent,
+} from '../../lib/helpers/APIDataInvariants';
 
 type ApiResult = {
   status: number;
@@ -294,6 +298,49 @@ export const runProductsAPINew = () => {
       expect(updated?.name).toBe(updatedPayload.name);
       expect(updated?.articl).toBe(updatedPayload.articl);
       expect(updated?.attention).toBe(true);
+
+      const paginationAfterUpdate = await productsAPI.getAllProducts(
+        request,
+        productPaginationDto({ searchString: updatedDesignation }),
+        accessToken,
+      );
+      expect(paginationAfterUpdate.status).toBe(201);
+      expect(
+        getRows<ProductLike>(paginationAfterUpdate.data).some(
+          (product) =>
+            product.id === createdProductId &&
+            product.designation === updatedDesignation &&
+            product.name === updatedPayload.name,
+        ),
+        JSON.stringify(paginationAfterUpdate.data),
+      ).toBe(true);
+
+      const oldDesignationSearch = await productsAPI.getAllProducts(
+        request,
+        productPaginationDto({ searchString: createdDesignation }),
+        accessToken,
+      );
+      expect(oldDesignationSearch.status).toBe(201);
+      expect(
+        getRows<ProductLike>(oldDesignationSearch.data).some(
+          (product) => product.id === createdProductId && product.designation === createdDesignation,
+        ),
+        JSON.stringify(oldDesignationSearch.data),
+      ).toBe(false);
+
+      const deficitsAfterUpdate = await productsAPI.getProductDeficits(
+        request,
+        { page: 0, statusWorking: 'Все', productIds: [createdProductId], shipmentIds: [], searchString: updatedDesignation },
+        accessToken,
+      );
+      expectNoServerError(deficitsAfterUpdate);
+      if (!clientErrorCodes.includes(deficitsAfterUpdate.status)) {
+        expect(successCodes).toContain(deficitsAfterUpdate.status);
+        expect(
+          getRows<ProductLike>(deficitsAfterUpdate.data).some((row) => row.id === createdProductId),
+          JSON.stringify(deficitsAfterUpdate.data),
+        ).toBe(false);
+      }
     });
 
     test('возвращает include и graph-childrens для обновленного изделия', async ({ request }) => {
@@ -325,21 +372,39 @@ export const runProductsAPINew = () => {
       expect(successCodes).toContain(archiveResponse.status);
       expectNoServerError(archiveResponse);
 
+      expect(
+        await waitForProductInActiveSearch(request, updatedDesignation, createdProductId as number, false, accessToken),
+      ).toBe(true);
       const activeSearch = await productsAPI.getAllProducts(
         request,
         productPaginationDto({ searchString: updatedDesignation }),
         accessToken,
       );
       expect(activeSearch.status).toBe(201);
-      expect(
-        await waitForProductInActiveSearch(request, updatedDesignation, createdProductId as number, false, accessToken),
-      ).toBe(true);
 
       const archived = await waitForProductInArchive(request, updatedDesignation, createdProductId as number, accessToken);
       expect(archived, `Product ${updatedDesignation} was not found in archive after delete`).toBeTruthy();
+      expectArchivedOnlyInArchiveSelection(
+        getRows<ProductLike>(activeSearch.data),
+        archived ? [archived] : [],
+        createdProductId as number,
+      );
 
       const secondArchiveResponse = await productsAPI.deleteProduct(request, createdProductId as number, accessToken);
       expectNoServerError(secondArchiveResponse);
+      expectRepeatOperationRejectedOrIdempotent(archiveResponse.status, secondArchiveResponse.status, successCodes, [400, 404, 409, 410, 422]);
+
+      const updateArchivedResponse = await productsAPI.updateProduct(
+        request,
+        { ...updatedPayload, id: createdProductId, description: `Post-archive update ${updatedDesignation}` },
+        accessToken,
+      );
+      expectNoServerError(updateArchivedResponse);
+      expect([...successCodes, 400, 404, 409, 410, 422], JSON.stringify(updateArchivedResponse.data)).toContain(updateArchivedResponse.status);
+
+      const archivedAfterUpdate = await waitForProductInArchive(request, updatedDesignation, createdProductId as number, accessToken);
+      expect(archivedAfterUpdate, `Product ${updatedDesignation} left archive after post-archive update`).toBeTruthy();
+      expect(archivedAfterUpdate?.ban, JSON.stringify(archivedAfterUpdate)).toBe(true);
 
       createdProductId = undefined;
     });

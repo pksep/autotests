@@ -23,6 +23,7 @@ import {
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import { expectArchivedOnlyInArchiveSelection, expectRepeatOperationRejectedOrIdempotent } from '../../lib/helpers/APIDataInvariants';
 import {
   paginationOf,
   productionTaskResponseSchema,
@@ -997,6 +998,44 @@ export const runProductionTasksAPINew = () => {
         if (!clientErrorCodes.includes(archiveTask.status)) {
           expect(successCodes).toContain(archiveTask.status);
         }
+
+        const activeAfterArchive = await productionTasksAPI.getProductionTaskPaginate(
+          request,
+          productionTaskPaginationDto({ isBan: false, searchValue: `API production task lifecycle ${suffix}` }),
+          accessToken,
+        );
+        const archiveAfterArchive = await productionTasksAPI.getProductionTaskPaginate(
+          request,
+          productionTaskPaginationDto({ isBan: true, searchValue: `API production task lifecycle ${suffix}` }),
+          accessToken,
+        );
+        expectNoServerError(activeAfterArchive);
+        expectNoServerError(archiveAfterArchive);
+        if (!clientErrorCodes.includes(activeAfterArchive.status) && !clientErrorCodes.includes(archiveAfterArchive.status)) {
+          expect(successCodes).toContain(activeAfterArchive.status);
+          expect(successCodes).toContain(archiveAfterArchive.status);
+          expectArchivedOnlyInArchiveSelection(
+            getRows<ApiRow>(activeAfterArchive.data),
+            getRows<ApiRow>(archiveAfterArchive.data),
+            createdProductionTaskId,
+          );
+        }
+
+        const archivedById = await productionTasksAPI.getProductionTaskById(request, createdProductionTaskId, accessToken);
+        expectNoServerError(archivedById);
+        if (!clientErrorCodes.includes(archivedById.status)) {
+          expect(successCodes).toContain(archivedById.status);
+          expect(Number(archivedById.data?.id), JSON.stringify(archivedById.data)).toBe(createdProductionTaskId);
+          expect(archivedById.data?.ban ?? true, JSON.stringify(archivedById.data)).not.toBe(false);
+        }
+
+        const secondArchiveTask = await productionTasksAPI.banProductionTask(
+          request,
+          createdProductionTaskId,
+          accessToken,
+        );
+        expectNoServerError(secondArchiveTask);
+        expectRepeatOperationRejectedOrIdempotent(archiveTask.status, secondArchiveTask.status, successCodes, [400, 404, 409, 410, 422]);
 
         createdProductionTaskId = undefined;
       } finally {

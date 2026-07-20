@@ -16,6 +16,7 @@ import {
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import { expectRepeatOperationRejectedOrIdempotent } from '../../lib/helpers/APIDataInvariants';
 
 type EntityLike = Record<string, any>;
 
@@ -238,6 +239,40 @@ export const runCompaniesAPINew = () => {
       const updated = await findCompanyByName(request, updatedCompanyName, accessToken);
       expect(updated, `Company ${updatedCompanyName} was not found after update`).toBeTruthy();
       expect(updated?.attention).toBe(true);
+
+      const attentionFiltered = await companiesAPI.getCompaniesPagination(
+        request,
+        companyPaginationDto({ searchString: updatedCompanyName, isSortedByAttention: true }),
+        accessToken,
+      );
+      expectNoServerError(attentionFiltered);
+      expect(successCodes, JSON.stringify(attentionFiltered.data)).toContain(attentionFiltered.status);
+      expect(getRows<EntityLike>(attentionFiltered.data).some((row) => row.id === companyId), JSON.stringify(attentionFiltered.data)).toBe(true);
+
+      const noAuthUpdate = await companiesAPI.updateCompany(
+        request,
+        companyPayload(updatedCompanyName.replace('API Company ', ''), [contactId as number], {
+          id: companyId,
+          name: updatedCompanyName,
+          description: 'No-auth update probe',
+          attention: false,
+        }),
+      );
+      expectUnauthorizedOrForbidden(noAuthUpdate);
+
+      const afterNoAuthUpdate = await companiesAPI.getCompanyById(request, companyId as number, accessToken);
+      expectNoServerError(afterNoAuthUpdate);
+      expect(successCodes, JSON.stringify(afterNoAuthUpdate.data)).toContain(afterNoAuthUpdate.status);
+      expect(afterNoAuthUpdate.data?.attention, JSON.stringify(afterNoAuthUpdate.data)).toBe(true);
+
+      const attentionAfterNoAuth = await companiesAPI.getCompaniesPagination(
+        request,
+        companyPaginationDto({ searchString: updatedCompanyName, isSortedByAttention: true }),
+        accessToken,
+      );
+      expectNoServerError(attentionAfterNoAuth);
+      expect(successCodes, JSON.stringify(attentionAfterNoAuth.data)).toContain(attentionAfterNoAuth.status);
+      expect(getRows<EntityLike>(attentionAfterNoAuth.data).some((row) => row.id === companyId), JSON.stringify(attentionAfterNoAuth.data)).toBe(true);
     });
 
     test('привязывает поставщика к материалу и проверяет связь через include и фильтр', async ({ request }) => {
@@ -382,6 +417,32 @@ export const runCompaniesAPINew = () => {
       if (!clientErrorCodes.includes(response.status)) {
         expect(successCodes).toContain(response.status);
       }
+
+      const includeCompany = await companiesAPI.getInclude(request, { id: companyId, includes: ['contacts'] }, accessToken);
+      expectNoServerError(includeCompany);
+      if (!clientErrorCodes.includes(includeCompany.status)) {
+        expect(successCodes).toContain(includeCompany.status);
+        expect(Array.isArray(includeCompany.data?.contacts), JSON.stringify(includeCompany.data)).toBe(true);
+        expect(
+          includeCompany.data.contacts.some((contact: EntityLike) => contact.id === contactId),
+          JSON.stringify(includeCompany.data),
+        ).toBe(false);
+      }
+
+      const includeContact = await contactsAPI.getInclude(request, { id: contactId, includes: ['companies'] }, accessToken);
+      expectNoServerError(includeContact);
+      if (!clientErrorCodes.includes(includeContact.status)) {
+        expect(successCodes).toContain(includeContact.status);
+        expect(Array.isArray(includeContact.data?.companies), JSON.stringify(includeContact.data)).toBe(true);
+        expect(
+          includeContact.data.companies.some((company: EntityLike) => company.id === companyId),
+          JSON.stringify(includeContact.data),
+        ).toBe(false);
+      }
+
+      const repeatUnpin = await companiesAPI.unpinContact(request, companyId as number, contactId as number, accessToken);
+      expectNoServerError(repeatUnpin);
+      expect([...successCodes, 400, 404, 409, 410, 422], JSON.stringify(repeatUnpin.data)).toContain(repeatUnpin.status);
     });
 
     test('архивирует компанию и проверяет архивную выдачу', async ({ request }) => {
@@ -406,6 +467,66 @@ export const runCompaniesAPINew = () => {
 
       expect(archived, `Company ${updatedCompanyName} was not found in archive`).toBeTruthy();
       expect(await waitForCompanyAbsentFromActivePagination(request, currentCompanyId, updatedCompanyName, accessToken)).toBe(true);
+
+      if (contactId) {
+        const includeContact = await contactsAPI.getInclude(request, { id: contactId, includes: ['companies'] }, accessToken);
+        expectNoServerError(includeContact);
+        if (!clientErrorCodes.includes(includeContact.status)) {
+          expect(successCodes).toContain(includeContact.status);
+          expect(Array.isArray(includeContact.data?.companies), JSON.stringify(includeContact.data)).toBe(true);
+          expect(
+            includeContact.data.companies.some((company: EntityLike) => company.id === currentCompanyId && company.ban !== true),
+            JSON.stringify(includeContact.data),
+          ).toBe(false);
+        }
+      }
+
+      const secondArchive = await companiesAPI.banCompany(request, currentCompanyId, accessToken);
+      expectNoServerError(secondArchive);
+      expectRepeatOperationRejectedOrIdempotent(response.status, secondArchive.status, successCodes, [400, 404, 409, 410, 422]);
+
+      const bulkArchive = await companiesAPI.banCompaniesBulk(request, [currentCompanyId, 999999999], accessToken);
+      expectNoServerError(bulkArchive);
+      expectRepeatOperationRejectedOrIdempotent(response.status, bulkArchive.status, successCodes, [400, 404, 409, 410, 422]);
+
+      const noAuthArchive = await companiesAPI.banCompany(request, currentCompanyId);
+      expectUnauthorizedOrForbidden(noAuthArchive);
+
+      const updateArchived = await companiesAPI.updateCompany(
+        request,
+        companyPayload(updatedCompanyName.replace('API Company ', ''), [], {
+          id: currentCompanyId,
+          name: updatedCompanyName,
+          type: ['provider'],
+          attention: true,
+          materialIds: linkedMaterialId ? [linkedMaterialId] : [],
+        }),
+        accessToken,
+      );
+      expectNoServerError(updateArchived);
+      expect([...successCodes, 400, 404, 409, 410, 422], JSON.stringify(updateArchived.data)).toContain(updateArchived.status);
+
+      const noAuthUpdateArchived = await companiesAPI.updateCompany(
+        request,
+        companyPayload(updatedCompanyName.replace('API Company ', ''), [], {
+          id: currentCompanyId,
+          name: updatedCompanyName,
+          type: ['buyer'],
+          attention: false,
+        }),
+      );
+      expectUnauthorizedOrForbidden(noAuthUpdateArchived);
+
+      const archivedAfterUpdate = await companiesAPI.getCompaniesPagination(
+        request,
+        companyPaginationDto({ searchString: updatedCompanyName, isBan: true }),
+        accessToken,
+      );
+      expectNoServerError(archivedAfterUpdate);
+      expect(
+        getRows<EntityLike>(archivedAfterUpdate.data).some((row) => row.id === currentCompanyId),
+        JSON.stringify(archivedAfterUpdate.data),
+      ).toBe(true);
       companyId = undefined;
     });
   });
@@ -475,6 +596,56 @@ export const runCompaniesAPINew = () => {
     test('не пропускает мутации без авторизации', async ({ request }) => {
       const response = await companiesAPI.createCompany(request, companyPayload(uniqueApiSuffix('noauth')));
       expectUnauthorizedOrForbidden(response);
+    });
+
+    test('bulk archive архивирует несколько валидных компаний без активных хвостов', async ({ request }) => {
+      const suffix = uniqueApiSuffix('bulk-company');
+      const firstName = `API Company ${suffix} A`;
+      const secondName = `API Company ${suffix} B`;
+      const createdIds: number[] = [];
+
+      try {
+        const first = await companiesAPI.createCompany(
+          request,
+          companyPayload(`${suffix} A`, [], { name: firstName }),
+          accessToken,
+        );
+        expect(successCodes, JSON.stringify(first.data)).toContain(first.status);
+        expectNoServerError(first);
+        createdIds.push(Number(first.data?.id));
+
+        const second = await companiesAPI.createCompany(
+          request,
+          companyPayload(`${suffix} B`, [], { name: secondName }),
+          accessToken,
+        );
+        expect(successCodes, JSON.stringify(second.data)).toContain(second.status);
+        expectNoServerError(second);
+        createdIds.push(Number(second.data?.id));
+
+        const bulk = await companiesAPI.banCompaniesBulk(request, createdIds, accessToken);
+        expectNoServerError(bulk);
+        expect(successCodes, JSON.stringify(bulk.data)).toContain(bulk.status);
+
+        for (const [index, id] of createdIds.entries()) {
+          const name = index === 0 ? firstName : secondName;
+          expect(await waitForCompanyAbsentFromActivePagination(request, id, name, accessToken)).toBe(true);
+
+          const archived = await companiesAPI.getCompaniesPagination(
+            request,
+            companyPaginationDto({ searchString: name, isBan: true }),
+            accessToken,
+          );
+          expectNoServerError(archived);
+          expect(successCodes, JSON.stringify(archived.data)).toContain(archived.status);
+          expect(getRows<EntityLike>(archived.data).some((row) => row.id === id), JSON.stringify(archived.data)).toBe(true);
+        }
+      } finally {
+        for (const id of createdIds) {
+          const cleanup = await companiesAPI.banCompany(request, id, accessToken);
+          expectNoServerError(cleanup);
+        }
+      }
     });
 
     test('обрабатывает защитные поисковые строки без 5xx', async ({ request }) => {

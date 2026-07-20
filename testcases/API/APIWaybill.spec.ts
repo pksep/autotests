@@ -11,7 +11,7 @@ import {
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { getAuthToken } from '../../lib/helpers/APITestUtils';
-import { expectNonNegativeQuantities } from '../../lib/helpers/APIDataInvariants';
+import { expectNonNegativeQuantities, expectRepeatOperationRejectedOrIdempotent } from '../../lib/helpers/APIDataInvariants';
 
 type ApiRow = Record<string, any>;
 
@@ -147,6 +147,7 @@ export const runWaybillAPINew = () => {
       const existingWaybill = waybill!;
       const originalDescription = existingWaybill.description ?? '';
       const updatedDescription = `API waybill update probe ${Date.now()}`;
+      const countBefore = getWaybillCount(list.data);
 
       try {
         const update = await waybillAPI.updateWaybill(
@@ -174,6 +175,29 @@ export const runWaybillAPINew = () => {
           const updatedRow = getRows<ApiRow>(afterUpdateList.data).find((row) => row.id === existingWaybill.id);
           expect(updatedRow, JSON.stringify(afterUpdateList.data)).toBeTruthy();
           expect(updatedRow?.description, JSON.stringify(updatedRow)).toBe(updatedDescription);
+          if (countBefore !== undefined) {
+            expect(getWaybillCount(afterUpdateList.data), JSON.stringify(afterUpdateList.data)).toBe(countBefore);
+          }
+        }
+
+        const repeatUpdate = await waybillAPI.updateWaybill(
+          request,
+          { waybillId: existingWaybill.id, description: updatedDescription, documentsIds: [] },
+          accessToken,
+        );
+        expectNoServerError(repeatUpdate);
+        expectRepeatOperationRejectedOrIdempotent(update.status, repeatUpdate.status, successCodes, [400, 404, 409, 410, 422]);
+
+        const afterRepeatList = await waybillAPI.getWaybillPagination(request, paginationDto(), accessToken);
+        expectNoServerError(afterRepeatList);
+        if (!clientErrorCodes.includes(afterRepeatList.status)) {
+          expect(successCodes).toContain(afterRepeatList.status);
+          const repeatedRows = getRows<ApiRow>(afterRepeatList.data).filter((row) => row.id === existingWaybill.id);
+          expect(repeatedRows.length, JSON.stringify(afterRepeatList.data)).toBe(1);
+          expect(repeatedRows[0]?.description, JSON.stringify(repeatedRows[0])).toBe(updatedDescription);
+          if (countBefore !== undefined) {
+            expect(getWaybillCount(afterRepeatList.data), JSON.stringify(afterRepeatList.data)).toBe(countBefore);
+          }
         }
       } finally {
         const restore = await waybillAPI.updateWaybill(
