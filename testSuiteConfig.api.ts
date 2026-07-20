@@ -33,6 +33,7 @@ import { runProductionTasksAPINew } from './testcases/API/APIProductionTasks.spe
 import { runProductionShipmentFlowAPI } from './testcases/API/APIProductionShipmentFlow.spec';
 import { runProviderAPINew } from './testcases/API/APIProvider.spec';
 import { runProviderDeliveriesAPINew } from './testcases/API/APIProviderDeliveries.spec';
+import { runQueuesAPINew } from './testcases/API/APIQueues.spec';
 import { runRackAPINew } from './testcases/API/APIRack.spec';
 import { runProductsAPINew } from './testcases/API/APIProducts.spec';
 import { runOperationAPINew } from './testcases/API/APIOperation.spec';
@@ -279,6 +280,17 @@ const apiSuitesByModule = {
         test: runMaintenanceAPINew,
         description:
           'Проверяет достижимость глобальных пересчетов, актуализаций, reset/settings операций и других потенциально тяжелых maintenance endpoint-ов.'
+      }
+    ]
+  },
+
+  queues_api: {
+    description: 'Осознанное исключение для служебного HTML endpoint-а очередей; запускать как maintenance-проверку.',
+    tests: [
+      {
+        test: runQueuesAPINew,
+        description:
+          'Проверяет api/queues/clean-completed: GET возвращает HTML, POST без токена требует авторизацию или выполняет clean без 5xx.'
       }
     ]
   },
@@ -893,6 +905,7 @@ const apiMaintenanceSuiteKeys = [
   'maintenance_api',
   'production_tasks_api',
   'product_api',
+  'queues_api',
   'settings_api',
   'shipments_api',
   'warehouse_api',
@@ -916,6 +929,7 @@ const apiSerialHeavySuiteKeys = [
   'metaloworking_api',
   'production_shipment_flow_api',
   'production_tasks_api',
+  'queues_api',
   'settings_api',
   'shipments_api',
   'specification_api',
