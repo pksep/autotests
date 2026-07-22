@@ -8,13 +8,35 @@ export class UsersAPI extends APIPageObject {
     super(page);
   }
 
+  private readonly safeUserAttributes = [
+    'tabel',
+    'login',
+    'initial',
+    'id',
+    'image',
+    'remote_work',
+    'dateWork',
+    'dateUnWork',
+    'birthday',
+    'haracteristic',
+    'primetch',
+    'requisites',
+    'banReason',
+    'last_online',
+    'rolesId',
+    'subdivision',
+    'createdAt',
+    'updatedAt',
+  ];
+
   async createUser(request: APIRequestContext, userData: any, _userId: string, authToken?: string) {
     logger.info(`Creating user with data:`, userData);
     logger.log(`🔍 Auth token: ${authToken ? authToken.substring(0, 50) + '...' : 'none'}`);
 
     const response = await this.apiRequest(request, 'POST', ENV.API_BASE_URL + 'api/users', {
-      data: userData,
-      accessToken: authToken,
+      headers: this.authHeaders(authToken),
+      form: this.toMultipartFields(userData),
+      json: false,
     });
 
     logger.log(`🔍 Create user response status: ${response.status}`);
@@ -33,8 +55,9 @@ export class UsersAPI extends APIPageObject {
     logger.info(`Updating user with data:`, userData);
 
     const response = await this.apiRequest(request, 'POST', ENV.API_BASE_URL + 'api/users/update', {
-      data: userData,
-      accessToken: authToken,
+      headers: this.authHeaders(authToken),
+      form: this.toMultipartFields(userData),
+      json: false,
     });
 
     if (response.status >= 200 && response.status < 300) {
@@ -309,7 +332,7 @@ export class UsersAPI extends APIPageObject {
         ...headers,
         'Content-Type': 'application/json',
       },
-      data: { id: Number(userId) },
+      data: { id: Number(userId), attributes: this.safeUserAttributes },
     });
 
     let responseData;

@@ -33,11 +33,10 @@ export class CBEDAPI extends APIPageObject {
 
     const response = await request.post(this.base() + '/', {
       headers: this.cbedAuthHeaders(accessToken, {
-        'Content-Type': 'application/json',
         'user-id': userId,
         compress: 'no-compress',
       }),
-      data: this.toMultipartFields(cbedData),
+      form: this.toMultipartFields(cbedData),
     });
 
     return this.result(response);
@@ -48,11 +47,10 @@ export class CBEDAPI extends APIPageObject {
 
     const response = await request.post(this.base() + '/update', {
       headers: this.cbedAuthHeaders(accessToken, {
-        'Content-Type': 'application/json',
         'user-id': userId,
         compress: 'no-compress',
       }),
-      data: this.toMultipartFields(cbedData),
+      form: this.toMultipartFields(cbedData),
     });
 
     return this.result(response);

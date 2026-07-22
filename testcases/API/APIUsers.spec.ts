@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { UsersAPI } from '../../pages/API/APIUsers';
+import { RolesAPI } from '../../pages/API/APIRoles';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import { ENV } from '../../config';
 import logger from '../../lib/utils/logger';
@@ -25,6 +26,7 @@ type ApiResult = {
 type UserLike = Record<string, any>;
 
 const usersAPI = new UsersAPI(null as any);
+const rolesAPI = new RolesAPI(null as any);
 
 const expectNoSensitiveFields = (data: unknown) => {
   const sensitiveKeys = ['password', 'hash', 'salt', 'refresh_token', 'refreshtoken'];
@@ -84,6 +86,41 @@ const invalidUpdateUserPayload = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
+const createUserPayload = (suffix: string, roleId: number) => ({
+  initial: `API User ${suffix}`,
+  login: `api-user-${suffix}`,
+  tabel: `api-${suffix}`.slice(0, 32),
+  password: API_CONST.API_TEST_PASSWORD,
+  dateWork: '2026-01-01',
+  birthday: '1990-01-01',
+  roles: roleId,
+  phone: '',
+  haracteristic: 'Created by API autotest',
+  primetch: '',
+  remoteWork: false,
+  documentIds: [],
+  requisites: [],
+});
+
+const createUserFixture = async (request: any, accessToken?: string) => {
+  const suffix = uniqueApiSuffix('users');
+  const roleName = `API Users Role ${suffix}`;
+  const role = await rolesAPI.createRole(request, { name: roleName, description: 'Created by Users API autotest' }, 'api-users', accessToken);
+  expectNoServerError(role);
+  expect(successCodes, JSON.stringify(role.data)).toContain(role.status);
+  const roleId = Number(role.data?.id);
+  expect(roleId, JSON.stringify(role.data)).toBeGreaterThan(0);
+
+  const payload = createUserPayload(suffix, roleId);
+  const user = await usersAPI.createUser(request, payload, 'api-users', accessToken);
+  expectNoServerError(user);
+  expect(successCodes, JSON.stringify(user.data)).toContain(user.status);
+  const userId = Number(user.data?.id);
+  expect(userId, JSON.stringify(user.data)).toBeGreaterThan(0);
+
+  return { userId, roleId, tabel: payload.tabel };
+};
+
 const postUsersPagination = async (request: any, data: Record<string, unknown>, accessToken?: string): Promise<ApiResult> => {
   const response = await request.post(ENV.API_BASE_URL + 'api/users/pagination/all', {
     headers: {
@@ -136,9 +173,31 @@ const postTabelUnique = async (request: any, data: Record<string, unknown>, acce
 export const runUsersAPINew = () => {
   logger.info('Starting Users API coverage suite');
   let accessToken: string | undefined;
+  let fixtureUserId: number;
+  let fixtureRoleId: number;
+  let fixtureTabel: string;
 
   test.beforeAll(async ({ request }) => {
     accessToken = await getAuthToken(request);
+    const fixture = await createUserFixture(request, accessToken);
+    fixtureUserId = fixture.userId;
+    fixtureRoleId = fixture.roleId;
+    fixtureTabel = fixture.tabel;
+  });
+
+  test.afterAll(async ({ request }) => {
+    if (fixtureUserId) {
+      const banUser = await usersAPI.banUser(
+        request,
+        { id: fixtureUserId, userId: fixtureUserId, banReason: 'API autotest cleanup' },
+        accessToken,
+      );
+      expectNoServerError(banUser);
+    }
+    if (fixtureRoleId) {
+      const banRole = await rolesAPI.deleteRole(request, String(fixtureRoleId), 'api-users', accessToken);
+      expectNoServerError(banRole);
+    }
   });
 
   test.describe('Users API: контракты чтения', () => {
@@ -151,10 +210,10 @@ export const runUsersAPINew = () => {
       expect(Array.isArray(response.data), JSON.stringify(response.data)).toBe(true);
       expectNoSensitiveFields(response.data);
 
-      const rows = getRows(response.data);
-      test.skip(rows.length === 0, 'No active users are available on this environment.');
-      expectUserShape(rows[0]);
-      expect(rows[0].ban, JSON.stringify(rows[0])).not.toBe(true);
+      const user = getRows(response.data).find((row) => Number(row.id) === fixtureUserId);
+      expect(user, JSON.stringify(response.data)).toBeTruthy();
+      expectUserShape(user!);
+      expect(user!.ban, JSON.stringify(user)).not.toBe(true);
     });
 
     test('возвращает облегченный список пользователей без ролей по умолчанию', async ({ request }) => {
@@ -164,36 +223,38 @@ export const runUsersAPINew = () => {
       expect(Array.isArray(response.data), JSON.stringify(response.data)).toBe(true);
       expectNoSensitiveFields(response.data);
 
-      const rows = getRows(response.data);
-      test.skip(rows.length === 0, 'No active users are available on this environment.');
-      expectUserShape(rows[0]);
+      const user = getRows(response.data).find((row) => Number(row.id) === fixtureUserId);
+      expect(user, JSON.stringify(response.data)).toBeTruthy();
+      expectUserShape(user!);
     });
 
-    test('возвращает список пользователей с ролями при includeRole=true', async ({ request }) => {
-      const response = await usersAPI.getAllUsers(request, true, true, accessToken);
+    test('возвращает список пользователей по роли без чувствительных полей', async ({ request }) => {
+      const response = await usersAPI.getUsersByRoleId(request, String(fixtureRoleId), accessToken);
 
       expect(response.status).toBe(200);
       expect(Array.isArray(response.data), JSON.stringify(response.data)).toBe(true);
       expectNoSensitiveFields(response.data);
 
-      const rows = getRows(response.data);
-      test.skip(rows.length === 0, 'No active users are available on this environment.');
-      expectUserShape(rows[0]);
+      const user = getRows(response.data).find((row) => Number(row.id) === fixtureUserId);
+      expect(user, JSON.stringify(response.data)).toBeTruthy();
+      expectUserShape(user!);
     });
 
     test('light/full контракты пользователей отличаются только ожидаемым расширением данных', async ({ request }) => {
       const lightResponse = await usersAPI.getAllUsers(request, true, false, accessToken);
-      const fullResponse = await usersAPI.getAllUsers(request, false, true, accessToken);
+      const fullResponse = await usersAPI.getUserById(request, String(fixtureUserId), accessToken);
 
       expect(lightResponse.status).toBe(200);
-      expect(fullResponse.status).toBe(200);
+      expect(fullResponse.status).toBe(201);
       expectNoSensitiveFields(lightResponse.data);
       expectNoSensitiveFields(fullResponse.data);
 
-      const lightRows = getRows(lightResponse.data);
-      const fullRows = getRows(fullResponse.data);
-      test.skip(lightRows.length === 0 || fullRows.length === 0, 'No users are available for light/full comparison.');
-      expect(Object.keys(fullRows[0]).length).toBeGreaterThanOrEqual(Object.keys(lightRows[0]).length);
+      const lightUser = getRows(lightResponse.data).find((row) => Number(row.id) === fixtureUserId);
+      const fullUser = fullResponse.data as UserLike;
+      expect(lightUser, JSON.stringify(lightResponse.data)).toBeTruthy();
+      expect(fullUser, JSON.stringify(fullResponse.data)).toBeTruthy();
+      expect(Number(fullUser.id), JSON.stringify(fullUser)).toBe(fixtureUserId);
+      expect(Object.keys(fullUser!).length).toBeGreaterThanOrEqual(Object.keys(lightUser!).length);
     });
 
     test('возвращает пагинированный список активных пользователей с count и rows', async ({ request }) => {
@@ -263,10 +324,7 @@ export const runUsersAPINew = () => {
       const listResponse = await usersAPI.getAllUsersList(request, accessToken);
       expect(listResponse.status).toBe(200);
 
-      const firstUser = getRows(listResponse.data)[0];
-      test.skip(!firstUser?.id, 'No active user id is available on this environment.');
-
-      const response = await usersAPI.getUserById(request, String(firstUser.id), accessToken);
+      const response = await usersAPI.getUserById(request, String(fixtureUserId), accessToken);
 
       if (response.status === 401) {
         expectNoSensitiveFields(response.data);
@@ -283,10 +341,7 @@ export const runUsersAPINew = () => {
     test('читает и валидирует настройки таблицы пользователя без серверных ошибок', async ({ request }) => {
       const listResponse = await usersAPI.getAllUsersList(request, accessToken);
       expect(listResponse.status).toBe(200);
-      const user = getRows(listResponse.data).find((row) => row.id);
-      test.skip(!user, 'No active user id is available on this environment.');
-
-      const config = await usersAPI.getTableConfigByUserId(request, Number(user!.id), accessToken);
+      const config = await usersAPI.getTableConfigByUserId(request, fixtureUserId, accessToken);
       expectNoServerError(config);
 
       const invalidUpdate = await usersAPI.setTableConfig(
@@ -315,13 +370,7 @@ export const runUsersAPINew = () => {
       const listResponse = await usersAPI.getAllUsersList(request, accessToken);
       expect(listResponse.status).toBe(200);
 
-      const tabel = getRows(listResponse.data).find((user) => user.tabel)?.tabel;
-      if (!tabel) {
-        test.skip(true, 'No user with tabel is available on this environment.');
-        return;
-      }
-
-      const response = await postTabelUnique(request, { tabel: String(tabel) }, accessToken);
+      const response = await postTabelUnique(request, { tabel: fixtureTabel }, accessToken);
 
       if (response.status === 401) {
         expectNoSensitiveFields(response.data);
@@ -365,8 +414,12 @@ export const runUsersAPINew = () => {
   test.describe('Users API: чтение архива и ролей', () => {
     test.describe.configure({ timeout: 60000 });
 
-    test('возвращает контракт списка архивных пользователей', async ({ request }) => {
-      const response = await usersAPI.getArchivedUsers(request, archiveDto(), accessToken);
+    test('возвращает контракт списка архивных пользователей для пустого поиска', async ({ request }) => {
+      const response = await usersAPI.getArchivedUsers(
+        request,
+        archiveDto({ searchString: `api-users-archive-no-match-${uniqueApiSuffix('users')}` }),
+        accessToken,
+      );
 
       if (response.status === 401) {
         expectNoSensitiveFields(response.data);
@@ -375,24 +428,12 @@ export const runUsersAPINew = () => {
 
       expect(response.status).toBe(201);
       expect(Array.isArray(response.data), JSON.stringify(response.data)).toBe(true);
+      expect(getRows(response.data), JSON.stringify(response.data)).toEqual([]);
       expectNoSensitiveFields(response.data);
-
-      const rows = getRows(response.data);
-      if (rows.length > 0) {
-        expectUserShape(rows[0]);
-        expect(rows[0].ban, JSON.stringify(rows[0])).toBe(true);
-      }
     });
 
     test('возвращает пользователей по id роли без чувствительных полей', async ({ request }) => {
-      const listResponse = await usersAPI.getAllUsers(request, false, true, accessToken);
-      expect(listResponse.status).toBe(200);
-
-      const userWithRole = getRows(listResponse.data).find((user) => user.rolesId || user.role?.id || user.roles?.id);
-      const roleId = userWithRole?.rolesId ?? userWithRole?.role?.id ?? userWithRole?.roles?.id;
-      test.skip(!roleId, 'No role id is available from users list on this environment.');
-
-      const response = await usersAPI.getUsersByRoleId(request, String(roleId), accessToken);
+      const response = await usersAPI.getUsersByRoleId(request, String(fixtureRoleId), accessToken);
 
       if (response.status === 401) {
         expectNoSensitiveFields(response.data);
@@ -479,10 +520,7 @@ export const runUsersAPINew = () => {
     test('валидный auth token не раскрывает чувствительные поля в ответе чтения пользователя', async ({ request }) => {
       const listResponse = await usersAPI.getAllUsersList(request, accessToken);
       expect(listResponse.status).toBe(200);
-      const user = getRows(listResponse.data).find((row) => row.id);
-      test.skip(!user, 'No active user id is available on this environment.');
-
-      const response = await usersAPI.getUserById(request, String(user!.id), accessToken);
+      const response = await usersAPI.getUserById(request, String(fixtureUserId), accessToken);
 
       if (response.status === 401) {
         expectNoSensitiveFields(response.data);

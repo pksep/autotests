@@ -32,10 +32,9 @@ export class ProductsAPI extends APIPageObject {
 
     const response = await request.post(this.base() + '/', {
       headers: this.productAuthHeaders(accessToken, {
-        'Content-Type': 'application/json',
         compress: 'no-compress',
       }),
-      data: this.toMultipartFields(productData),
+      form: this.toMultipartFields(productData),
     });
 
     return this.result(response);
@@ -46,10 +45,9 @@ export class ProductsAPI extends APIPageObject {
 
     const response = await request.post(this.base() + '/update', {
       headers: this.productAuthHeaders(accessToken, {
-        'Content-Type': 'application/json',
         compress: 'no-compress',
       }),
-      data: this.toMultipartFields(productData),
+      form: this.toMultipartFields(productData),
     });
 
     return this.result(response);

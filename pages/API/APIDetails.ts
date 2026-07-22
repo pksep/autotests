@@ -216,13 +216,12 @@ export class DetailsAPI extends APIPageObject {
       'user-id': userId,
       Authorization: `Bearer ${authToken}`,
       ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
-      'Content-Type': 'application/json',
       compress: 'no-compress',
     };
 
     const response = await request.post(ENV.API_BASE_URL + 'api/detal', {
       headers: headers,
-      data: this.toMultipartFields(detailData),
+      form: this.toMultipartFields(detailData),
       timeout: 30000,
     });
 
@@ -309,13 +308,12 @@ export class DetailsAPI extends APIPageObject {
       'user-id': userId,
       Authorization: `Bearer ${authToken}`,
       ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
-      'Content-Type': 'application/json',
       compress: 'no-compress',
     };
 
     const response = await request.post(ENV.API_BASE_URL + 'api/detal/update', {
       headers: headers,
-      data: this.toMultipartFields(detailData),
+      form: this.toMultipartFields(detailData),
     });
 
     try {

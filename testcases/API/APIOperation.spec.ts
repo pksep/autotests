@@ -44,6 +44,21 @@ const invalidOperationPayload = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
+const operationPayload = (_name: string, typeOperationId: number, overrides: Record<string, unknown> = {}) => ({
+  name: String(typeOperationId),
+  preTime: '0',
+  helperTime: '0',
+  techProcessId: '',
+  mainTime: '0',
+  generalCountTime: '0',
+  description: 'Created by API autotest',
+  instrumentList: null,
+  instrumentMerList: null,
+  instrumentOsnList: null,
+  eqList: null,
+  ...overrides,
+});
+
 const expectTypeOperationShape = (row: ApiRow) => {
   expect(row).toBeTruthy();
   expect(typeof row.id, JSON.stringify(row)).toBe('number');
@@ -223,9 +238,43 @@ export const runOperationAPINew = () => {
     test.describe.configure({ timeout: 60000 });
 
     let accessToken: string | undefined;
+    let fixtureTypeOperationId: number | undefined;
+    let fixtureOperationId: number | undefined;
 
     test.beforeAll(async ({ request }) => {
       accessToken = await getAuthToken(request);
+      const suffix = uniqueApiSuffix('operation-read');
+
+      const typeOperation = await operationAPI.createTypeOperation(
+        request,
+        typeOperationPayload(`API Read Type Operation ${suffix}`),
+        accessToken,
+      );
+      expectNoServerError(typeOperation);
+      expect(successCodes, JSON.stringify(typeOperation.data)).toContain(typeOperation.status);
+      fixtureTypeOperationId = Number(typeOperation.data?.id);
+      expect(fixtureTypeOperationId, JSON.stringify(typeOperation.data)).toBeGreaterThan(0);
+
+      const operation = await operationAPI.createOperation(
+        request,
+        operationPayload(`API Read Operation ${suffix}`, fixtureTypeOperationId as number),
+        accessToken,
+      );
+      expectNoServerError(operation);
+      expect(successCodes, JSON.stringify(operation.data)).toContain(operation.status);
+      fixtureOperationId = Number(operation.data?.id);
+      expect(fixtureOperationId, JSON.stringify(operation.data)).toBeGreaterThan(0);
+    });
+
+    test.afterAll(async ({ request }) => {
+      if (fixtureOperationId) {
+        const cleanupOperation = await operationAPI.banOperation(request, fixtureOperationId, accessToken);
+        expectNoServerError(cleanupOperation);
+      }
+      if (fixtureTypeOperationId) {
+        const cleanupTypeOperation = await operationAPI.banTypeOperation(request, fixtureTypeOperationId, accessToken);
+        expectNoServerError(cleanupTypeOperation);
+      }
     });
 
     test('возвращает справочники типов операций и операции без 5xx', async ({ request }) => {
@@ -259,19 +308,11 @@ export const runOperationAPINew = () => {
     });
 
     test('читает существующую операцию из списка, если она есть', async ({ request }) => {
-      const operations = await operationAPI.getAllOperations(request, accessToken);
-      expectNoServerError(operations);
-      test.skip(clientErrorCodes.includes(operations.status), 'Operations list is not available on this environment.');
-
-      const operation = getRows<ApiRow>(operations.data).find((row) => row.id);
-      test.skip(!operation, 'No operation with id is available on this environment.');
-      const existingOperation = operation!;
-
-      const byId = await operationAPI.getOperationById(request, existingOperation.id, accessToken);
+      const byId = await operationAPI.getOperationById(request, fixtureOperationId as number, accessToken);
       expectNoServerError(byId);
       if (!clientErrorCodes.includes(byId.status)) {
         expect(successCodes).toContain(byId.status);
-        expect(byId.data.id, JSON.stringify(byId.data)).toBe(existingOperation.id);
+        expect(byId.data.id, JSON.stringify(byId.data)).toBe(fixtureOperationId);
       }
     });
 

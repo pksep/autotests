@@ -827,18 +827,19 @@ export const runProductionTasksAPINew = () => {
     let firstOperationPosId: number | undefined;
     let firstEntity: { type: 'ass' | 'metall'; id: number } | undefined;
     let firstProductionEntity: { type: 'product' | 'cbed' | 'detal'; id: number } | undefined;
+    let createdReadFixtureTaskId: number | undefined;
 
     test.beforeAll(async ({ request }) => {
       accessToken = await getAuthToken(request);
 
-      const list = await productionTasksAPI.getProductionTaskWithOperationsPaginate(
+      let list = await productionTasksAPI.getProductionTaskWithOperationsPaginate(
         request,
         productionTaskPaginationDto({ pageSize: 50 }),
         accessToken,
       );
       expectNoServerError(list);
 
-      const tasks = getRows<ApiRow>(list.data).filter((row) => row.id);
+      let tasks = getRows<ApiRow>(list.data).filter((row) => row.id);
       firstTask = tasks[0];
       firstTaskId = firstTask ? Number(firstTask.id) : undefined;
       firstUserId =
@@ -869,11 +870,66 @@ export const runProductionTasksAPINew = () => {
       firstOperationPosId = findTask(tasks, findOperationPosIdForTask)?.value;
       firstEntity = findTask(tasks, findEntityForTask)?.value;
       firstProductionEntity = findTask(tasks, findProductionEntityForTask)?.value;
+
+      if (!firstTaskId || !firstOperationTypeId || !firstOperationPosId || !firstEntity) {
+        const lifecycleSource = await findLifecycleSource(request, undefined, accessToken);
+        expect(lifecycleSource, 'No plan row with operations is available to create production task fixture.').toBeTruthy();
+        const source = lifecycleSource!;
+
+        if (source.typeWork === 'metall' && !source.equipmentId) {
+          source.equipmentId = firstEquipmentId;
+        }
+        if (source.typeWork === 'metall' && !source.equipmentId) {
+          const allEquipments = await productionTasksAPI.getProductionTaskByAllEquipments(request, undefined, accessToken);
+          expectNoServerError(allEquipments);
+          source.equipmentId = findEquipmentId(allEquipments.data);
+        }
+        expect(
+          source.typeWork !== 'metall' || source.equipmentId,
+          'No equipment id is available to create metal production task fixture.',
+        ).toBeTruthy();
+
+        const suffix = uniqueApiSuffix('pt-read');
+        const createResponse = await productionTasksAPI.createProductionTask(
+          request,
+          createProductionTaskPayload(source, firstUserId as number, suffix),
+          accessToken,
+        );
+        expectNoServerError(createResponse);
+        expect(successCodes, JSON.stringify(createResponse.data)).toContain(createResponse.status);
+        createdReadFixtureTaskId = Number(getQueueData(createResponse.data)?.id);
+        expect(createdReadFixtureTaskId, JSON.stringify(createResponse.data)).toBeGreaterThan(0);
+
+        const byId = await productionTasksAPI.getProductionTaskById(request, createdReadFixtureTaskId, accessToken);
+        expectNoServerError(byId);
+        expect(successCodes, JSON.stringify(byId.data)).toContain(byId.status);
+
+        firstTask = byId.data;
+        firstTaskId = createdReadFixtureTaskId;
+        firstOperationTypeId = source.operationId;
+        firstOperationPosId = findOperationPosIdForTask(byId.data);
+        firstEntity = findEntityForTask(byId.data) || { type: source.typeWork, id: source.entityId };
+        firstProductionEntity = findProductionEntityForTask(byId.data);
+
+        list = await productionTasksAPI.getProductionTaskWithOperationsPaginate(
+          request,
+          productionTaskPaginationDto({ pageSize: 50 }),
+          accessToken,
+        );
+        expectNoServerError(list);
+        tasks = getRows<ApiRow>(list.data).filter((row) => row.id);
+      }
+    });
+
+    test.afterAll(async ({ request }) => {
+      if (!createdReadFixtureTaskId) return;
+      const cleanup = await productionTasksAPI.banProductionTask(request, createdReadFixtureTaskId, accessToken);
+      expectNoServerError(cleanup);
     });
 
     const runLifecycleScenario = async (request: any, typeWork: LifecycleType) => {
       const lifecycleSource = await findLifecycleSource(request, typeWork, accessToken);
-      test.skip(!lifecycleSource, `No ${typeWork} plan row with operations is available for lifecycle create.`);
+      expect(lifecycleSource, `No ${typeWork} plan row with operations is available for lifecycle create.`).toBeTruthy();
       const source = lifecycleSource!;
 
       if (typeWork === 'metall' && !source.equipmentId) {
@@ -884,7 +940,7 @@ export const runProductionTasksAPINew = () => {
         expectNoServerError(allEquipments);
         source.equipmentId = findEquipmentId(allEquipments.data);
       }
-      test.skip(typeWork === 'metall' && !source.equipmentId, 'No equipment id is available for metal lifecycle create.');
+      expect(typeWork !== 'metall' || source.equipmentId, 'No equipment id is available for metal lifecycle create.').toBeTruthy();
 
       const suffix = uniqueApiSuffix(`pt-${typeWork}`);
       let createdProductionTaskId: number | undefined;
@@ -1133,7 +1189,7 @@ export const runProductionTasksAPINew = () => {
     });
 
     test('читает производственное задание по id, если в базе есть активные ПЗ', async ({ request }) => {
-      test.skip(!firstTaskId, 'No production tasks are available on this environment.');
+      expect(firstTaskId, 'Production task fixture was not prepared.').toBeTruthy();
 
       const byId = await productionTasksAPI.getProductionTaskById(request, firstTaskId as number, accessToken);
       expectNoServerError(byId);
@@ -1169,7 +1225,7 @@ export const runProductionTasksAPINew = () => {
         }
       }
 
-      test.skip(!firstOperationTypeId, 'No operation type id was found in production task data.');
+      expect(firstOperationTypeId, 'Operation type id was not prepared in production task data.').toBeTruthy();
       const byOperation = await productionTasksAPI.getTaskByProductionOperation(
         request,
         byOperationDto(firstOperationTypeId as number),
@@ -1333,7 +1389,7 @@ export const runProductionTasksAPINew = () => {
         }
       }
 
-      test.skip(!firstEntity || !firstOperationTypeId, 'No production entity or operation type id was found in production task data.');
+      expect(firstEntity && firstOperationTypeId, 'Production entity and operation type id were not prepared in production task data.').toBeTruthy();
 
       const taskOperations = await productionTasksAPI.getTaskOperations(
         request,
@@ -1350,7 +1406,7 @@ export const runProductionTasksAPINew = () => {
     });
 
     test('проверяет связи ПЗ с производственной сущностью, если такая связь найдена', async ({ request }) => {
-      test.skip(!firstProductionEntity, 'No product/cbed/detal relation was found in production task data.');
+      expect(firstProductionEntity, 'Product/cbed/detal relation was not prepared in production task data.').toBeTruthy();
 
       const shipment = await productionTasksAPI.getShipmentByProductionTask(
         request,
@@ -1440,7 +1496,7 @@ export const runProductionTasksAPINew = () => {
       expect(successCodes, JSON.stringify(allEquipment.data)).toContain(allEquipment.status);
 
       const equipmentRows = getEquipmentRows(allEquipment.data).filter((equipment) => Number.isFinite(Number(equipment.id)));
-      test.skip(!equipmentRows.length, 'No equipment is available for production task date validation.');
+      expect(equipmentRows.length, 'No equipment is available for production task date validation.').toBeGreaterThan(0);
 
       const relativeDateCache = new Map<string, string | null>();
       const operationDetailsCache = new Map<string, ApiRow[]>();
@@ -1660,7 +1716,7 @@ export const runProductionTasksAPINew = () => {
       expect(successCodes, JSON.stringify(allUsers.data)).toContain(allUsers.status);
 
       const userRows = getRows<ApiRow>(allUsers.data).filter((user) => Number.isFinite(Number(user.id)));
-      test.skip(!userRows.length, 'No users are available for production task date validation.');
+      expect(userRows.length, 'No users are available for production task date validation.').toBeGreaterThan(0);
 
       const relativeDateCache = new Map<string, string | null>();
       const operationDetailsCache = new Map<string, ApiRow[]>();
@@ -1898,8 +1954,18 @@ export const runProductionTasksAPINew = () => {
     test('обновляет start time пользователя и возвращает исходное значение', async ({ request }) => {
       const originalUserStartTime = await productionTasksAPI.getStartTimeByUser(request, firstUserId as number, accessToken);
       expectNoServerError(originalUserStartTime);
-      const originalTime = extractDateValue(originalUserStartTime.data);
-      test.skip(!originalTime, 'No existing user start time is available to restore safely.');
+      let originalTime = extractDateValue(originalUserStartTime.data);
+
+      if (!originalTime) {
+        originalTime = new Date().toISOString();
+        const seedUserStartTime = await productionTasksAPI.setStartTimeByUser(
+          request,
+          { userId: firstUserId as number, time: originalTime },
+          accessToken,
+        );
+        expectNoServerError(seedUserStartTime);
+        expect(successCodes, JSON.stringify(seedUserStartTime.data)).toContain(seedUserStartTime.status);
+      }
 
       const newTime = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
       let shouldRestoreUserTime = false;
@@ -1934,7 +2000,7 @@ export const runProductionTasksAPINew = () => {
     });
 
     test('негативные операции назначения по найденной позиции ПЗ не приводят к серверным ошибкам', async ({ request }) => {
-      test.skip(!firstOperationPosId, 'No production operation position id was found in production task data.');
+      expect(firstOperationPosId, 'Production operation position id was not prepared in production task data.').toBeTruthy();
 
       const setMissingResponsible = await productionTasksAPI.setResponsibleUser(
         request,

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { WarehouseAPI } from '../../pages/API/APIWarehouse';
+import { MaterialsAPI } from '../../pages/API/APIMaterials';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import {
@@ -15,7 +16,7 @@ import {
   getRows,
   successCodes,
 } from '../../lib/helpers/APIAssertions';
-import { getAuthToken } from '../../lib/helpers/APITestUtils';
+import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 import { expectNonNegativeQuantities } from '../../lib/helpers/APIDataInvariants';
 import {
   arrayOf,
@@ -31,23 +32,10 @@ type ApiResult = {
 type ApiRow = Record<string, any>;
 
 const warehouseAPI = new WarehouseAPI(null as any);
+const materialsAPI = new MaterialsAPI(null as any);
 
 const entityTypes = ['product', 'cbed', 'detal', 'material'] as const;
 type WarehouseEntityType = (typeof entityTypes)[number];
-
-const getEntityId = (row: ApiRow | undefined): number | undefined => {
-  if (!row) return undefined;
-  const value =
-    row.entity_id ??
-    row.entityId ??
-    row.object_id ??
-    row.objectId ??
-    row.izd_id ??
-    row.izdId ??
-    row.id;
-
-  return Number.isFinite(Number(value)) ? Number(value) : undefined;
-};
 
 const remainsDto = (entityType: WarehouseEntityType | string, overrides: Record<string, unknown> = {}) => ({
   page: 0,
@@ -64,20 +52,97 @@ const revisionDto = (entityType: WarehouseEntityType | string, overrides: Record
   ...overrides,
 });
 
-const findFirstRemain = async (
-  request: any,
-  accessToken?: string,
-): Promise<{ type: WarehouseEntityType; row: ApiRow; id: number } | undefined> => {
-  for (const type of entityTypes) {
-    const response = await warehouseAPI.getWarehouseRemains(request, remainsDto(type), accessToken);
+const typeCharacteristics = () => ({
+  length: { edizmId: 6, znach: null, shortName: 'mm' },
+  width: { edizmId: 6, znach: null, shortName: 'mm' },
+  height: { edizmId: 6, znach: null, shortName: 'mm' },
+  wallThickness: { edizmId: 6, znach: null, shortName: 'mm' },
+  outsideDiameter: { edizmId: 6, znach: null, shortName: 'mm' },
+  thickness: { edizmId: 6, znach: null, shortName: 'mm' },
+  areaCrossSectional: { edizmId: 8, znach: null, shortName: 'm2' },
+});
+
+const materialCharacteristics = () => ({
+  density: { used: true, znach: 8, edizmId: 9, shortName: 'kg/m3' },
+  length: { used: false, znach: 0, edizmId: 6, shortName: 'mm' },
+  width: { used: false, znach: 0, edizmId: 6, shortName: 'mm' },
+  height: { used: false, znach: 0, edizmId: 6, shortName: 'mm' },
+  wallThickness: { used: false, znach: 0, edizmId: 6, shortName: 'mm' },
+  outsideDiameter: { used: false, znach: 0, edizmId: 6, shortName: 'mm' },
+  thickness: { used: false, znach: 0, edizmId: 6, shortName: 'mm' },
+  areaCrossSectional: { used: false, znach: 0, edizmId: 8, shortName: 'm2' },
+});
+
+const materialPayload = (suffix: string, rootParentId: number, subtypeMaterialId: number) => ({
+  id: undefined,
+  name: `API Warehouse Material ${suffix}`,
+  rootParentId,
+  subtypeMaterialId,
+  deliveryTime: 0,
+  description: `Created by Warehouse API autotest ${suffix}`,
+  attention: false,
+  units_measurement: [{ unitTypeId: 1, convertRate: 1, isBase: true }],
+  characteristics: materialCharacteristics(),
+  companyIds: '[]',
+  file_base: '[]',
+  material_aliases: [{ alias: `API Warehouse Material Alias ${suffix}`, default: true }],
+});
+
+const findMaterialByName = async (request: any, name: string, accessToken?: string): Promise<ApiRow | undefined> => {
+  const response = await eventually(async () => {
+    const response = await materialsAPI.getMaterialsPagination(
+      request,
+      { page: 0, instans: 1, searchString: name, typeMaterialId: null, subtypeMaterialId: null, filterByAttention: false, filterByTime: true },
+      accessToken,
+    );
     expectNoServerError(response);
+    return response;
+  }, (response) => getRows<ApiRow>(response.data).some((row) => row.name === name));
 
-    const row = getRows(response.data).find((item) => getEntityId(item));
-    const id = getEntityId(row);
-    if (row && id) return { type, row, id };
-  }
+  return response ? getRows<ApiRow>(response.data).find((row) => row.name === name) : undefined;
+};
 
-  return undefined;
+const createMaterialRemainFixture = async (request: any, accessToken?: string) => {
+  const suffix = uniqueApiSuffix('warehouse');
+  const typeResponse = await materialsAPI.createTypeMaterial(
+    request,
+    { name: `API Warehouse Type Material ${suffix}`, characteristics: typeCharacteristics(), instance_type: 1 },
+    accessToken,
+  );
+  expectNoServerError(typeResponse);
+  expect(successCodes, JSON.stringify(typeResponse.data)).toContain(typeResponse.status);
+  const typeId = Number(typeResponse.data?.id);
+  expect(typeId, JSON.stringify(typeResponse.data)).toBeGreaterThan(0);
+
+  const subtypeResponse = await materialsAPI.createSubtypeMaterial(
+    request,
+    { name: `API Warehouse Subtype Material ${suffix}`, density: 8, id: null, instance_type: 1, parentMaterialIds: [typeId] },
+    accessToken,
+  );
+  expectNoServerError(subtypeResponse);
+  expect(successCodes, JSON.stringify(subtypeResponse.data)).toContain(subtypeResponse.status);
+  const subtypeId = Number(subtypeResponse.data?.id);
+  expect(subtypeId, JSON.stringify(subtypeResponse.data)).toBeGreaterThan(0);
+
+  const payload = materialPayload(suffix, typeId, subtypeId);
+  const createMaterial = await materialsAPI.createAndUpdateMaterial(request, payload, accessToken);
+  expectNoServerError(createMaterial);
+  expect(successCodes, JSON.stringify(createMaterial.data)).toContain(createMaterial.status);
+
+  const material = await findMaterialByName(request, payload.name, accessToken);
+  expect(material, `Material ${payload.name} was not found after create`).toBeTruthy();
+  const materialId = Number(createMaterial.data?.id ?? material!.id);
+  expect(materialId, JSON.stringify(createMaterial.data)).toBeGreaterThan(0);
+
+  const revision = await warehouseAPI.updateWarehouseItem(
+    request,
+    { entityId: materialId, entityType: 'material', quantity: 1, userId: Number(API_CONST.API_TEST_USER_ID) },
+    accessToken,
+  );
+  expectNoServerError(revision);
+  expect(successCodes, JSON.stringify(revision.data)).toContain(revision.status);
+
+  return { typeId, subtypeId, materialId, materialName: payload.name };
 };
 
 export const runWarehouseAPINew = () => {
@@ -88,10 +153,27 @@ export const runWarehouseAPINew = () => {
 
     let accessToken: string | undefined;
     let firstRemain: { type: WarehouseEntityType; row: ApiRow; id: number } | undefined;
+    let materialFixture: { typeId?: number; subtypeId?: number; materialId?: number } = {};
 
     test.beforeAll(async ({ request }) => {
       accessToken = await getAuthToken(request);
-      firstRemain = await findFirstRemain(request, accessToken);
+      materialFixture = await createMaterialRemainFixture(request, accessToken);
+      firstRemain = { type: 'material', row: { id: materialFixture.materialId }, id: materialFixture.materialId as number };
+    });
+
+    test.afterAll(async ({ request }) => {
+      if (materialFixture.materialId) {
+        const archiveMaterial = await materialsAPI.banMaterial(request, materialFixture.materialId, accessToken);
+        expectNoServerError(archiveMaterial);
+      }
+      if (materialFixture.subtypeId) {
+        const archiveSubtype = await materialsAPI.removeSubtypeMaterial(request, materialFixture.subtypeId, accessToken);
+        expectNoServerError(archiveSubtype);
+      }
+      if (materialFixture.typeId) {
+        const archiveType = await materialsAPI.removeTypeMaterial(request, materialFixture.typeId, accessToken);
+        expectNoServerError(archiveType);
+      }
     });
 
     test('возвращает остатки по типам сущностей без серверных ошибок', async ({ request }) => {
@@ -189,8 +271,6 @@ export const runWarehouseAPINew = () => {
     });
 
     test('проверяет потребности по найденному складскому объекту', async ({ request }) => {
-      test.skip(!firstRemain, 'No warehouse remains are available for needs checks on this environment.');
-
       const needsByParents = await warehouseAPI.getNeedsByParents(
         request,
         firstRemain!.type,

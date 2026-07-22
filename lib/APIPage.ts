@@ -76,6 +76,8 @@ export class APIPageObject extends AbstractPage {
     url: string,
     options: {
       data?: unknown;
+      multipart?: Record<string, string>;
+      form?: Record<string, string>;
       headers?: Record<string, string>;
       accessToken?: string;
       json?: boolean;
@@ -90,6 +92,8 @@ export class APIPageObject extends AbstractPage {
 
     const requestOptions = {
       headers,
+      ...(options.multipart === undefined ? {} : { multipart: options.multipart }),
+      ...(options.form === undefined ? {} : { form: options.form }),
       ...(options.data === undefined ? {} : { data: options.data }),
     };
 
