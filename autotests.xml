@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<fb version="0.19.6" size="375029">
+<fb version="0.19.6" size="375025">
   <f>
     <added t="I">8</added>
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">11.887479387</seconds>
+    <seconds t="F">16.126621157</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-07-25T14:19:10Z</when>
+    <when t="T">2026-07-25T15:46:07Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -24669,11 +24669,11 @@ The average number of releases per month (0.0) is staying still.</text>
   </f>
   <f>
     <_id t="I">1816</_id>
-    <_job t="I">30161361892</_job>
-    <_time t="T">2026-07-25T14:19:01Z</_time>
+    <_job t="I">30164230488</_job>
+    <_time t="T">2026-07-25T15:45:54Z</_time>
     <_version t="S">0.19.6/0.60.0/0.17.11</_version>
     <earliest_issue_was_found t="I">1</earliest_issue_was_found>
-    <events_were_scanned t="I">15786807966</events_were_scanned>
+    <events_were_scanned t="I">15792070927</events_were_scanned>
     <latest_issue_was_found t="I">529</latest_issue_was_found>
     <min_pull_was_found t="I">529</min_pull_was_found>
     <repository t="I">935866864</repository>
