@@ -5,10 +5,10 @@
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">18.929397797</seconds>
+    <seconds t="F">15.416359261</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-07-31T21:45:19Z</when>
+    <when t="T">2026-07-31T23:39:48Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -24918,19 +24918,6 @@ The average number of releases per month (0.0) is staying still.</text>
     <when t="T">2026-07-30T22:45:59Z</when>
   </f>
   <f>
-    <_id t="I">1840</_id>
-    <_job t="I">30667602548</_job>
-    <_time t="T">2026-07-31T21:45:03Z</_time>
-    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
-    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
-    <events_were_scanned t="I">16347785289</events_were_scanned>
-    <latest_issue_was_found t="I">529</latest_issue_was_found>
-    <min_pull_was_found t="I">529</min_pull_was_found>
-    <repository t="I">935866864</repository>
-    <what t="S">iterate</what>
-    <where t="S">github</where>
-  </f>
-  <f>
     <_id t="I">1841</_id>
     <_job t="I">30667602548</_job>
     <_time t="T">2026-07-31T21:45:05Z</_time>
@@ -24947,5 +24934,18 @@ The average number of releases per month (0.0) is staying still.</text>
     <total_stars t="I">1</total_stars>
     <what t="S">dimensions-of-terrain</what>
     <when t="T">2026-07-31T21:45:05Z</when>
+  </f>
+  <f>
+    <_id t="I">1842</_id>
+    <_job t="I">30673439448</_job>
+    <_time t="T">2026-07-31T23:39:36Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
+    <events_were_scanned t="I">16352692280</events_were_scanned>
+    <latest_issue_was_found t="I">529</latest_issue_was_found>
+    <min_pull_was_found t="I">529</min_pull_was_found>
+    <repository t="I">935866864</repository>
+    <what t="S">iterate</what>
+    <where t="S">github</where>
   </f>
 </fb>
