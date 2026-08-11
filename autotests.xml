@@ -5,10 +5,10 @@
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">8.63242796</seconds>
+    <seconds t="F">45.519797403</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-08-11T12:27:47Z</when>
+    <when t="T">2026-08-11T14:05:44Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -25120,19 +25120,6 @@ The average number of releases per month (0.0) is staying still.</text>
     <when t="T">2026-08-11T07:52:26Z</when>
   </f>
   <f>
-    <_id t="I">1883</_id>
-    <_job t="I">31486662691</_job>
-    <_time t="T">2026-08-11T11:28:04Z</_time>
-    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
-    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
-    <events_were_scanned t="I">17381686551</events_were_scanned>
-    <latest_issue_was_found t="I">529</latest_issue_was_found>
-    <min_pull_was_found t="I">529</min_pull_was_found>
-    <repository t="I">935866864</repository>
-    <what t="S">iterate</what>
-    <where t="S">github</where>
-  </f>
-  <f>
     <_id t="I">1884</_id>
     <_job t="I">86327</_job>
     <_time t="T">2026-08-11T11:28:41Z</_time>
@@ -25143,5 +25130,18 @@ The average number of commits per week (0.2) is decreasing (R=-0.77).
 The average number of releases per month (0.0) is staying still.</text>
     <what t="S">assessment</what>
     <when t="T">2026-08-11T11:28:41Z</when>
+  </f>
+  <f>
+    <_id t="I">1885</_id>
+    <_job t="I">31499508264</_job>
+    <_time t="T">2026-08-11T14:05:02Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
+    <events_were_scanned t="I">17389626405</events_were_scanned>
+    <latest_issue_was_found t="I">529</latest_issue_was_found>
+    <min_pull_was_found t="I">529</min_pull_was_found>
+    <repository t="I">935866864</repository>
+    <what t="S">iterate</what>
+    <where t="S">github</where>
   </f>
 </fb>
