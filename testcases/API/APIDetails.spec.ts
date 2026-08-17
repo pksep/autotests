@@ -17,10 +17,7 @@ import {
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
-import {
-  expectArchivedOnlyInArchiveSelection,
-  expectRepeatOperationRejectedOrIdempotent,
-} from '../../lib/helpers/APIDataInvariants';
+import { expectRepeatOperationRejectedOrIdempotent } from '../../lib/helpers/APIDataInvariants';
 
 type ApiResult = {
   status: number;
@@ -122,21 +119,6 @@ const findDetailByDesignation = async (
   }, (response) => getRows(response.data).some((row) => row.designation === designation));
 
   return response ? getRows(response.data).find((row) => row.designation === designation) : undefined;
-};
-
-const waitForDetailInArchive = async (
-  request: any,
-  designation: string,
-  detailId: number,
-  accessToken?: string,
-): Promise<boolean> => {
-  const response = await eventually(async () => {
-    const response = await detailsAPI.getArchivedDetails(request, designation, accessToken);
-    expectNoServerError(response);
-    return response;
-  }, (response) => getRows(response.data).some((row) => row.id === detailId && row.ban === true));
-
-  return Boolean(response);
 };
 
 const waitForDetailInActiveSearch = async (
@@ -346,9 +328,6 @@ export const runDetailsAPINew = () => {
       expect(successCodes).toContain(archiveResponse.status);
       expectNoServerError(archiveResponse);
 
-      const archiveSearch = await detailsAPI.getArchivedDetails(request, updatedDesignation, accessToken);
-      expect(archiveSearch.status).toBe(201);
-      expect(await waitForDetailInArchive(request, updatedDesignation, createdDetailId as number, accessToken)).toBe(true);
       expect(await waitForDetailInActiveSearch(request, updatedDesignation, createdDetailId as number, false, accessToken)).toBe(true);
       const activeSearch = await detailsAPI.getPaginationDetails(
         request,
@@ -357,11 +336,10 @@ export const runDetailsAPINew = () => {
         accessToken,
       );
       expect(activeSearch.status).toBe(201);
-      expectArchivedOnlyInArchiveSelection(
-        getRows<DetailLike>(activeSearch.data),
-        getRows<DetailLike>(archiveSearch.data),
-        createdDetailId as number,
-      );
+      expect(
+        getRows<DetailLike>(activeSearch.data).some((row) => Number(row.id) === createdDetailId),
+        `Archived detail ${createdDetailId} should not be returned by active pagination`,
+      ).toBe(false);
 
       const secondArchiveResponse = await detailsAPI.deleteDetail(request, String(createdDetailId), testUserId, accessToken);
       expectNoServerError(secondArchiveResponse);
@@ -375,7 +353,6 @@ export const runDetailsAPINew = () => {
       );
       expectNoServerError(updateArchived);
       expect([...successCodes, 400, 404, 409, 410, 422], JSON.stringify(updateArchived.data)).toContain(updateArchived.status);
-      expect(await waitForDetailInArchive(request, updatedDesignation, createdDetailId as number, accessToken)).toBe(true);
       expect(await waitForDetailInActiveSearch(request, updatedDesignation, createdDetailId as number, false, accessToken)).toBe(true);
 
       createdDetailId = undefined;

@@ -298,15 +298,29 @@ const waitForShipment = async (
   shipmentId: number,
   predicate: (shipment: ApiRow) => boolean,
   accessToken?: string,
+  options: { attempts?: number; intervalMs?: number } = {},
 ): Promise<ApiRow | undefined> => {
   const response = await eventually(async () => {
     const response = await shipmentsAPI.getShipmentById(request, shipmentId, accessToken);
     expectNoServerError(response);
     return response;
-  }, (response) => Boolean(response.data && predicate(response.data)), { attempts: 10, intervalMs: 700 });
+  }, (response) => Boolean(response.data && predicate(response.data)), {
+    attempts: options.attempts ?? 10,
+    intervalMs: options.intervalMs ?? 700,
+  });
 
   return response?.data;
 };
+
+const isArchivedShipment = (shipment: ApiRow): boolean =>
+  (shipment.ban ?? shipment.isDeleted ?? true) !== false && String(shipment.status ?? '') === 'Удалено';
+
+const waitForArchivedShipment = async (
+  request: any,
+  shipmentId: number,
+  accessToken?: string,
+): Promise<ApiRow | undefined> =>
+  waitForShipment(request, shipmentId, isArchivedShipment, accessToken, { attempts: 30, intervalMs: 2000 });
 
 const waitForShipmentAbsentFromActivePagination = async (
   request: any,
@@ -415,13 +429,6 @@ export const runShipmentsAPINew = () => {
       const allChecks = await shipmentsAPI.getAllShChecks(request, accessToken);
       expectNoServerError(allChecks);
       if (successCodes.includes(allChecks.status)) expectArrayResponse(allChecks.data);
-
-      const k6Ids = await shipmentsAPI.getIdsWithShipments(request, accessToken);
-      expectNoServerError(k6Ids);
-      if (successCodes.includes(k6Ids.status)) {
-        expect(Array.isArray(k6Ids.data?.cbedIds), JSON.stringify(k6Ids.data)).toBe(true);
-        expect(Array.isArray(k6Ids.data?.detalIds), JSON.stringify(k6Ids.data)).toBe(true);
-      }
 
       const attributes = await shipmentsAPI.getAttributes(
         request,
@@ -842,11 +849,6 @@ export const runShipmentsAPINew = () => {
         expect(String(readyToShipTrue.data?.message || ''), JSON.stringify(readyToShipTrue.data)).toContain('На складе нет доступного количества');
       }
 
-      const k6Ids = await shipmentsAPI.getIdsWithShipments(request, accessToken);
-      expectNoServerError(k6Ids);
-      expect(successCodes, JSON.stringify(k6Ids.data)).toContain(k6Ids.status);
-      expect(Array.isArray(k6Ids.data?.cbedIds), JSON.stringify(k6Ids.data)).toBe(true);
-      expect(Array.isArray(k6Ids.data?.detalIds), JSON.stringify(k6Ids.data)).toBe(true);
     });
 
     test('архивирует тестовую отгрузку', async ({ request }) => {
@@ -859,14 +861,15 @@ export const runShipmentsAPINew = () => {
 
       expect(await waitForShipmentAbsentFromActivePagination(request, shipmentId, updatedDescription, accessToken)).toBe(true);
 
-      const archivedById = await shipmentsAPI.getShipmentById(request, shipmentId, accessToken);
-      expectNoServerError(archivedById);
-      if (!clientErrorCodes.includes(archivedById.status) && successCodes.includes(archivedById.status)) {
-        expect(Number(archivedById.data?.id), JSON.stringify(archivedById.data)).toBe(shipmentId);
-        expect(archivedById.data?.ban ?? archivedById.data?.isDeleted ?? true, JSON.stringify(archivedById.data)).not.toBe(false);
-        expect(String(archivedById.data?.status ?? ''), JSON.stringify(archivedById.data)).toBe('Удалено');
-      }
-      const archiveSearch = String(archivedById.data?.number_order || updatedDescription);
+      const archivedById = await waitForArchivedShipment(request, shipmentId, accessToken);
+      expect(
+        archivedById,
+        `GET /api/shipments/oneships/${shipmentId} после DELETE /api/shipments/${shipmentId}: Bull не успел перевести отгрузку в архив/Удалено`,
+      ).toBeTruthy();
+      expect(Number(archivedById?.id), JSON.stringify(archivedById)).toBe(shipmentId);
+      expect(archivedById?.ban ?? archivedById?.isDeleted ?? true, JSON.stringify(archivedById)).not.toBe(false);
+      expect(String(archivedById?.status ?? ''), JSON.stringify(archivedById)).toBe('Удалено');
+      const archiveSearch = String(archivedById?.number_order || updatedDescription);
 
       const activePagination = await shipmentsAPI.getAllShipments(
         request,

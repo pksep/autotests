@@ -147,13 +147,6 @@ export class ShipmentsAPI extends APIPageObject {
     return this.result(response);
   }
 
-  async getIdsWithShipments(request: APIRequestContext, accessToken?: string) {
-    const response = await request.get(this.base() + '/shipments/k6', {
-      headers: { ...this.authHeaders(this.token(accessToken)), compress: 'no-compress' },
-    });
-    return this.result(response);
-  }
-
   async getItemsByEntity(
     request: APIRequestContext,
     entityType: string,

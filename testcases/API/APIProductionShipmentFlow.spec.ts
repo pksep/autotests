@@ -33,13 +33,13 @@ const jsonHeaders = (token?: string, extra: Record<string, string> = {}) => ({
   'Content-Type': 'application/json',
   compress: 'no-compress',
   ...extra,
-  ...(token ? { Authorization: `Bearer ${token}`, Cookie: `access_token=${token}; refresh_token=${token}` } : {}),
+  ...(token ? { Cookie: `access_token=${token}; refresh_token=${token}` } : {}),
 });
 
 const multipartHeaders = (token?: string, extra: Record<string, string> = {}) => ({
   compress: 'no-compress',
   ...extra,
-  ...(token ? { Authorization: `Bearer ${token}`, Cookie: `access_token=${token}; refresh_token=${token}` } : {}),
+  ...(token ? { Cookie: `access_token=${token}; refresh_token=${token}` } : {}),
 });
 
 const parseBody = async (response: any) => {
@@ -190,20 +190,25 @@ const deficitDto = (searchString: string, idsKey: string, id?: number) => ({
   searchString,
 });
 
-const productionPlanDto = (workingType: 'metall' | 'ass', searchStr = '') => ({
-  page: 0,
-  workingType,
-  searchStr,
-  onlyDeficit: false,
-  assembleIds: [],
-  childrenByProductionTaskIds: [],
-  excludeIds: [],
-  typeOperationIds: [],
-  deficitFilteringType: 'all',
-  sortReadiness: 'any',
-  range: { start: null, end: null },
+const productionPlanDto = (
+  workingType: 'metall' | 'ass',
+  searchStr = '',
+  overrides: Record<string, unknown> = {},
+) => ({
   byParents: { productIds: [], cbedIds: [], detalIds: [] },
   byOrder: { customer: 'buyer', orderId: [] },
+  onlyDeficit: false,
+  page: 0,
+  workingType,
+  childrenByProductionTaskIds: [],
+  searchStr,
+  range: { start: null, end: null },
+  sortReadiness: 'any',
+  typeOperationIds: [],
+  assembleIds: [],
+  excludeIds: [],
+  deficitFilteringType: 'all',
+  ...overrides,
 });
 
 const getFirstMatchingRow = async (
@@ -710,6 +715,16 @@ const createShCheckWithFallback = async (
   let lastResponse: ApiResult | undefined;
 
   for (let attempt = 0; attempt < 3; attempt++) {
+    const jsonResponse = await apiPost(request, 'api/shipments/shcheck', data, token);
+    lastResponse = jsonResponse;
+    if (successCodes.includes(jsonResponse.status)) return jsonResponse;
+
+    const existingAfterJson = await findShCheckByNumber(request, numberOrder, token);
+    if (existingAfterJson) return { status: 200, data: existingAfterJson };
+
+    const jsonMessage = String(jsonResponse.data?.message ?? jsonResponse.data?.raw ?? '');
+    if (!jsonMessage.includes('timed out')) return jsonResponse;
+
     const multipart = multipartBodyWithEmptyFields(data);
     const res = await request.post(ENV.API_BASE_URL + 'api/shipments/shcheck', {
       headers: multipartHeaders(token, { 'Content-Type': multipart.contentType }),
@@ -782,15 +797,8 @@ const readDeficitRow = async (
   return getRows<ApiRow>(response.data).find(matcher);
 };
 
-const expectNoDeficitRow = async (
-  loader: () => Promise<ApiResult>,
-  matcher: (row: ApiRow) => boolean,
-  message: string,
-) => {
-  const row = await readDeficitRow(loader, matcher);
-  if (!row) return;
-
-  const deficitValue = Number(
+const readDeficitValues = (row: ApiRow) => ({
+  deficit: Number(
     row.deficit ??
       row.deficit_count ??
       row.deficitCount ??
@@ -798,9 +806,38 @@ const expectNoDeficitRow = async (
       row.shortage_count ??
       row.shortageCount ??
       0,
+  ),
+  shipmentsDeficit: Number(row.shipments_deficit ?? row.shipmentsDeficit ?? 0),
+});
+
+const expectNoDeficitRow = async (
+  loader: () => Promise<ApiResult>,
+  matcher: (row: ApiRow) => boolean,
+  message: string,
+) => {
+  let lastRow: ApiRow | undefined;
+  const response = await eventually(
+    async () => {
+      const response = await loader();
+      expectNoServerError(response);
+      lastRow = getRows<ApiRow>(response.data).find(matcher);
+      return response;
+    },
+    () => {
+      if (!lastRow) return true;
+      const { deficit, shipmentsDeficit } = readDeficitValues(lastRow);
+      return deficit === 0 && shipmentsDeficit === 0;
+    },
+    { attempts: 30, intervalMs: 2000 },
   );
 
-  expect(deficitValue, `${message}: ${JSON.stringify(row)}`).toBe(0);
+  expect(response, `${message}: пересчет дефицитов Bull не завершился. Last row: ${JSON.stringify(lastRow)}`).toBeTruthy();
+  const row = lastRow;
+  if (!row) return;
+
+  const { deficit, shipmentsDeficit } = readDeficitValues(row);
+  expect(deficit, `${message}: ${JSON.stringify(row)}`).toBe(0);
+  expect(shipmentsDeficit, `${message}: ${JSON.stringify(row)}`).toBe(0);
 };
 
 const waitForProductState = async (
@@ -1439,16 +1476,19 @@ export const runProductionShipmentFlowAPI = () => {
           dateOrder: shipmentForShCheck.data.date_order,
           numberOrder: shipmentForShCheck.data.number_order,
           dateShipments: dateToTimestampFormat(shipmentForShCheck.data.date_shipments),
-          fabricNumber: shipmentForShCheck.data.product?.designation || `API-FLOW-P-${suffix}`,
-          description: '',
-          nameCheck: '',
-          responsibleUserId: '',
-          createrUserId: '',
-          dateCreate: dateRu(),
+          fabricNumber:
+            shipmentForShCheck.data.fabric_number ||
+            shipmentForShCheck.data.product?.designation ||
+            `API-FLOW-P-${suffix}`,
+          description: `API flow shcheck ${suffix}`,
+          nameCheck: `API flow shcheck ${shipmentId}`,
+          responsibleUserId: String(API_CONST.API_TEST_USER_ID_72),
+          createrUserId: String(API_CONST.API_CREATOR_USER_ID_66),
+          dateCreate: new Date().toISOString(),
           dateShipmentsFakt: dateToTimestampFormat(new Date()),
           docs: JSON.stringify([]),
           childrens: JSON.stringify([{ id: shipmentId, shipped: 1, builderId: null, controllerId: null }]),
-          companyId: '',
+          companyId: String(shipmentForShCheck.data.company_id || shipmentForShCheck.data.buyer_id || buyerId),
         };
         const shCheck = await createShCheckWithFallback(request, shCheckPayload, accessToken);
         expect(

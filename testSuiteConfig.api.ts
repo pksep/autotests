@@ -186,12 +186,12 @@ const apiSuitesByModule = {
   },
 
   movement_errors_api: {
-    description: 'Набор тестов Movement Errors API для текущего пустого контроллера.',
+    description: 'Набор тестов Movement Errors API для списка ошибок перемещений и defensive-сценариев.',
     tests: [
       {
         test: runMovementErrorsAPINew,
         description:
-          'Проверяет, что неэкспонированные маршруты movement-errors возвращают клиентскую ошибку без 5xx.'
+          'Проверяет, что api/movement-errors возвращает список, а чтение отсутствующей записи обрабатывается без 5xx.'
       }
     ]
   },
@@ -632,7 +632,7 @@ const apiSuitesByModule = {
       {
         test: runMovementErrorsAPINew,
         description:
-          'Тестирует текущий пустой api/movement-errors как неэкспонированный контракт без 5xx.'
+          'Тестирует api/movement-errors: успешное чтение списка и defensive-сценарий отсутствующей записи.'
       },
       {
         test: runUsersAPINew,

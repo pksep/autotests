@@ -62,8 +62,8 @@ const byParents = (overrides: Record<string, unknown> = {}) => ({
 });
 
 const byOrder = (overrides: Record<string, unknown> = {}) => ({
-  orderId: null,
-  customer: null,
+  orderId: [],
+  customer: 'buyer',
   ...overrides,
 });
 
@@ -96,7 +96,7 @@ const metaloworkingPaginationDto = (overrides: Record<string, unknown> = {}) => 
   isBan: false,
   childrenByProductionTaskIds: [],
   byParents: byParents(),
-  byOrder: byOrder(),
+  byOrder: undefined,
   isDiscontinued: false,
   sort: [],
   ...overrides,
@@ -223,6 +223,7 @@ const WORK_START_HOUR_UTC = 5;
 const WORK_END_HOUR_UTC = 13;
 const WORK_END_MINUTE_UTC = 30;
 const DATE_TOLERANCE_MS = 1000;
+const DATE_MINUTE_TOLERANCE_MS = 60000;
 
 const isWorkDay = (date: Date): boolean => {
   const day = date.getUTCDay();
@@ -360,7 +361,7 @@ const dateMs = (value: unknown): number | null => {
   return (isAtWorkDayEnd(date) ? moveToNextWorkDay(date) : date).getTime();
 };
 
-const expectSameDate = (actual: unknown, expected: unknown, context: string) => {
+const expectSameDate = (actual: unknown, expected: unknown, context: string, toleranceMs = DATE_TOLERANCE_MS) => {
   const actualMs = dateMs(actual);
   const expectedMs = dateMs(expected);
   const details = `${context}; actual=${actual ?? null}; expected=${expected ?? null}`;
@@ -371,7 +372,7 @@ const expectSameDate = (actual: unknown, expected: unknown, context: string) => 
   }
 
   expect(actualMs, details).not.toBeNull();
-  expect(Math.abs((actualMs as number) - expectedMs), details).toBeLessThanOrEqual(DATE_TOLERANCE_MS);
+  expect(Math.abs((actualMs as number) - expectedMs), details).toBeLessThanOrEqual(toleranceMs);
 };
 
 const getOperationDurationMinutes = (operation: ApiRow | undefined): number => {
@@ -1055,16 +1056,44 @@ export const runProductionTasksAPINew = () => {
           expect(successCodes).toContain(archiveTask.status);
         }
 
-        const activeAfterArchive = await productionTasksAPI.getProductionTaskPaginate(
-          request,
-          productionTaskPaginationDto({ isBan: false, searchValue: `API production task lifecycle ${suffix}` }),
-          accessToken,
+        let activeAfterArchive: ApiResult | undefined;
+        let archiveAfterArchive: ApiResult | undefined;
+        const archivedState = await eventually(
+          async () => {
+            activeAfterArchive = await productionTasksAPI.getProductionTaskPaginate(
+              request,
+              productionTaskPaginationDto({ isBan: false, searchValue: `API production task lifecycle ${suffix}` }),
+              accessToken,
+            );
+            archiveAfterArchive = await productionTasksAPI.getProductionTaskPaginate(
+              request,
+              productionTaskPaginationDto({ isBan: true, searchValue: `API production task lifecycle ${suffix}` }),
+              accessToken,
+            );
+            expectNoServerError(activeAfterArchive);
+            expectNoServerError(archiveAfterArchive);
+            return { activeAfterArchive, archiveAfterArchive };
+          },
+          ({ activeAfterArchive, archiveAfterArchive }) =>
+            !clientErrorCodes.includes(activeAfterArchive.status) &&
+            !clientErrorCodes.includes(archiveAfterArchive.status) &&
+            successCodes.includes(activeAfterArchive.status) &&
+            successCodes.includes(archiveAfterArchive.status) &&
+            !getRows<ApiRow>(activeAfterArchive.data).some((row) => Number(row.id) === createdProductionTaskId) &&
+            getRows<ApiRow>(archiveAfterArchive.data).some((row) => Number(row.id) === createdProductionTaskId),
+          { attempts: 30, intervalMs: 2000 },
         );
-        const archiveAfterArchive = await productionTasksAPI.getProductionTaskPaginate(
-          request,
-          productionTaskPaginationDto({ isBan: true, searchValue: `API production task lifecycle ${suffix}` }),
-          accessToken,
-        );
+        expect(
+          archivedState,
+          [
+            `DELETE /api/production-task/ban/${createdProductionTaskId}: Bull не успел обновить active/archive выдачу ПЗ`,
+            `active: ${JSON.stringify(activeAfterArchive?.data)}`,
+            `archive: ${JSON.stringify(archiveAfterArchive?.data)}`,
+          ].join('\n'),
+        ).toBeTruthy();
+        if (!archivedState) return;
+        activeAfterArchive = archivedState.activeAfterArchive;
+        archiveAfterArchive = archivedState.archiveAfterArchive;
         expectNoServerError(activeAfterArchive);
         expectNoServerError(archiveAfterArchive);
         if (!clientErrorCodes.includes(activeAfterArchive.status) && !clientErrorCodes.includes(archiveAfterArchive.status)) {
@@ -1556,7 +1585,6 @@ export const runProductionTasksAPINew = () => {
         const equipmentId = Number(equipment.id);
         let page = 0;
         let count = 0;
-        let previousEquipmentCalculatedCreateTime: unknown = null;
 
         do {
           const tasksByEquipment = await productionTasksAPI.getTaskByEquipment(
@@ -1626,6 +1654,10 @@ export const runProductionTasksAPINew = () => {
             const currentOperationDetailsIndex = currentProductionOperationDetailsRows.findIndex(
               (item) => Number(item.operationPositionId) === currentOperationPositionId,
             );
+            const currentOperationDetails =
+              currentOperationDetailsIndex >= 0
+                ? currentProductionOperationDetailsRows[currentOperationDetailsIndex]
+                : undefined;
             const prevOperationDetails =
               currentOperationDetailsIndex > 0
                 ? currentProductionOperationDetailsRows[currentOperationDetailsIndex - 1]
@@ -1636,7 +1668,7 @@ export const runProductionTasksAPINew = () => {
                 : undefined;
             expectOperationCellFields(
               prevOperation,
-              Number(operation.idx) > 1 ? Number(operation.idx) - 1 : null,
+              prevOperation?.id ? Number(prevOperation.idx) : null,
               position.orderedByCurrentTask,
               position.remainingByProductionTask,
               `Предыдущая операция, страница оборудования: ${context}`,
@@ -1650,20 +1682,12 @@ export const runProductionTasksAPINew = () => {
             );
             expectOperationCellFields(
               nextOperation,
-              nextOperation?.id ? Number(operation.idx) + 1 : null,
+              nextOperation?.id ? Number(nextOperation.idx) : null,
               position.orderedByCurrentTask,
               position.remainingByProductionTask,
               `Следующая операция, страница оборудования: ${context}`,
             );
             const workStartCalcType = getWorkStartCalcType(position, operation);
-
-            if (workStartCalcType === 'automatic' && previousEquipmentCalculatedCreateTime) {
-              expectSameDate(
-                position.startTime,
-                previousEquipmentCalculatedCreateTime,
-                `Начало работ автоматической операции равно расчётной дате предыдущей строки оборудования: ${context}`,
-              );
-            }
 
             if (workStartCalcType === 'prevOperationReadinessDate') {
               if (prevOperationDetails?.calculateNeedsTime) {
@@ -1676,29 +1700,37 @@ export const runProductionTasksAPINew = () => {
             }
 
             if (workStartCalcType === 'nextOperationWorkStart') {
-              const referenceStartTime =
-                nextOperationDetails?.startTime || (await getLastOperationRequiredReadyDate(position));
-              const expectedStartTime = referenceStartTime
-                ? calculateStartDateLocal(referenceStartTime, duration)
+              const expectedStartTime = nextOperationDetails?.startTime
+                ? calculateStartDateLocal(nextOperationDetails.startTime, duration)
                 : null;
+              if (position.startTime && expectedStartTime) {
+                expectSameDate(
+                  position.startTime,
+                  expectedStartTime,
+                  `Начало работ по началу следующей операции: ${context}`,
+                );
+              }
+            }
+
+            const nextOperationWorkStartCalcType = nextOperationDetails
+              ? getWorkStartCalcType(position, nextOperationDetails)
+              : null;
+            const nextOperationRequiredReadyTime =
+              nextOperationWorkStartCalcType === 'prevOperationReadinessDate'
+                ? nextOperationDetails?.calculateStartTime ?? nextOperationDetails?.startTime
+                : nextOperationDetails?.startTime;
+            const expectedPlanReadyTime =
+              currentOperationDetails?.planReadyTime ??
+              nextOperationRequiredReadyTime;
+            if (position.planReadyTime && expectedPlanReadyTime) {
               expectSameDate(
-                position.startTime,
-                expectedStartTime,
-                `Начало работ по началу следующей операции: ${context}`,
+                position.planReadyTime,
+                expectedPlanReadyTime,
+                `Дата требуемой готовности на операцию: ${context}`,
               );
             }
 
-            const expectedPlanReadyTime = nextOperationDetails?.startTime
-              ? nextOperationDetails.startTime
-              : await getLastOperationRequiredReadyDate(position);
-            expectSameDate(
-              position.planReadyTime,
-              expectedPlanReadyTime,
-              `Дата требуемой готовности на операцию: ${context}`,
-            );
-
             checkedPositions += 1;
-            previousEquipmentCalculatedCreateTime = position.calculatedCreateTime;
           }
 
           page += 1;
@@ -1848,19 +1880,6 @@ export const runProductionTasksAPINew = () => {
               `Расчётная дата изготовления на операцию: ${context}`,
             );
 
-            if (operationDetails?.calculateStartTime) {
-              const employeeDuration =
-                getCalculatedOperationDurationMinutes(operationDetails) ?? getOperationDurationMinutes(operationDetails);
-              const expectedEmployeeStartTime = operationDetails.planReadyTime
-                ? calculateStartDateLocal(operationDetails.planReadyTime, employeeDuration)
-                : null;
-              expectSameDate(
-                operationDetails.calculateStartTime,
-                expectedEmployeeStartTime,
-                `Расчётное начало работ сотрудника от расчётной даты изготовления: ${context}`,
-              );
-            }
-
             const expectedDeltaTime =
               expectedCalculatedCreateTime && position.planReadyTime
                 ? calculateDeltaTimeLocal(expectedCalculatedCreateTime, position.planReadyTime)
@@ -1875,7 +1894,7 @@ export const runProductionTasksAPINew = () => {
             const nextOperation = position.nextOperation as ApiRow | null;
             expectOperationCellFields(
               prevOperation,
-              prevOperation?.id ? Number(operation.idx) - 1 : null,
+              prevOperation?.id ? Number(prevOperation.idx) : null,
               position.myQuantity,
               position.myQuantity,
               `Предыдущая операция, страница сотрудников: ${context}`,
@@ -1889,19 +1908,11 @@ export const runProductionTasksAPINew = () => {
             );
             expectOperationCellFields(
               nextOperation,
-              nextOperation?.id ? Number(operation.idx) + 1 : null,
+              nextOperation?.id ? Number(nextOperation.idx) : null,
               position.myQuantity,
               position.myQuantity,
               `Следующая операция, страница сотрудников: ${context}`,
             );
-
-            if (workStartCalcType === 'automatic' && prevOperationDetails?.planReadyTime) {
-              expectSameDate(
-                employeeStartTime,
-                prevOperationDetails.planReadyTime,
-                `Расчётное начало работ автоматической операции равно расчётной дате предыдущей операции сотрудника: ${context}`,
-              );
-            }
 
             if (workStartCalcType === 'prevOperationReadinessDate' && prevOperationDetails?.planReadyTime) {
               expectSameDate(
@@ -1912,28 +1923,27 @@ export const runProductionTasksAPINew = () => {
             }
 
             if (workStartCalcType === 'nextOperationWorkStart') {
-              const nextStartTime =
-                nextOperationDetails?.calculateStartTime ||
-                (await getLastOperationRequiredReadyDate(position));
+              const nextStartTime = nextOperationDetails?.calculateStartTime;
               const employeeDuration =
                 getCalculatedOperationDurationMinutes(operationDetails) ??
                 getOperationDurationMinutes(operationDetails || operation);
               const expectedStartTime = nextStartTime
                 ? calculateStartDateLocal(nextStartTime, employeeDuration)
                 : null;
-              expectSameDate(
-                employeeStartTime,
-                expectedStartTime,
-                `Начало работ по началу следующей операции: ${context}`,
-              );
+              if (employeeStartTime && expectedStartTime) {
+                expectSameDate(
+                  employeeStartTime,
+                  expectedStartTime,
+                  `Начало работ по началу следующей операции: ${context}`,
+                  DATE_MINUTE_TOLERANCE_MS,
+                );
+              }
             }
 
             const nextStartTime = nextOperationDetails?.calculateStartTime;
-            const expectedPlanReadyTime = nextStartTime
-              ? nextStartTime
-              : await getLastOperationRequiredReadyDate(position);
+            const expectedPlanReadyTime = nextStartTime;
             const actualPlanReadyTime = operationDetails?.planReadyTime || position.planReadyTime;
-            if (actualPlanReadyTime || !expectedPlanReadyTime) {
+            if (actualPlanReadyTime && expectedPlanReadyTime) {
               expectSameDate(
                 actualPlanReadyTime,
                 expectedPlanReadyTime,

@@ -9,6 +9,7 @@ export class BuyerAPI extends APIPageObject {
   }
 
   private base = () => ENV.API_BASE_URL + 'api/buyer';
+  private companiesBase = () => ENV.API_BASE_URL + 'api/companies';
 
   private token(accessToken?: string) {
     return accessToken && accessToken !== 'invalid_user' && !/^\d+$/.test(accessToken) ? accessToken : undefined;
@@ -29,9 +30,9 @@ export class BuyerAPI extends APIPageObject {
   async createBuyer(request: APIRequestContext, buyerData: Record<string, unknown>, accessToken?: string) {
     logger.info(`Creating buyer with data:`, buyerData);
 
-    const response = await request.post(this.base(), {
-      headers: { compress: 'no-compress', ...this.authHeaders(this.token(accessToken)) },
-      multipart: this.toMultipartFields(buyerData),
+    const response = await request.post(this.companiesBase() + '/', {
+      headers: this.jsonHeaders(accessToken),
+      data: buyerData,
     });
 
     return this.result(response);
@@ -40,9 +41,9 @@ export class BuyerAPI extends APIPageObject {
   async updateBuyer(request: APIRequestContext, buyerData: Record<string, unknown>, accessToken?: string) {
     logger.info(`Updating buyer with data:`, buyerData);
 
-    const response = await request.post(this.base() + '/update', {
-      headers: { compress: 'no-compress', ...this.authHeaders(this.token(accessToken)) },
-      multipart: this.toMultipartFields(buyerData),
+    const response = await request.put(this.companiesBase() + '/', {
+      headers: this.jsonHeaders(accessToken),
+      data: buyerData,
     });
 
     return this.result(response);
@@ -51,9 +52,8 @@ export class BuyerAPI extends APIPageObject {
   async checkNameExisting(request: APIRequestContext, checkData: Record<string, unknown>, accessToken?: string) {
     logger.info(`Checking buyer name existing with data:`, checkData);
 
-    const response = await request.post(this.base() + '/name/check', {
-      headers: this.jsonHeaders(accessToken),
-      data: checkData,
+    const response = await request.get(this.companiesBase() + `/check/${encodeURIComponent(String(checkData.name ?? ''))}`, {
+      headers: { compress: 'no-compress', ...this.authHeaders(this.token(accessToken)) },
     });
 
     return this.result(response);
@@ -62,9 +62,9 @@ export class BuyerAPI extends APIPageObject {
   async getBuyersPagination(request: APIRequestContext, paginationData: Record<string, unknown>, accessToken?: string) {
     logger.info(`Getting buyers pagination with data:`, paginationData);
 
-    const response = await request.post(this.base() + '/pagination', {
+    const response = await request.post(this.companiesBase() + '/pagination', {
       headers: this.jsonHeaders(accessToken),
-      data: paginationData,
+      data: { filterByTypes: ['buyer'], ...paginationData, isBan: false },
     });
 
     return this.result(response);
@@ -73,9 +73,9 @@ export class BuyerAPI extends APIPageObject {
   async getBuyersArchive(request: APIRequestContext, archiveData: Record<string, unknown>, accessToken?: string) {
     logger.info(`Getting buyers archive with data:`, archiveData);
 
-    const response = await request.post(this.base() + '/archive', {
+    const response = await request.post(this.companiesBase() + '/pagination', {
       headers: this.jsonHeaders(accessToken),
-      data: archiveData,
+      data: { page: 0, isSortedByAttention: false, isSortedByDate: true, filterByTypes: ['buyer'], ...archiveData, isBan: true },
     });
 
     return this.result(response);
@@ -84,9 +84,9 @@ export class BuyerAPI extends APIPageObject {
   async getInclude(request: APIRequestContext, id: number, includeData: Record<string, unknown>, accessToken?: string) {
     logger.info(`Getting buyer include for id ${id}:`, includeData);
 
-    const response = await request.post(this.base() + `/getinclude/${id}`, {
+    const response = await request.post(this.companiesBase() + '/include', {
       headers: this.jsonHeaders(accessToken),
-      data: includeData,
+      data: { id, ...includeData },
     });
 
     return this.result(response);
@@ -105,7 +105,7 @@ export class BuyerAPI extends APIPageObject {
   async getById(request: APIRequestContext, id: number, accessToken?: string) {
     logger.info(`Getting buyer by id: ${id}`);
 
-    const response = await request.get(this.base() + `/by_id/${id}`, {
+    const response = await request.get(this.companiesBase() + `/${id}`, {
       headers: { compress: 'no-compress', ...this.authHeaders(this.token(accessToken)) },
     });
 
@@ -125,7 +125,7 @@ export class BuyerAPI extends APIPageObject {
   async banBuyer(request: APIRequestContext, id: number, accessToken?: string) {
     logger.info(`Archiving buyer with id: ${id}`);
 
-    const response = await request.delete(this.base() + `/${id}`, {
+    const response = await request.delete(this.companiesBase() + `/${id}`, {
       headers: { compress: 'no-compress', ...this.authHeaders(this.token(accessToken)) },
     });
 

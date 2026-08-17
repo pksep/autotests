@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { OperationAPI } from '../../pages/API/APIOperation';
+import { DetailsAPI } from '../../pages/API/APIDetails';
+import { TechProcessAPI } from '../../pages/API/APITechProcess';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import { clientErrorCodes, expectNoServerError, expectClientError, getRows, successCodes } from '../../lib/helpers/APIAssertions';
@@ -8,6 +10,11 @@ import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/API
 type ApiRow = Record<string, any>;
 
 const operationAPI = new OperationAPI(null);
+const detailsAPI = new DetailsAPI(null);
+const techProcessAPI = new TechProcessAPI(null);
+const testUserId = API_CONST.API_TEST_TABEL;
+
+const queueData = (data: any) => (data?.data && typeof data.data === 'object' ? data.data : data);
 
 const typeOperationPayload = (name: string, overrides: Record<string, unknown> = {}) => ({
   ban: false,
@@ -49,14 +56,47 @@ const operationPayload = (_name: string, typeOperationId: number, overrides: Rec
   preTime: '0',
   helperTime: '0',
   techProcessId: '',
-  mainTime: '0',
-  generalCountTime: '0',
+  mainTime: '1',
+  generalCountTime: '1',
   description: 'Created by API autotest',
-  instrumentList: null,
-  instrumentMerList: null,
-  instrumentOsnList: null,
-  eqList: null,
+  docs: '[]',
+  instrumentList: '[]',
+  instrumentMerList: '[]',
+  instrumentOsnList: '[]',
+  eqList: '[]',
   ...overrides,
+});
+
+const detailPayload = (suffix: string) => ({
+  id: null,
+  techProcessID: null,
+  characteristic: [{ name: 'Масса детали', ez: 'кг', znach: 0 }],
+  name: `API Operation Detail ${suffix}`,
+  designation: `API-OPERATION-DETAIL-${suffix}`,
+  discontinued: false,
+  responsible: '0',
+  description: `Created by Operation API autotest ${suffix}`,
+  parametrs: {
+    preTime: { ez: 'ч', znach: 0 },
+    helperTime: { ez: 'ч', znach: 0 },
+    mainTime: { ez: 'ч', znach: 0 },
+  },
+  attention: false,
+  workpiece_characterization: { mass: 0, trash: 0 },
+  materialList: [],
+  mat_zag: null,
+  mat_zag_zam: null,
+  docs: null,
+  fileBase: [],
+});
+
+const techProcessPayload = (detailId: number, suffix: string) => ({
+  id: '',
+  izd_type: 'detal',
+  izd_id: detailId,
+  description: `API Operation tech process ${suffix}`,
+  operationList: '[]',
+  docs: null,
 });
 
 const expectTypeOperationShape = (row: ApiRow) => {
@@ -240,10 +280,28 @@ export const runOperationAPINew = () => {
     let accessToken: string | undefined;
     let fixtureTypeOperationId: number | undefined;
     let fixtureOperationId: number | undefined;
+    let fixtureDetailId: number | undefined;
+    let fixtureTechProcessId: number | undefined;
 
     test.beforeAll(async ({ request }) => {
       accessToken = await getAuthToken(request);
       const suffix = uniqueApiSuffix('operation-read');
+
+      const detail = await detailsAPI.createDetail(request, detailPayload(suffix), testUserId, accessToken);
+      expectNoServerError(detail);
+      expect(successCodes, JSON.stringify(detail.data)).toContain(detail.status);
+      fixtureDetailId = Number(queueData(detail.data)?.id);
+      expect(fixtureDetailId, JSON.stringify(detail.data)).toBeGreaterThan(0);
+
+      const techProcess = await techProcessAPI.createOrUpdateTechProcess(
+        request,
+        techProcessPayload(fixtureDetailId as number, suffix),
+        accessToken,
+      );
+      expectNoServerError(techProcess);
+      expect(successCodes, JSON.stringify(techProcess.data)).toContain(techProcess.status);
+      fixtureTechProcessId = Number(queueData(techProcess.data)?.id);
+      expect(fixtureTechProcessId, JSON.stringify(techProcess.data)).toBeGreaterThan(0);
 
       const typeOperation = await operationAPI.createTypeOperation(
         request,
@@ -257,7 +315,9 @@ export const runOperationAPINew = () => {
 
       const operation = await operationAPI.createOperation(
         request,
-        operationPayload(`API Read Operation ${suffix}`, fixtureTypeOperationId as number),
+        operationPayload(`API Read Operation ${suffix}`, fixtureTypeOperationId as number, {
+          techProcessId: String(fixtureTechProcessId),
+        }),
         accessToken,
       );
       expectNoServerError(operation);
@@ -274,6 +334,10 @@ export const runOperationAPINew = () => {
       if (fixtureTypeOperationId) {
         const cleanupTypeOperation = await operationAPI.banTypeOperation(request, fixtureTypeOperationId, accessToken);
         expectNoServerError(cleanupTypeOperation);
+      }
+      if (fixtureDetailId) {
+        const cleanupDetail = await detailsAPI.deleteDetail(request, String(fixtureDetailId), testUserId, accessToken);
+        expectNoServerError(cleanupDetail);
       }
     });
 

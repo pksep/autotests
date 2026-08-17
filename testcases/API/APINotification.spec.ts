@@ -288,7 +288,7 @@ export const runNotificationAPINew = () => {
     });
 
     test('минимальный невалидный объект не приводит к 5xx', async ({ request }) => {
-      const response = await notificationsAPI.sendBulkNotification(
+      const response = await notificationsAPI.enrichBatchRaw(
         request,
         [{ uuid: uniqueApiSuffix('notification-invalid'), isSystem: false, event: 'update' }],
         API_CONST.API_TEST_USER_ID,

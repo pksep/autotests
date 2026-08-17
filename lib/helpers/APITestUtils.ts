@@ -7,8 +7,7 @@ const authAPI = new AuthAPI();
 const tokenByRequest = new WeakMap<APIRequestContext, string>();
 
 export const getAuthToken = async (request: APIRequestContext): Promise<string> => {
-  const cached = tokenByRequest.get(request);
-  if (cached) return cached;
+  if (tokenByRequest.has(request)) return tokenByRequest.get(request) as string;
 
   const loginResponse = await authAPI.login(
     request,

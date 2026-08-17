@@ -21,13 +21,12 @@ export class APIPageObject extends AbstractPage {
   }
 
   /**
-   * Builds headers for authenticated API calls (Nest JWT).
-   * Pass a raw access token, `Bearer …`, or `invalid_user` / empty to omit Authorization.
+   * Builds headers for authenticated API calls.
+   * Dev API accepts the login JWT as an auth cookie; sending it as Bearer is limited to comments.
    */
   protected authHeaders(accessToken?: string, extra: Record<string, string> = {}): Record<string, string> {
     const headers: Record<string, string> = { ...extra };
     if (accessToken && accessToken !== 'invalid_user') {
-      headers['Authorization'] = accessToken.startsWith('Bearer ') ? accessToken : `Bearer ${accessToken}`;
       const rawToken = accessToken.startsWith('Bearer ') ? accessToken.slice('Bearer '.length) : accessToken;
       headers['Cookie'] = `access_token=${rawToken}; refresh_token=${rawToken}`;
     }

@@ -182,7 +182,6 @@ const parseBody = async (response: Awaited<ReturnType<APIRequestContext['get']>>
 
 const headersFor = (accessToken: string, json: boolean) => ({
   ...(json ? { 'Content-Type': 'application/json' } : {}),
-  Authorization: `Bearer ${accessToken}`,
   Cookie: `access_token=${accessToken}; refresh_token=${accessToken}`,
   compress: 'no-compress',
 });

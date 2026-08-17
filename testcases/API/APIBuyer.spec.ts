@@ -19,7 +19,7 @@ type BuyerLike = Record<string, any>;
 const buyerAPI = new BuyerAPI(null);
 
 const buyerPaginationDto = (overrides: Record<string, unknown> = {}) => ({
-  page: 1,
+  page: 0,
   searchString: '',
   isSortedByAttention: false,
   isSortedByDate: true,
@@ -31,17 +31,18 @@ const buyerPayload = (suffix: string, overrides: Record<string, unknown> = {}) =
   name: `API Buyer ${suffix}`,
   inn: `78${Math.floor(100000000 + Math.random() * 899999999)}`,
   cpp: `78${Math.floor(1000000 + Math.random() * 8999999)}`,
-  rekvisit: JSON.stringify([
+  type: ['buyer'],
+  requisites: [
     { name: 'Юр. адрес', description: `API buyer address ${suffix}` },
     { name: 'Телефон', description: '' },
     { name: 'Сайт', description: '' },
     { name: 'Эл.почта', description: '' },
-  ]),
-  contacts: JSON.stringify([]),
+  ],
+  contactIds: [],
   description: `Created by Buyer API autotest ${suffix}`,
   docs: '',
   attention: false,
-  fileBase: '[]',
+  documentIds: [],
   ...overrides,
 });
 

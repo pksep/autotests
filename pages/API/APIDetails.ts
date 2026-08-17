@@ -27,8 +27,7 @@ export class DetailsAPI extends APIPageObject {
 
     const headers = {
       accept: '*/*',
-      Authorization: `Bearer ${authToken}`,
-      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
+      ...this.authHeaders(authToken),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };
@@ -78,8 +77,7 @@ export class DetailsAPI extends APIPageObject {
 
     const headers = {
       accept: '*/*',
-      Authorization: `Bearer ${authToken}`,
-      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
+      ...this.authHeaders(authToken),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };
@@ -114,8 +112,7 @@ export class DetailsAPI extends APIPageObject {
 
     const headers = {
       accept: '*/*',
-      Authorization: `Bearer ${authToken}`,
-      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
+      ...this.authHeaders(authToken),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };
@@ -150,8 +147,7 @@ export class DetailsAPI extends APIPageObject {
 
     const headers = {
       accept: '*/*',
-      Authorization: `Bearer ${authToken}`,
-      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
+      ...this.authHeaders(authToken),
       compress: 'no-compress',
     };
 
@@ -179,8 +175,7 @@ export class DetailsAPI extends APIPageObject {
 
     const headers = {
       accept: '*/*',
-      Authorization: `Bearer ${authToken}`,
-      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
+      ...this.authHeaders(authToken),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };
@@ -214,8 +209,7 @@ export class DetailsAPI extends APIPageObject {
     const headers = {
       accept: '*/*',
       'user-id': userId,
-      Authorization: `Bearer ${authToken}`,
-      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
+      ...this.authHeaders(authToken),
       compress: 'no-compress',
     };
 
@@ -245,8 +239,7 @@ export class DetailsAPI extends APIPageObject {
     const headers = {
       accept: '*/*',
       'user-id': userId,
-      Authorization: `Bearer ${authToken}`,
-      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
+      ...this.authHeaders(authToken),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };
@@ -275,8 +268,7 @@ export class DetailsAPI extends APIPageObject {
 
     const headers = {
       accept: '*/*',
-      Authorization: `Bearer ${authToken}`,
-      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
+      ...this.authHeaders(authToken),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };
@@ -306,8 +298,7 @@ export class DetailsAPI extends APIPageObject {
     const headers = {
       accept: '*/*',
       'user-id': userId,
-      Authorization: `Bearer ${authToken}`,
-      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
+      ...this.authHeaders(authToken),
       compress: 'no-compress',
     };
 
@@ -335,8 +326,7 @@ export class DetailsAPI extends APIPageObject {
 
     const headers = {
       accept: '*/*',
-      Authorization: `Bearer ${authToken}`,
-      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
+      ...this.authHeaders(authToken),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };
@@ -366,8 +356,7 @@ export class DetailsAPI extends APIPageObject {
     const headers = {
       accept: '*/*',
       'user-id': userId,
-      Authorization: `Bearer ${authToken}`,
-      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
+      ...this.authHeaders(authToken),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };
@@ -396,8 +385,7 @@ export class DetailsAPI extends APIPageObject {
 
     const headers = {
       accept: '*/*',
-      Authorization: `Bearer ${authToken}`,
-      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
+      ...this.authHeaders(authToken),
       compress: 'no-compress',
     };
 
@@ -425,8 +413,7 @@ export class DetailsAPI extends APIPageObject {
     const headers = {
       accept: '*/*',
       'user-id': userId,
-      Authorization: `Bearer ${authToken}`,
-      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
+      ...this.authHeaders(authToken),
       compress: 'no-compress',
     };
 
@@ -453,8 +440,7 @@ export class DetailsAPI extends APIPageObject {
 
     const headers = {
       accept: '*/*',
-      Authorization: `Bearer ${authToken}`,
-      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
+      ...this.authHeaders(authToken),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };
@@ -483,8 +469,7 @@ export class DetailsAPI extends APIPageObject {
 
     const headers = {
       accept: '*/*',
-      Authorization: `Bearer ${authToken}`,
-      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
+      ...this.authHeaders(authToken),
       compress: 'no-compress',
     };
 
@@ -511,8 +496,7 @@ export class DetailsAPI extends APIPageObject {
 
     const headers = {
       accept: '*/*',
-      Authorization: `Bearer ${authToken}`,
-      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
+      ...this.authHeaders(authToken),
       compress: 'no-compress',
     };
 
@@ -539,8 +523,7 @@ export class DetailsAPI extends APIPageObject {
 
     const headers = {
       accept: '*/*',
-      Authorization: `Bearer ${authToken}`,
-      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
+      ...this.authHeaders(authToken),
       compress: 'no-compress',
     };
 
@@ -568,8 +551,7 @@ export class DetailsAPI extends APIPageObject {
 
     const headers = {
       accept: '*/*',
-      Authorization: `Bearer ${authToken}`,
-      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
+      ...this.authHeaders(authToken),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };
@@ -598,8 +580,7 @@ export class DetailsAPI extends APIPageObject {
 
     const headers = {
       accept: '*/*',
-      Authorization: `Bearer ${authToken}`,
-      ...(authToken ? { Cookie: `access_token=${authToken}` } : {}),
+      ...this.authHeaders(authToken),
       'Content-Type': 'application/json',
       compress: 'no-compress',
     };

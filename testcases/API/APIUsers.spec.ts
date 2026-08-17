@@ -126,7 +126,7 @@ const postUsersPagination = async (request: any, data: Record<string, unknown>, 
     headers: {
       'Content-Type': 'application/json',
       compress: 'no-compress',
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      ...(accessToken ? { Cookie: `access_token=${accessToken}; refresh_token=${accessToken}` } : {}),
     },
     data,
   });
@@ -148,7 +148,7 @@ const postTabelUnique = async (request: any, data: Record<string, unknown>, acce
     headers: {
       'Content-Type': 'application/json',
       compress: 'no-compress',
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      ...(accessToken ? { Cookie: `access_token=${accessToken}; refresh_token=${accessToken}` } : {}),
     },
     data,
   });
@@ -161,7 +161,13 @@ const postTabelUnique = async (request: any, data: Record<string, unknown>, acce
   }
 
   const result = { status: response.status(), data: responseData, headers: response.headers() };
-  expectApiContract(result, { shape: 'number' });
+  expectNoServerError(result);
+  if (clientErrorCodes.includes(result.status)) {
+    expectErrorResponseContract(result);
+  } else {
+    expect(successCodes, JSON.stringify(result.data)).toContain(result.status);
+    expect(Number(result.data), JSON.stringify(result.data)).not.toBeNaN();
+  }
   return result;
 };
 
@@ -377,7 +383,6 @@ export const runUsersAPINew = () => {
         return;
       }
 
-      expectApiContract(response, { shape: 'number' });
       expect(response.status).toBe(201);
       expect(Number(response.data), JSON.stringify(response.data)).toBeGreaterThan(0);
     });

@@ -14,10 +14,12 @@ const paginationDto = (overrides: Record<string, unknown> = {}) => ({
 
 const invalidCellDto = {
   rackId: 999999999,
-  cellId: 999999999,
-  entityId: 999999999,
-  entityType: 'product',
-  quantity: -1,
+  xIndex: 999999999,
+  yIndex: 999999999,
+  productIds: JSON.stringify([{ id: 999999999, quantity: -1 }]),
+  cbedIds: JSON.stringify([]),
+  detalIds: JSON.stringify([]),
+  materialIds: JSON.stringify([]),
 };
 
 export const runRackAPINew = () => {
