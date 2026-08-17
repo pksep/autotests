@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<fb version="0.19.6" size="381395">
+<fb version="0.19.6" size="381716">
   <f>
     <added t="I">8</added>
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
+    <error t="S">GET https://api.github.com/search/issues?per_page=100&amp;q=repo%3Apksep%2Fautotests+type%3Aissue+created%3A2026-06-27T17%3A44%3A01Z..2026-07-29T18%3A38%3A47Z: 504 - We couldn't respond to your request in time. Sorry about that. Please try resubmitting your request and contact us if the problem persists.</error>
     <inserted t="I">8</inserted>
-    <seconds t="F">40.338039747</seconds>
+    <seconds t="F">74.86730184</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-08-17T14:05:29Z</when>
+    <when t="T">2026-08-17T15:01:07Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -25257,11 +25258,11 @@ The average number of releases per month (0.0) is staying still.</text>
   </f>
   <f>
     <_id t="I">1909</_id>
-    <_job t="I">32034973348</_job>
-    <_time t="T">2026-08-17T13:25:53Z</_time>
+    <_job t="I">32040809721</_job>
+    <_time t="T">2026-08-17T15:00:01Z</_time>
     <_version t="S">0.19.6/0.60.0/0.17.11</_version>
     <earliest_issue_was_found t="I">1</earliest_issue_was_found>
-    <events_were_scanned t="I">17932737890</events_were_scanned>
+    <events_were_scanned t="I">17938746237</events_were_scanned>
     <latest_issue_was_found t="I">529</latest_issue_was_found>
     <min_pull_was_found t="I">529</min_pull_was_found>
     <repository t="I">935866864</repository>
