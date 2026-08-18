@@ -14,6 +14,7 @@ import {
   expectSortedDescendingByKnownDate,
   getCount,
   getRows,
+  serverErrorCodes,
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
@@ -33,6 +34,8 @@ type ApiRow = Record<string, any>;
 
 const warehouseAPI = new WarehouseAPI(null as any);
 const materialsAPI = new MaterialsAPI(null as any);
+
+const hasNoServerError = (response: ApiResult) => !serverErrorCodes.includes(response.status);
 
 const entityTypes = ['product', 'cbed', 'detal', 'material'] as const;
 type WarehouseEntityType = (typeof entityTypes)[number];
@@ -87,6 +90,30 @@ const materialPayload = (suffix: string, rootParentId: number, subtypeMaterialId
   file_base: '[]',
   material_aliases: [{ alias: `API Warehouse Material Alias ${suffix}`, default: true }],
 });
+
+const waitForWarehouseRemains = async (
+  request: any,
+  dto: Record<string, unknown>,
+  accessToken?: string,
+): Promise<ApiResult> => {
+  let lastResponse: ApiResult | undefined;
+  let lastError: Error | undefined;
+
+  const response = await eventually(async () => {
+    try {
+      lastResponse = await warehouseAPI.getWarehouseRemains(request, dto, accessToken);
+      lastError = undefined;
+      return lastResponse;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      return { status: 0, data: { message: lastError.message } };
+    }
+  }, (response) => response.status > 0 && hasNoServerError(response), { attempts: 10, intervalMs: 700 });
+
+  if (response) return response;
+  if (lastResponse) return lastResponse;
+  throw lastError ?? new Error(`Warehouse remains did not return a response for dto: ${JSON.stringify(dto)}`);
+};
 
 const findMaterialByName = async (request: any, name: string, accessToken?: string): Promise<ApiRow | undefined> => {
   const response = await eventually(async () => {
@@ -191,7 +218,7 @@ export const runWarehouseAPINew = () => {
 
     test('возвращает пагинацию остатков со стабильной структурой', async ({ request }) => {
       for (const type of entityTypes) {
-        const response = await warehouseAPI.getWarehouseRemains(request, remainsDto(type), accessToken);
+        const response = await waitForWarehouseRemains(request, remainsDto(type), accessToken);
         expectNoServerError(response);
 
         if (!clientErrorCodes.includes(response.status)) {
@@ -205,7 +232,7 @@ export const runWarehouseAPINew = () => {
     });
 
     test('пагинация остатков поддерживает пустой поиск', async ({ request }) => {
-      const response = await warehouseAPI.getWarehouseRemains(
+      const response = await waitForWarehouseRemains(
         request,
         remainsDto('product', { searchString: 'api-sclad-no-match-999999999' }),
         accessToken,
@@ -221,7 +248,7 @@ export const runWarehouseAPINew = () => {
     });
 
     test('пагинация остатков поддерживает граничные значения page/pageSize', async ({ request }) => {
-      const firstPage = await warehouseAPI.getWarehouseRemains(
+      const firstPage = await waitForWarehouseRemains(
         request,
         remainsDto('product', { page: 0, pageSize: 1 }),
         accessToken,
@@ -234,7 +261,7 @@ export const runWarehouseAPINew = () => {
         expectNonNegativeQuantities(getRows<ApiRow>(firstPage.data));
       }
 
-      const farPage = await warehouseAPI.getWarehouseRemains(
+      const farPage = await waitForWarehouseRemains(
         request,
         remainsDto('product', { page: 999999, pageSize: 5 }),
         accessToken,
@@ -314,7 +341,7 @@ export const runWarehouseAPINew = () => {
       ];
 
       for (const searchString of cases) {
-        const remains = await warehouseAPI.getWarehouseRemains(
+        const remains = await waitForWarehouseRemains(
           request,
           remainsDto('product', { searchString }),
           accessToken,

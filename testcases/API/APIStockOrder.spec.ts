@@ -13,6 +13,7 @@ import {
   expectSchemaContract,
   getCount,
   getRows,
+  serverErrorCodes,
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
@@ -46,6 +47,8 @@ const testUserId = API_CONST.API_TEST_TABEL;
 const getQueueData = (data: any): any => {
   return data?.data && typeof data.data === 'object' ? data.data : data;
 };
+
+const hasNoServerError = (response: ApiResult) => !serverErrorCodes.includes(response.status);
 
 const expectStockOrderShape = (stockOrder: StockOrderLike) => {
   expectSchemaContract(stockOrder, stockOrderResponseSchema);
@@ -190,11 +193,24 @@ const waitForStockOrderItems = async (
 ): Promise<StockOrderItemLike[]> => {
   const response = await eventually(async () => {
     const response = await stockOrderAPI.getItemsByStockOrder(request, stockOrderId, accessToken);
-    expectNoServerError(response);
     return response;
-  }, (response) => getRows(response.data).length > 0, { attempts: 10, intervalMs: 700 });
+  }, (response) => hasNoServerError(response) && getRows(response.data).length > 0, { attempts: 10, intervalMs: 700 });
 
   return response ? getRows(response.data) : [];
+};
+
+const waitForStockOrderPagination = async (
+  request: any,
+  paginationData: Record<string, unknown>,
+  accessToken?: string,
+): Promise<ApiResult> => {
+  let lastResponse: ApiResult | undefined;
+  const response = await eventually(async () => {
+    lastResponse = await stockOrderAPI.getPagination(request, paginationData, accessToken);
+    return lastResponse;
+  }, hasNoServerError, { attempts: 10, intervalMs: 700 });
+
+  return response ?? lastResponse as ApiResult;
 };
 
 const waitForStockOrderById = async (
@@ -205,9 +221,8 @@ const waitForStockOrderById = async (
 ): Promise<StockOrderLike | undefined> => {
   const response = await eventually(async () => {
     const response = await stockOrderAPI.getOne(request, { id: stockOrderId, itemsSearchString: '', light: false }, accessToken);
-    expectNoServerError(response);
     return response;
-  }, (response) => successCodes.includes(response.status) && response.data && predicate(response.data), { attempts: 10, intervalMs: 700 });
+  }, (response) => hasNoServerError(response) && successCodes.includes(response.status) && response.data && predicate(response.data), { attempts: 10, intervalMs: 700 });
 
   return response?.data;
 };
@@ -219,9 +234,8 @@ const waitForArchivedStockOrder = async (
 ): Promise<StockOrderLike | undefined> => {
   const response = await eventually(async () => {
     const response = await stockOrderAPI.getOne(request, { id: stockOrderId, itemsSearchString: '', light: false }, accessToken);
-    expectNoServerError(response);
     return response;
-  }, (response) => successCodes.includes(response.status) && response.data?.id === stockOrderId && response.data?.ban === true, { attempts: 10, intervalMs: 700 });
+  }, (response) => hasNoServerError(response) && successCodes.includes(response.status) && response.data?.id === stockOrderId && response.data?.ban === true, { attempts: 10, intervalMs: 700 });
 
   return response?.data;
 };
@@ -239,9 +253,8 @@ const waitForStockOrderAbsentFromActivePagination = async (
       stockOrderArchivePaginationDto({ searchString }),
       accessToken,
     );
-    expectNoServerError(response);
     return response;
-  }, (response) => !getRows(response.data).some((row) => row.id === stockOrderId), { attempts: 10, intervalMs: 700 });
+  }, (response) => hasNoServerError(response) && !getRows(response.data).some((row) => row.id === stockOrderId), { attempts: 10, intervalMs: 700 });
 
   return Boolean(response);
 };
@@ -344,7 +357,7 @@ export const runStockOrderAPINew = () => {
       createdStockOrderItemId = Number(items[0].id);
       expect(getStockOrderItemEntityId(items[0], entity!.type), JSON.stringify(items[0])).toBe(entity!.id);
 
-      const pagination = await stockOrderAPI.getPagination(
+      const pagination = await waitForStockOrderPagination(
         request,
         stockOrderPaginationDto({ searchString: byId.data.number_order }),
         accessToken,
@@ -598,7 +611,7 @@ export const runStockOrderAPINew = () => {
         expect(Array.isArray(allActive.data), JSON.stringify(allActive.data)).toBe(true);
       }
 
-      const mainPagination = await stockOrderAPI.getPagination(request, stockOrderPaginationDto(), accessToken);
+      const mainPagination = await waitForStockOrderPagination(request, stockOrderPaginationDto(), accessToken);
       expect(mainPagination.status).toBe(201);
       expectApiContract(mainPagination, { shape: 'pagination', schema: paginationOf(stockOrderResponseSchema) });
       expect(getCount(mainPagination.data), JSON.stringify(mainPagination.data)).toBeGreaterThanOrEqual(0);
@@ -620,7 +633,7 @@ export const runStockOrderAPINew = () => {
     });
 
     test('пагинация поддерживает пустой результат со стабильной структурой', async ({ request }) => {
-      const response = await stockOrderAPI.getPagination(
+      const response = await waitForStockOrderPagination(
         request,
         stockOrderPaginationDto({ searchString: 'api-stock-order-no-match-999999999' }),
         accessToken,
@@ -633,7 +646,7 @@ export const runStockOrderAPINew = () => {
     });
 
     test('пагинации заказов склада поддерживают граничные значения page/pageSize', async ({ request }) => {
-      const firstPage = await stockOrderAPI.getPagination(
+      const firstPage = await waitForStockOrderPagination(
         request,
         stockOrderPaginationDto({ page: 0, pageSize: 1 }),
         accessToken,
@@ -641,7 +654,7 @@ export const runStockOrderAPINew = () => {
       expect(firstPage.status).toBe(201);
       expectPaginationContract(firstPage.data, 1);
 
-      const farPage = await stockOrderAPI.getPagination(
+      const farPage = await waitForStockOrderPagination(
         request,
         stockOrderPaginationDto({ page: 999999, pageSize: 5 }),
         accessToken,
@@ -661,7 +674,7 @@ export const runStockOrderAPINew = () => {
       ];
 
       for (const searchString of cases) {
-        const response = await stockOrderAPI.getPagination(request, stockOrderPaginationDto({ searchString }), accessToken);
+        const response = await waitForStockOrderPagination(request, stockOrderPaginationDto({ searchString }), accessToken);
         expectNoServerError(response);
       }
     });

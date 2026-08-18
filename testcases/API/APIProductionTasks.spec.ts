@@ -5,6 +5,7 @@ import { ProductionTasksAPI } from '../../pages/API/APIProductionTasks';
 import { UsersAPI } from '../../pages/API/APIUsers';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
+import type { ApiResult } from '../../lib/helpers/APIAssertions';
 import {
   captureApiResult,
   clientErrorCodes,
@@ -44,6 +45,40 @@ const productionTasksAPI = new ProductionTasksAPI(null);
 const equipmentAPI = new EquipmentAPI(null);
 const metaloworkingAPI = new MetaloworkingAPI(null);
 const usersAPI = new UsersAPI(null as any);
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const hasNoServerError = (response: ApiResult) => !serverErrorCodes.includes(response.status);
+
+const waitForStaggeredProductionCalculation = async (offsetMs: number) => {
+  const configuredWorkers = Number((test.info().config as any).workers ?? 1);
+  if (configuredWorkers <= 1) return;
+  await sleep(offsetMs + test.info().parallelIndex * 5000);
+};
+
+const waitForTaskOperations = async (
+  request: any,
+  dto: Record<string, unknown>,
+  accessToken?: string,
+): Promise<ApiResult> => {
+  let lastResponse: ApiResult | undefined;
+  let lastError: Error | undefined;
+
+  const response = await eventually(async () => {
+    try {
+      lastResponse = await productionTasksAPI.getTaskOperations(request, dto, accessToken);
+      lastError = undefined;
+      return lastResponse;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      return { status: 0, data: { message: lastError.message } };
+    }
+  }, (response) => response.status > 0 && hasNoServerError(response), { attempts: 8, intervalMs: 1500 });
+
+  if (response) return response;
+  if (lastResponse) return lastResponse;
+  throw lastError ?? new Error(`Production task operations did not return a response for dto: ${JSON.stringify(dto)}`);
+};
 
 const productionTaskPaginationDto = (overrides: Record<string, unknown> = {}) => ({
   page: 0,
@@ -1519,6 +1554,7 @@ export const runProductionTasksAPINew = () => {
 
     test('проверяет расчёт дат операций ПЗ по всем оборудованиям', async ({ request }) => {
       test.setTimeout(180000);
+      await waitForStaggeredProductionCalculation(15000);
 
       const allEquipment = await equipmentAPI.getAllEquipment(request, true, accessToken);
       expectNoServerError(allEquipment);
@@ -1562,7 +1598,7 @@ export const runProductionTasksAPINew = () => {
         const cacheKey = `${entityType}:${productionEntityId}:${productionTaskId}:${Number(operation.id)}`;
 
         if (!operationDetailsCache.has(cacheKey)) {
-          const taskOperations = await productionTasksAPI.getTaskOperations(
+          const taskOperations = await waitForTaskOperations(
             request,
             taskOperationsDto(entityType, productionEntityId, Number(operation.id), { productionTaskId }),
             accessToken,
@@ -1742,6 +1778,7 @@ export const runProductionTasksAPINew = () => {
 
     test('проверяет расчёт дат операций ПЗ по всем сотрудникам', async ({ request }) => {
       test.setTimeout(180000);
+      await waitForStaggeredProductionCalculation(45000);
 
       const allUsers = await usersAPI.getAllUsers(request, true, false, accessToken);
       expectNoServerError(allUsers);
@@ -1787,7 +1824,7 @@ export const runProductionTasksAPINew = () => {
         const cacheKey = `${entityType}:${productionEntityId}:${productionTaskId}:${Number(operation.id)}`;
 
         if (!operationDetailsCache.has(cacheKey)) {
-          const taskOperations = await productionTasksAPI.getTaskOperations(
+          const taskOperations = await waitForTaskOperations(
             request,
             taskOperationsDto(entityType, productionEntityId, Number(operation.id), { productionTaskId }),
             accessToken,

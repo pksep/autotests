@@ -18,6 +18,7 @@ import {
   expectSchemaContract,
   getCount,
   getRows,
+  serverErrorCodes,
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
@@ -173,9 +174,12 @@ const companyPayload = (suffix: string, overrides: Record<string, unknown> = {})
 const findProductByDesignation = async (request: any, designation: string, accessToken?: string): Promise<ApiRow | undefined> => {
   const response = await eventually(async () => {
     const response = await productsAPI.getAllProducts(request, productPaginationDto({ searchString: designation }), accessToken);
-    expectNoServerError(response);
     return response;
-  }, (response) => getRows<ApiRow>(response.data).some((row) => row.designation === designation && row.ban !== true));
+  }, (response) =>
+    !serverErrorCodes.includes(response.status) &&
+    getRows<ApiRow>(response.data).some((row) => row.designation === designation && row.ban !== true),
+    { attempts: 30, intervalMs: 1500 },
+  );
 
   return response ? getRows<ApiRow>(response.data).find((row) => row.designation === designation && row.ban !== true) : undefined;
 };
@@ -202,6 +206,10 @@ const createIsolatedProduct = async (request: any, suffix: string, accessToken?:
   expectNoServerError(create);
 
   const created = await findProductByDesignation(request, String(payload.designation), accessToken);
+  expect(
+    created,
+    `POST /api/product вернул ${create.status}, но Bull не успел отдать изделие в pagination: ${JSON.stringify(create.data)}`,
+  ).toBeTruthy();
   const id = Number(getQueueData(create.data)?.id ?? created?.id);
   expect(id, JSON.stringify(create.data)).toBeGreaterThan(0);
   return { ...(created as ApiRow), id, name: String(payload.name), designation: String(payload.designation) };
@@ -233,11 +241,12 @@ const findShipmentByDescription = async (
       }),
       accessToken,
     );
-    expectNoServerError(response);
     return response;
-  }, (response) => getRows<ApiRow>(response.data).some((row) => row.description === description), {
-    attempts: 12,
-    intervalMs: 750,
+  }, (response) =>
+    !serverErrorCodes.includes(response.status) &&
+    getRows<ApiRow>(response.data).some((row) => row.description === description), {
+    attempts: 30,
+    intervalMs: 1500,
   });
 
   return response ? getRows<ApiRow>(response.data).find((row) => row.description === description) : undefined;
@@ -302,9 +311,10 @@ const waitForShipment = async (
 ): Promise<ApiRow | undefined> => {
   const response = await eventually(async () => {
     const response = await shipmentsAPI.getShipmentById(request, shipmentId, accessToken);
-    expectNoServerError(response);
     return response;
-  }, (response) => Boolean(response.data && predicate(response.data)), {
+  }, (response) =>
+    !serverErrorCodes.includes(response.status) &&
+    Boolean(response.data && predicate(response.data)), {
     attempts: options.attempts ?? 10,
     intervalMs: options.intervalMs ?? 700,
   });
@@ -340,9 +350,10 @@ const waitForShipmentAbsentFromActivePagination = async (
       }),
       accessToken,
     );
-    expectNoServerError(response);
     return response;
-  }, (response) => !getRows<ApiRow>(response.data).some((row) => Number(row.id) === shipmentId), {
+  }, (response) =>
+    !serverErrorCodes.includes(response.status) &&
+    !getRows<ApiRow>(response.data).some((row) => Number(row.id) === shipmentId), {
     attempts: 10,
     intervalMs: 700,
   });

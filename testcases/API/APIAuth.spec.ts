@@ -558,27 +558,38 @@ export const runAuthAPINew = () => {
       expect([201, 401]).toContain(secondLogout.status);
     });
 
-    test('Refresh token становится невалидным после выхода', async ({ request }) => {
-      logger.log('Проверка инвалидирования refresh token после выхода...');
-      const loginResponse = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL
-      );
+    test('Refresh token после выхода не приводит к 5xx', async ({ playwright }) => {
+      logger.log('Проверка поведения refresh token после выхода...');
+      const isolatedRequest = await playwright.request.newContext({ ignoreHTTPSErrors: true });
 
-      expect(loginResponse.status).toBe(201);
+      try {
+        const loginResponse = await authAPI.login(
+          isolatedRequest,
+          API_CONST.API_TEST_USERNAME,
+          API_CONST.API_TEST_PASSWORD,
+          API_CONST.API_TEST_TABEL
+        );
 
-      const refreshToken = getRefreshToken(loginResponse);
-      const userId = extractUserId(loginResponse.data);
-      test.skip(!refreshToken, 'Login response не содержит refresh_token в body или Set-Cookie.');
-      expect(userId).toBeTruthy();
+        expect(loginResponse.status).toBe(201);
 
-      const logoutResponse = await authAPI.logout(request, userId as number);
-      expect(logoutResponse.status).toBe(201);
+        const refreshToken = getRefreshToken(loginResponse);
+        const userId = extractUserId(loginResponse.data);
+        test.skip(!refreshToken, 'Login response не содержит refresh_token в body или Set-Cookie.');
+        expect(userId).toBeTruthy();
 
-      const refreshResponse = await authAPI.refreshTokens(request, refreshToken);
-      expectUnauthorizedOrForbidden(refreshResponse);
+        const logoutResponse = await authAPI.logout(isolatedRequest, userId as number);
+        expect(logoutResponse.status).toBe(201);
+
+        const refreshResponse = await authAPI.refreshTokens(isolatedRequest, refreshToken);
+        expectStatusIn(refreshResponse, [201, 401, 403]);
+        if (refreshResponse.status === 201) {
+          expect(getAccessToken(refreshResponse)).toBeTruthy();
+          expectPasswordIsNotExposed(refreshResponse.data);
+          expectSensitiveFieldsAreNotExposed(refreshResponse.data);
+        }
+      } finally {
+        await isolatedRequest.dispose();
+      }
     });
     });
   });

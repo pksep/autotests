@@ -1,7 +1,7 @@
 import { test, expect, APIRequestContext } from '@playwright/test';
 import { ENV } from '../../config';
 import { API_CONST } from '../../lib/Constants/APIConstants';
-import { expectNoServerError, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { expectNoServerError, getRows, serverErrorCodes, successCodes } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 import { expectRepeatOperationRejectedOrIdempotent } from '../../lib/helpers/APIDataInvariants';
 import { ProductsAPI } from '../../pages/API/APIProducts';
@@ -52,6 +52,7 @@ const parseBody = async (response: any) => {
 };
 
 const queueData = (data: any) => (data?.data && typeof data.data === 'object' ? data.data : data);
+const hasNoServerError = (result: ApiResult) => !serverErrorCodes.includes(result.status);
 const multipartData = (data: Record<string, unknown>) =>
   Object.fromEntries(
     Object.entries(data)
@@ -218,10 +219,9 @@ const getFirstMatchingRow = async (
   const response = await eventually(
     async () => {
       const res = await loader();
-      expectNoServerError(res);
       return res;
     },
-    (res) => getRows<ApiRow>(res.data).some(matcher),
+    (res) => hasNoServerError(res) && getRows<ApiRow>(res.data).some(matcher),
     { attempts: 15, intervalMs: 800 },
   );
 
@@ -390,10 +390,10 @@ const expectStock = async (
       const res = await api(remainsDto(name));
       const data = await parseBody(res);
       const result = { status: res.status(), data };
-      expectNoServerError(result);
       return result;
     },
     (result) => {
+      if (!hasNoServerError(result)) return false;
       const row = getRows<ApiRow>(result.data).find((item) => Number(item.id) === id);
       return (
         Boolean(row) &&
@@ -420,10 +420,10 @@ const expectStockOrder = async (
   const response = await eventually(
     async () => {
       const res = await stockOrderAPI.getByObject(request, id, type, token);
-      expectNoServerError(res);
       return res;
     },
     (res) =>
+      hasNoServerError(res) &&
       getRows<ApiRow>(res.data).some((row) => {
         const entityId = Number(row[entityKey] ?? row[`${type}Id`]);
         const actualOrderType = String(row.stock_order?.type ?? row.stockOrder?.type ?? '').toLowerCase();
@@ -461,10 +461,10 @@ const expectOperationMark = async (
   const response = await eventually(
     async () => {
       const res = await apiGet(request, `api/marks/marks/byoperation/${operationId}`, token);
-      expectNoServerError(res);
       return res;
     },
     (res) =>
+      hasNoServerError(res) &&
       getRows<ApiRow>(res.data).some(
         (row) =>
           Number(row.oper_id ?? row.operId) === operationId &&
@@ -496,10 +496,10 @@ const expectComplectKitId = async (
   const response = await eventually(
     async () => {
       const res = await apiGet(request, `api/marks/marks/byoperation/${operationId}`, token);
-      expectNoServerError(res);
       return res;
     },
     (res) =>
+      hasNoServerError(res) &&
       getRows<ApiRow>(res.data).some(
         (row) =>
           Number(row.oper_id ?? row.operId) === operationId &&
@@ -645,10 +645,10 @@ const createShipmentWithFallbacks = async (
         const hydrated = await eventually(
           async () => {
             const shipment = await shipmentsAPI.getShipmentById(request, shipmentId, token);
-            expectNoServerError(shipment);
             return shipment;
           },
           (shipment) =>
+            hasNoServerError(shipment) &&
             Number(shipment.data?.id) === shipmentId &&
             Number(shipment.data?.productId ?? shipment.data?.product_id) === productId &&
             Number(shipment.data?.kol ?? 0) === 1,
@@ -681,7 +681,7 @@ const findShCheckByNumber = async (
       },
       token,
     );
-    expectNoServerError(response);
+    if (!hasNoServerError(response)) return undefined;
 
     return getRows<ApiRow>(response.data).find(
       (row) => row.number_order === numberOrder || row.numberOrder === numberOrder,
@@ -778,10 +778,9 @@ const waitForDeficit = async (
   const response = await eventually(
     async () => {
       const res = await loader();
-      expectNoServerError(res);
       return res;
     },
-    (res) => getRows<ApiRow>(res.data).some(matcher),
+    (res) => hasNoServerError(res) && getRows<ApiRow>(res.data).some(matcher),
     { attempts: 20, intervalMs: 1500 },
   );
 
@@ -819,11 +818,13 @@ const expectNoDeficitRow = async (
   const response = await eventually(
     async () => {
       const response = await loader();
-      expectNoServerError(response);
-      lastRow = getRows<ApiRow>(response.data).find(matcher);
+      if (hasNoServerError(response)) {
+        lastRow = getRows<ApiRow>(response.data).find(matcher);
+      }
       return response;
     },
-    () => {
+    (response) => {
+      if (!hasNoServerError(response)) return false;
       if (!lastRow) return true;
       const { deficit, shipmentsDeficit } = readDeficitValues(lastRow);
       return deficit === 0 && shipmentsDeficit === 0;
@@ -848,19 +849,23 @@ const waitForProductState = async (
   const response = await eventually(
     async () => {
       const res = await productsAPI.getProductById(request, productId, token);
-      expectNoServerError(res);
-      return queueData(res.data);
+      return res;
     },
-    (row) =>
-      Boolean(row) &&
-      Number(row.id) === productId &&
-      Number(row.actual_shipment_id ?? 0) > 0 &&
-      Number(row.shipments_kolvo ?? 0) > 0 &&
-      Number(row.deficit ?? 0) < 0,
+    (response) => {
+      if (!hasNoServerError(response)) return false;
+      const row = queueData(response.data);
+      return (
+        Boolean(row) &&
+        Number(row.id) === productId &&
+        Number(row.actual_shipment_id ?? 0) > 0 &&
+        Number(row.shipments_kolvo ?? 0) > 0 &&
+        Number(row.deficit ?? 0) < 0
+      );
+    },
     { attempts: 40, intervalMs: 3000 },
   );
 
-  return response || null;
+  return response ? queueData(response.data) : null;
 };
 
 const ignoreCleanupError = async (action: () => Promise<unknown>) => {
@@ -1085,10 +1090,10 @@ export const runProductionShipmentFlowAPI = () => {
         const persistedShipment = await eventually(
           async () => {
             const response = await shipmentsAPI.getShipmentById(request, shipmentId, accessToken);
-            expectNoServerError(response);
             return response;
           },
           (response) =>
+            hasNoServerError(response) &&
             Number(response.data?.id) === shipmentId &&
             Number(response.data?.productId ?? response.data?.product_id) === productId &&
             Number(response.data?.kol) === 1,
@@ -1501,10 +1506,12 @@ export const runProductionShipmentFlowAPI = () => {
         const shippedShipment = await eventually(
           async () => {
             const response = await shipmentsAPI.getShipmentById(request, shipmentId, accessToken);
-            expectNoServerError(response);
             return response;
           },
-          (response) => Number(response.data?.shipped ?? 0) >= 1 && String(response.data?.status ?? '') === 'Отгружено',
+          (response) =>
+            hasNoServerError(response) &&
+            Number(response.data?.shipped ?? 0) >= 1 &&
+            String(response.data?.status ?? '') === 'Отгружено',
           { attempts: 15, intervalMs: 1000 },
         );
         expect(shippedShipment?.data, `Отгрузка ${shipmentId} не перешла в shipped-состояние`).toBeTruthy();

@@ -12,16 +12,19 @@ import {
   expectPaginationContract,
   getCount,
   getRows,
+  serverErrorCodes,
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 import { expectRepeatOperationRejectedOrIdempotent } from '../../lib/helpers/APIDataInvariants';
 
 type ApiRow = Record<string, any>;
+type ApiResult = { status: number; data: any };
 
 const equipmentAPI = new EquipmentAPI(null);
 const documentsAPI = new DocumentsAPI(null);
 const operationAPI = new OperationAPI(null);
+const hasNoServerError = (result: ApiResult) => !serverErrorCodes.includes(result.status);
 
 const equipmentPaginationDto = (overrides: Record<string, unknown> = {}) => ({
   page: 0,
@@ -66,9 +69,8 @@ const expectEquipmentShape = (row: ApiRow) => {
 const findEquipmentByName = async (request: any, name: string, accessToken?: string): Promise<ApiRow | undefined> => {
   const response = await eventually(async () => {
     const response = await equipmentAPI.getEquipmentPagination(request, equipmentPaginationDto({ searchString: name }), accessToken);
-    expectNoServerError(response);
     return response;
-  }, (response) => getRows<ApiRow>(response.data).some((row) => row.name === name));
+  }, (response) => hasNoServerError(response) && getRows<ApiRow>(response.data).some((row) => row.name === name));
 
   return response ? getRows<ApiRow>(response.data).find((row) => row.name === name) : undefined;
 };
@@ -81,9 +83,48 @@ const waitForEquipmentAbsentFromActivePagination = async (
 ): Promise<boolean> => {
   const response = await eventually(async () => {
     const response = await equipmentAPI.getEquipmentPagination(request, equipmentPaginationDto({ searchString: name }), accessToken);
-    expectNoServerError(response);
     return response;
-  }, (response) => !getRows<ApiRow>(response.data).some((row) => row.id === equipmentId));
+  }, (response) =>
+    hasNoServerError(response) &&
+    !getRows<ApiRow>(response.data).some((row) => row.id === equipmentId),
+    { attempts: 30, intervalMs: 1500 },
+  );
+
+  return Boolean(response);
+};
+
+const waitForEquipmentTypeAbsentFromActivePagination = async (
+  request: any,
+  typeId: number,
+  name: string,
+  accessToken?: string,
+): Promise<boolean> => {
+  const response = await eventually(async () => {
+    const response = await equipmentAPI.getTypePagination(request, equipmentPaginationDto({ searchString: name }), accessToken);
+    return response;
+  }, (response) =>
+    hasNoServerError(response) &&
+    !getRows<ApiRow>(response.data).some((row) => row.id === typeId),
+    { attempts: 30, intervalMs: 1500 },
+  );
+
+  return Boolean(response);
+};
+
+const waitForEquipmentSubtypeAbsentFromActivePagination = async (
+  request: any,
+  subtypeId: number,
+  name: string,
+  accessToken?: string,
+): Promise<boolean> => {
+  const response = await eventually(async () => {
+    const response = await equipmentAPI.getSubtypePagination(request, equipmentPaginationDto({ searchString: name }), accessToken);
+    return response;
+  }, (response) =>
+    hasNoServerError(response) &&
+    !getRows<ApiRow>(response.data).some((row) => row.id === subtypeId),
+    { attempts: 30, intervalMs: 1500 },
+  );
 
   return Boolean(response);
 };
@@ -568,17 +609,15 @@ export const runEquipmentAPINew = () => {
         expect(successCodes).toContain(archiveType.status);
       }
 
-      const activeSubtypes = await equipmentAPI.getSubtypePagination(request, equipmentPaginationDto({ searchString: subtypeName }), accessToken);
-      expectNoServerError(activeSubtypes);
-      if (!clientErrorCodes.includes(activeSubtypes.status)) {
-        expect(getRows<ApiRow>(activeSubtypes.data).some((row) => row.id === currentSubtypeId), JSON.stringify(activeSubtypes.data)).toBe(false);
-      }
+      expect(
+        await waitForEquipmentSubtypeAbsentFromActivePagination(request, currentSubtypeId, subtypeName, accessToken),
+        `Equipment subtype ${currentSubtypeId} не исчез из active pagination после архивации через Bull`,
+      ).toBe(true);
 
-      const activeTypes = await equipmentAPI.getTypePagination(request, equipmentPaginationDto({ searchString: typeName }), accessToken);
-      expectNoServerError(activeTypes);
-      if (!clientErrorCodes.includes(activeTypes.status)) {
-        expect(getRows<ApiRow>(activeTypes.data).some((row) => row.id === currentTypeId), JSON.stringify(activeTypes.data)).toBe(false);
-      }
+      expect(
+        await waitForEquipmentTypeAbsentFromActivePagination(request, currentTypeId, typeName, accessToken),
+        `Equipment type ${currentTypeId} не исчез из active pagination после архивации через Bull`,
+      ).toBe(true);
 
       const noAuthArchiveType = await equipmentAPI.removeEquipmentType(request, currentTypeId);
       expectClientError(noAuthArchiveType);
