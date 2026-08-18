@@ -5,10 +5,10 @@
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">14.243864671</seconds>
+    <seconds t="F">10.14350494</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-08-18T17:03:05Z</when>
+    <when t="T">2026-08-18T18:00:06Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
