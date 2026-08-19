@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<fb version="0.19.6" size="381873">
+<fb version="0.19.6" size="381870">
   <f>
     <added t="I">8</added>
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">13.474145096</seconds>
+    <seconds t="F">8.270159108</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-08-19T15:06:26Z</when>
+    <when t="T">2026-08-19T16:02:28Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -25232,18 +25232,6 @@
     <when t="T">2026-08-17T11:01:48Z</when>
   </f>
   <f>
-    <_id t="I">1910</_id>
-    <_job t="I">87473</_job>
-    <_time t="T">2026-08-17T15:01:29Z</_time>
-    <_version t="S">0.19.16/0.61.1/0.17.11!0.17.21</_version>
-    <analyzers t="I">18</analyzers>
-    <text t="S">The average number of builds per week (119.9) is increasing (R=0.57).
-The average number of commits per week (0.2) is decreasing (R=-0.77).
-The average number of releases per month (0.0) is staying still.</text>
-    <what t="S">assessment</what>
-    <when t="T">2026-08-17T15:01:29Z</when>
-  </f>
-  <f>
     <_id t="I">1912</_id>
     <_job t="I">32134363480</_job>
     <_time t="T">2026-08-18T11:59:18Z</_time>
@@ -25303,5 +25291,17 @@ The average number of releases per month (0.0) is staying still.</text>
     <repository t="I">935866864</repository>
     <what t="S">iterate</what>
     <where t="S">github</where>
+  </f>
+  <f>
+    <_id t="I">1918</_id>
+    <_job t="I">87758</_job>
+    <_time t="T">2026-08-19T15:06:43Z</_time>
+    <_version t="S">0.19.16/0.61.1/0.17.11!0.17.21</_version>
+    <analyzers t="I">18</analyzers>
+    <text t="S">The average number of builds per week (119.9) is increasing (R=0.57).
+The average number of commits per week (0.2) is decreasing (R=-0.77).
+The average number of releases per month (0.0) is staying still.</text>
+    <what t="S">assessment</what>
+    <when t="T">2026-08-19T15:06:43Z</when>
   </f>
 </fb>
