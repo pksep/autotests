@@ -79,17 +79,16 @@ deploy:
                           secretKeyRef:
                             name: autotests-report-secret
                             key: CHAT_ID
-                            optional: true
+                      - name: BOT_TOKEN
+                        valueFrom:
+                          secretKeyRef:
+                            name: autotests-report-secret
+                            key: BOT_TOKEN
                       - name: BOT_API_BASE_URL
                         valueFrom:
                           configMapKeyRef:
                             name: weekly-reports-bot-config
                             key: BOT_API_BASE_URL
-                      - name: BOT_TOKEN
-                        valueFrom:
-                          secretKeyRef:
-                            name: weekly-reports-bot-secret
-                            key: BOT_TOKEN
                     envFrom:
                       - secretRef:
                           name: autotests-env
