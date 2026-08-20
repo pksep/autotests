@@ -24,7 +24,7 @@ type ApiResult = {
 };
 
 type ApiRow = Record<string, any>;
-const lzString = require('../../../sep_erp_server/sep_erp_server/node_modules/lz-string') as {
+const lzString = require('lz-string') as {
   compressToBase64: (input: string) => string;
 };
 

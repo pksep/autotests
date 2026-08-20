@@ -12,7 +12,6 @@ variables:
   AUTOTESTS_TEST_SUITE:
     value: "all_api_tests"
     description: "TEST_SUITE для nightly CronJob."
-
 deploy:
   stage: deploy
   image:
@@ -37,7 +36,7 @@ deploy:
           app: autotests
           component: autotests-nightly
       spec:
-        schedule: "0 0 * * *"
+        schedule: "30 7 * * *"
         timeZone: Europe/Moscow
         concurrencyPolicy: Forbid
         successfulJobsHistoryLimit: 3
@@ -75,6 +74,22 @@ deploy:
                         value: "true"
                       - name: REPORTS_DIR
                         value: "/app/reports"
+                      - name: AUTOTESTS_REPORT_CHAT_ID
+                        valueFrom:
+                          secretKeyRef:
+                            name: autotests-report-secret
+                            key: CHAT_ID
+                            optional: true
+                      - name: BOT_API_BASE_URL
+                        valueFrom:
+                          configMapKeyRef:
+                            name: weekly-reports-bot-config
+                            key: BOT_API_BASE_URL
+                      - name: BOT_TOKEN
+                        valueFrom:
+                          secretKeyRef:
+                            name: weekly-reports-bot-secret
+                            key: BOT_TOKEN
                     envFrom:
                       - secretRef:
                           name: autotests-env

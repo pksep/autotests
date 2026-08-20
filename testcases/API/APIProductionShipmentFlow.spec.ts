@@ -14,7 +14,7 @@ import { CompaniesAPI } from '../../pages/API/APICompanies';
 
 type ApiRow = Record<string, any>;
 type ApiResult = { status: number; data: any };
-const lzString = require('../../../sep_erp_server/sep_erp_server/node_modules/lz-string') as {
+const lzString = require('lz-string') as {
   compressToBase64: (input: string) => string;
 };
 

@@ -63,6 +63,21 @@ run_tests() {
 
   ln -sfn "${run_dir}" "${REPORTS_DIR}/latest"
 
+  report_exit_code=0
+  report_archive="/tmp/autotests-report-${run_id}.tar.gz"
+  tar -czf "${report_archive}" -C "${run_dir}" . || report_exit_code=$?
+
+  if [ "${report_exit_code}" -eq 0 ]; then
+    AUTOTESTS_EXIT_CODE="${test_exit_code}" node scripts/send-test-report.mjs "${report_archive}" "${run_dir}" || report_exit_code=$?
+  fi
+
+  if [ "${report_exit_code}" -ne 0 ]; then
+    echo "Autotests report delivery failed with exit code ${report_exit_code}"
+    if [ "${test_exit_code}" -eq 0 ]; then
+      test_exit_code="${report_exit_code}"
+    fi
+  fi
+
   echo "Finished API autotests at ${finished_at}; report directory: ${run_dir}; exit code: ${test_exit_code}"
   return "${test_exit_code}"
 }
