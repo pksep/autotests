@@ -5,9 +5,9 @@
 
 export const API_CONST = {
   // Auth Test Data
-  API_TEST_USERNAME: 'Грибовский О.М.',
-  API_TEST_PASSWORD: 'mied9aiC',
-  API_TEST_TABEL: '108',
+  API_TEST_USERNAME: process.env.API_TEST_USERNAME || 'Грибовский О.М.',
+  API_TEST_PASSWORD: process.env.API_TEST_PASSWORD || 'mied9aiC',
+  API_TEST_TABEL: process.env.API_TEST_TABEL || '108',
   API_TEST_AUTHORIZATION_TOKEN: 'Bearer test-token-12345',
 
   // Users Test Data
