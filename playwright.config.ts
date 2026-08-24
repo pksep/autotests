@@ -58,6 +58,7 @@ export default defineConfig({
   ],
   reporter: [
     ['line'], // Console output
+    ['json', { outputFile: 'test-results/results.json' }],
     ['html', { open: 'never' }], // playwright-report/ — for deploy:gh-pages (no Java required)
     ['allure-playwright'], // Allure reporter (allure generate needs Java)
   ],
