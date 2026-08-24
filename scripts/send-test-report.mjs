@@ -69,7 +69,10 @@ const sendDocument = async (filePath, caption) => {
 
   const uploadResponse = await fetch(upload.upload_url, {
     method: 'PUT',
-    headers: { 'content-type': mimeType },
+    headers: {
+      'content-type': mimeType,
+      'content-length': String(fileSize),
+    },
     body: createReadStream(filePath),
     duplex: 'half',
   });
