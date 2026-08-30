@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<fb version="0.19.6" size="384494">
+<fb version="0.19.6" size="385151">
   <f>
     <added t="I">8</added>
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">21.008651433</seconds>
+    <seconds t="F">119.409535548</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-08-30T17:46:53Z</when>
+    <when t="T">2026-08-30T21:34:49Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -25489,15 +25489,175 @@ The average number of releases per month (0.0) is staying still.</text>
   </f>
   <f>
     <_id t="I">1957</_id>
-    <_job t="I">33326121140</_job>
-    <_time t="T">2026-08-30T17:46:37Z</_time>
+    <_job t="I">33336673520</_job>
+    <_time t="T">2026-08-30T21:32:52Z</_time>
     <_version t="S">0.19.6/0.60.0/0.17.11</_version>
     <earliest_issue_was_found t="I">1</earliest_issue_was_found>
-    <events_were_scanned t="I">19445948569</events_were_scanned>
+    <events_were_scanned t="I">19456740461</events_were_scanned>
     <latest_issue_was_found t="I">529</latest_issue_was_found>
     <min_pull_was_found t="I">529</min_pull_was_found>
     <repository t="I">935866864</repository>
     <what t="S">iterate</what>
     <where t="S">github</where>
+  </f>
+  <f>
+    <_id t="I">1958</_id>
+    <_job t="I">33336673520</_job>
+    <_time t="T">2026-08-30T21:32:52Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <since t="T">2026-07-29T18:38:32Z</since>
+    <total_builds_ran t="I">1038</total_builds_ran>
+    <total_commits_pushed t="I">0</total_commits_pushed>
+    <total_hoc_committed t="I">0</total_hoc_committed>
+    <total_issues_created t="I">0</total_issues_created>
+    <total_pulls_submitted t="I">0</total_pulls_submitted>
+    <total_releases_published t="I">0</total_releases_published>
+    <total_reviews_submitted t="I">0</total_reviews_submitted>
+    <what t="S">quantity-of-deliverables</what>
+    <when t="T">2026-08-30T21:32:52Z</when>
+  </f>
+  <f>
+    <_id t="I">1959</_id>
+    <_job t="I">33336673520</_job>
+    <_time t="T">2026-08-30T21:33:02Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <since t="T">2026-07-29T18:38:47Z</since>
+    <some_backlog_size>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+      <v t="I">0</v>
+    </some_backlog_size>
+    <some_build_duration>
+      <v t="I">27</v>
+      <v t="I">110</v>
+      <v t="I">28</v>
+      <v t="I">115</v>
+      <v t="I">28</v>
+      <v t="I">106</v>
+      <v t="I">30</v>
+      <v t="I">99</v>
+      <v t="I">32</v>
+      <v t="I">115</v>
+      <v t="I">29</v>
+      <v t="I">105</v>
+      <v t="I">26</v>
+      <v t="I">102</v>
+      <v t="I">33</v>
+      <v t="I">101</v>
+      <v t="I">41</v>
+      <v t="I">117</v>
+      <v t="I">41</v>
+      <v t="I">103</v>
+      <v t="I">27</v>
+      <v t="I">110</v>
+      <v t="I">38</v>
+      <v t="I">110</v>
+      <v t="I">28</v>
+      <v t="I">109</v>
+      <v t="I">30</v>
+      <v t="I">109</v>
+      <v t="I">28</v>
+      <v t="I">111</v>
+      <v t="I">27</v>
+      <v t="I">131</v>
+      <v t="I">31</v>
+      <v t="I">104</v>
+      <v t="I">29</v>
+      <v t="I">95</v>
+      <v t="I">24</v>
+      <v t="I">117</v>
+      <v t="I">33</v>
+      <v t="I">129</v>
+      <v t="I">28</v>
+      <v t="I">109</v>
+      <v t="I">22</v>
+      <v t="I">100</v>
+      <v t="I">27</v>
+      <v t="I">103</v>
+      <v t="I">28</v>
+      <v t="I">105</v>
+      <v t="I">26</v>
+      <v t="I">116</v>
+      <v t="I">23</v>
+      <v t="I">98</v>
+      <v t="I">26</v>
+      <v t="I">141</v>
+      <v t="I">27</v>
+      <v t="I">119</v>
+      <v t="I">28</v>
+      <v t="I">134</v>
+      <v t="I">24</v>
+      <v t="I">0</v>
+    </some_build_duration>
+    <some_build_success_rate>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+      <v t="I">1</v>
+      <v t="I">0</v>
+    </some_build_success_rate>
+    <some_merged_pulls t="I">0</some_merged_pulls>
+    <some_unmerged_pulls t="I">0</some_unmerged_pulls>
+    <what t="S">quality-of-service</what>
+    <when t="T">2026-08-30T21:33:02Z</when>
   </f>
 </fb>
