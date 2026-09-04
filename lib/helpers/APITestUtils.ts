@@ -9,15 +9,21 @@ const tokenByRequest = new WeakMap<APIRequestContext, string>();
 export const getAuthToken = async (request: APIRequestContext): Promise<string> => {
   if (tokenByRequest.has(request)) return tokenByRequest.get(request) as string;
 
-  const loginResponse = await authAPI.login(
-    request,
-    API_CONST.API_TEST_USERNAME,
-    API_CONST.API_TEST_PASSWORD,
-    API_CONST.API_TEST_TABEL,
-  );
+  let loginResponse: Awaited<ReturnType<AuthAPI['login']>> | undefined;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    loginResponse = await authAPI.login(
+      request,
+      API_CONST.API_TEST_USERNAME,
+      API_CONST.API_TEST_PASSWORD,
+      API_CONST.API_TEST_TABEL,
+    );
 
-  expect(loginResponse.status).toBe(201);
-  const accessToken = extractAccessToken(loginResponse.data);
+    if (loginResponse.status < 500 || attempt === 4) break;
+    await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+  }
+
+  expect(loginResponse?.status).toBe(201);
+  const accessToken = extractAccessToken(loginResponse?.data);
   expect(accessToken).toBeTruthy();
 
   tokenByRequest.set(request, accessToken as string);

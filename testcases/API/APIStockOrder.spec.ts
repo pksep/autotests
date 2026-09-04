@@ -546,18 +546,27 @@ export const runStockOrderAPINew = () => {
         stockOrderArchivePaginationDto({ searchString: stockOrderNumber }),
         accessToken,
       );
-      const archivedPagination = await stockOrderAPI.getPaginationByArchive(
-        request,
-        true,
-        stockOrderArchivePaginationDto({ searchString: stockOrderNumber }),
-        accessToken,
+      const archivedPagination = await eventually(
+        () => stockOrderAPI.getPaginationByArchive(
+          request,
+          true,
+          stockOrderArchivePaginationDto({ searchString: stockOrderNumber }),
+          accessToken,
+        ),
+        (response) => hasNoServerError(response) && getRows<StockOrderLike>(response.data).some((row) => row.id === stockOrderId),
+        { attempts: 10, intervalMs: 700 },
       );
+      expect(
+        archivedPagination,
+        `Archived stock order ${stockOrderId} did not appear in archive pagination`,
+      ).toBeTruthy();
+      const archivedPaginationResult = archivedPagination as ApiResult;
       expectNoServerError(activePagination);
-      expectNoServerError(archivedPagination);
-      if (!clientErrorCodes.includes(activePagination.status) && !clientErrorCodes.includes(archivedPagination.status)) {
+      expectNoServerError(archivedPaginationResult);
+      if (!clientErrorCodes.includes(activePagination.status) && !clientErrorCodes.includes(archivedPaginationResult.status)) {
         expectArchivedOnlyInArchiveSelection(
           getRows<StockOrderLike>(activePagination.data),
-          getRows<StockOrderLike>(archivedPagination.data),
+          getRows<StockOrderLike>(archivedPaginationResult.data),
           stockOrderId,
         );
       }
@@ -612,6 +621,7 @@ export const runStockOrderAPINew = () => {
       }
 
       const mainPagination = await waitForStockOrderPagination(request, stockOrderPaginationDto(), accessToken);
+      expectNoServerError(mainPagination);
       expect(mainPagination.status).toBe(201);
       expectApiContract(mainPagination, { shape: 'pagination', schema: paginationOf(stockOrderResponseSchema) });
       expect(getCount(mainPagination.data), JSON.stringify(mainPagination.data)).toBeGreaterThanOrEqual(0);
@@ -651,6 +661,7 @@ export const runStockOrderAPINew = () => {
         stockOrderPaginationDto({ page: 0, pageSize: 1 }),
         accessToken,
       );
+      expectNoServerError(firstPage);
       expect(firstPage.status).toBe(201);
       expectPaginationContract(firstPage.data, 1);
 
