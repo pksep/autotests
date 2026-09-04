@@ -6,6 +6,10 @@ const botToken = process.env.BOT_TOKEN || '';
 const chatId = process.env.AUTOTESTS_REPORT_CHAT_ID || '';
 const reportFile = process.argv[2];
 const runDir = process.argv[3] || '';
+const deliveryAttempts = Number(process.env.AUTOTESTS_REPORT_DELIVERY_ATTEMPTS || 12);
+const deliveryRetryDelayMs = Number(process.env.AUTOTESTS_REPORT_RETRY_DELAY_MS || 3000);
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const callBot = async (method, payload) => {
   if (!botApiBaseUrl || !botToken) {
@@ -126,10 +130,16 @@ const readTestSummary = () => {
 };
 
 const sendMessage = async (text) => {
-  await callBot('sendMessage', {
+  const message = await callBot('sendMessage', {
     chat_id: chatId,
     text,
   });
+
+  if (!message?.message_id) {
+    throw new Error('sendMessage returned ok without message_id');
+  }
+
+  return message;
 };
 
 const sendDocument = async (filePath, caption) => {
@@ -160,7 +170,7 @@ const sendDocument = async (filePath, caption) => {
     throw new Error(`file upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`);
   }
 
-  await callBot('sendDocument', {
+  const message = await callBot('sendDocument', {
     chat_id: chatId,
     file_id: upload.file_id,
     file_name: fileName,
@@ -169,6 +179,34 @@ const sendDocument = async (filePath, caption) => {
     type: 'FILE',
     caption,
   });
+
+  if (!message?.message_id) {
+    throw new Error('sendDocument returned ok without message_id');
+  }
+
+  return message;
+};
+
+const deliverWithRetry = async (deliver) => {
+  let lastError;
+
+  for (let attempt = 1; attempt <= deliveryAttempts; attempt += 1) {
+    try {
+      const message = await deliver();
+      console.log(`Autotests report delivered, message_id=${message.message_id}`);
+      return;
+    } catch (err) {
+      lastError = err;
+      const message = err instanceof Error ? err.message : String(err);
+      console.log(`Autotests report delivery attempt ${attempt}/${deliveryAttempts} failed: ${message}`);
+
+      if (attempt < deliveryAttempts) {
+        await sleep(deliveryRetryDelayMs);
+      }
+    }
+  }
+
+  throw lastError || new Error('Autotests report delivery failed');
 };
 
 if (!chatId) {
@@ -192,7 +230,7 @@ const caption = [
 ].filter(Boolean).join('\n');
 
 if (reportFile) {
-  await sendDocument(reportFile, caption);
+  await deliverWithRetry(() => sendDocument(reportFile, caption));
 } else {
-  await sendMessage(caption);
+  await deliverWithRetry(() => sendMessage(caption));
 }

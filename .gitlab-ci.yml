@@ -82,7 +82,7 @@ deploy:
                       - name: BOT_TOKEN
                         valueFrom:
                           secretKeyRef:
-                            name: autotests-report-secret
+                            name: weekly-reports-bot-secret
                             key: BOT_TOKEN
                       - name: BOT_API_BASE_URL
                         valueFrom:
