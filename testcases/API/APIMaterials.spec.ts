@@ -568,17 +568,6 @@ export const runMaterialsAPINew = () => {
         expectArrayResponse(aliases.data);
       }
 
-      const createdAlias = await materialsAPI.createMaterialAlias(
-        request,
-        {
-          material_id: createdMaterialId as number,
-          alias: `API Material Extra Alias ${uniqueApiSuffix('material-alias')}`,
-          default: false,
-        },
-        accessToken,
-      );
-      expectNoServerError(createdAlias);
-
       const shipments = await materialsAPI.getMaterialShipmentsAndOrders(request, createdMaterialId as number, accessToken);
       expectNoServerError(shipments);
 
@@ -615,20 +604,6 @@ export const runMaterialsAPINew = () => {
           getRows<MaterialLike>(archiveSearch.data).some((row) => row.id === materialId),
           JSON.stringify(archiveSearch.data),
         ).toBe(true);
-      }
-
-      const providerPagination = await materialsAPI.getMaterialsProviderPagination(
-        request,
-        materialProviderPaginationDto({ searchString: activeMaterialName }),
-        accessToken,
-      );
-      expectNoServerError(providerPagination);
-      if (!clientErrorCodes.includes(providerPagination.status)) {
-        expect(successCodes).toContain(providerPagination.status);
-        expect(
-          getRows<MaterialLike>(providerPagination.data).some((row) => row.id === materialId && row.ban !== true),
-          JSON.stringify(providerPagination.data),
-        ).toBe(false);
       }
 
       const archivedById = await materialsAPI.getMaterialById(request, materialId, true, accessToken);
@@ -803,36 +778,8 @@ export const runMaterialsAPINew = () => {
       }
     });
 
-    test('provider-пагинации материалов, типов и подтипов не отвечают 5xx на базовые фильтры', async ({ request }) => {
-      const materialsProvider = await materialsAPI.getMaterialsProviderPagination(request, materialProviderPaginationDto(), accessToken);
-      expectNoServerError(materialsProvider);
-      if (!clientErrorCodes.includes(materialsProvider.status)) {
-        expect(successCodes).toContain(materialsProvider.status);
-        expectApiContract(materialsProvider, { shape: 'pagination', schema: paginationOf(materialResponseSchema) });
-        const materialRow = getRows(materialsProvider.data)[0];
-        if (materialRow) expectMaterialShape(materialRow);
-      }
 
-      const typesProvider = await materialsAPI.getTypeMaterialsProviderPagination(request, materialProviderPaginationDto(), accessToken);
-      expectNoServerError(typesProvider);
-      if (!clientErrorCodes.includes(typesProvider.status)) {
-        expect(successCodes).toContain(typesProvider.status);
-        expectApiContract(typesProvider, { shape: 'pagination', schema: paginationOf(typeMaterialResponseSchema) });
-        const typeRow = getRows(typesProvider.data)[0];
-        if (typeRow) expectTypeMaterialShape(typeRow);
-      }
-
-      const subtypesProvider = await materialsAPI.getSubtypeMaterialsProviderPagination(request, materialProviderPaginationDto(), accessToken);
-      expectNoServerError(subtypesProvider);
-      if (!clientErrorCodes.includes(subtypesProvider.status)) {
-        expect(successCodes).toContain(subtypesProvider.status);
-        expectApiContract(subtypesProvider, { shape: 'pagination', schema: paginationOf(subtypeMaterialResponseSchema) });
-        const subtypeRow = getRows(subtypesProvider.data)[0];
-        if (subtypeRow) expectSubtypeMaterialShape(subtypeRow);
-      }
-    });
-
-    test('дефициты и справочники подтипов не отвечают 5xx на базовые фильтры', async ({ request }) => {
+    test('дефициты и действующие справочники не отвечают 5xx на базовые фильтры', async ({ request }) => {
       const deficits = await materialsAPI.getMaterialDeficits(
         request,
         {
@@ -848,22 +795,6 @@ export const runMaterialsAPINew = () => {
       if (!clientErrorCodes.includes(deficits.status)) {
         expect(successCodes).toContain(deficits.status);
         expectPaginationContract(deficits.data);
-      }
-
-      const allDeficit = await materialsAPI.getAllMaterialDeficit(request, accessToken);
-      expectNoServerError(allDeficit);
-      if (!clientErrorCodes.includes(allDeficit.status)) {
-        expect(successCodes).toContain(allDeficit.status);
-        expectArrayResponse(allDeficit.data);
-      }
-
-      const subtypes = await materialsAPI.getAllSubtypeMaterial(request, API_CONST.API_TEST_SUBTYPE_INSTANS, accessToken);
-      expectNoServerError(subtypes);
-      if (!clientErrorCodes.includes(subtypes.status)) {
-        expect(successCodes).toContain(subtypes.status);
-        expectArrayResponse(subtypes.data);
-        const subtypeRow = subtypes.data[0];
-        if (subtypeRow) expectSubtypeMaterialShape(subtypeRow);
       }
 
       const materialTypes = await materialsAPI.actualMaterialLists(request, accessToken);

@@ -234,17 +234,6 @@ export const runUsersAPINew = () => {
       expectUserShape(user!);
     });
 
-    test('возвращает список пользователей по роли без чувствительных полей', async ({ request }) => {
-      const response = await usersAPI.getUsersByRoleId(request, String(fixtureRoleId), accessToken);
-
-      expect(response.status).toBe(200);
-      expect(Array.isArray(response.data), JSON.stringify(response.data)).toBe(true);
-      expectNoSensitiveFields(response.data);
-
-      const user = getRows(response.data).find((row) => Number(row.id) === fixtureUserId);
-      expect(user, JSON.stringify(response.data)).toBeTruthy();
-      expectUserShape(user!);
-    });
 
     test('light/full контракты пользователей отличаются только ожидаемым расширением данных', async ({ request }) => {
       const lightResponse = await usersAPI.getAllUsers(request, true, false, accessToken);
@@ -437,25 +426,8 @@ export const runUsersAPINew = () => {
       expectNoSensitiveFields(response.data);
     });
 
-    test('возвращает пользователей по id роли без чувствительных полей', async ({ request }) => {
-      const response = await usersAPI.getUsersByRoleId(request, String(fixtureRoleId), accessToken);
 
-      if (response.status === 401) {
-        expectNoSensitiveFields(response.data);
-        return;
-      }
-
-      expect(response.status).toBe(200);
-      expect(Array.isArray(response.data), JSON.stringify(response.data)).toBe(true);
-      expectNoSensitiveFields(response.data);
-    });
-
-    test('обрабатывает невалидный id роли без серверных ошибок', async ({ request }) => {
-      const response = await usersAPI.getUsersByRoleId(request, '999999999', accessToken);
-
-      expectNoServerError(response);
-      expectNoSensitiveFields(response.data);
-
+    test('обрабатывает невалидный id при прикреплении файла без серверных ошибок', async ({ request }) => {
       const byTypeOperation = await usersAPI.attachFile(request, '999999999', accessToken);
       expectNoServerError(byTypeOperation);
       if (successCodes.includes(byTypeOperation.status)) expectArrayResponse(byTypeOperation.data);

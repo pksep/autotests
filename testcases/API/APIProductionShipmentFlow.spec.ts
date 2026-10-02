@@ -458,32 +458,30 @@ const expectOperationMark = async (
   assembleId: number,
   token?: string,
 ) => {
+  let lastResponse: ApiResult | undefined;
   const response = await eventually(
     async () => {
-      const res = await apiGet(request, `api/marks/marks/byoperation/${operationId}`, token);
-      return res;
+      lastResponse = await apiPost(request, 'api/marks/marks/operations', {
+        id: assembleId,
+        operationId,
+        typeIzd: 'assembly',
+        isIncludeBan: false,
+      }, token);
+      return lastResponse;
     },
     (res) =>
-      hasNoServerError(res) &&
-      getRows<ApiRow>(res.data).some(
-        (row) =>
-          Number(row.oper_id ?? row.operId) === operationId &&
-          Number(row.assemble_id ?? row.assembleId) === assembleId &&
-          Number(row.kol ?? 0) >= 1 &&
-          row.ban !== true,
+      successCodes.includes(res.status) &&
+      getRows<ApiRow>(res.data?.current?.marks).some(
+        (row) => Number(row.oper_id) === operationId && Number(row.assemble_id) === assembleId && Number(row.kol) >= 1 && row.ban !== true,
       ),
     { attempts: 15, intervalMs: 1000 },
   );
 
   expect(
-    response && getRows<ApiRow>(response.data).some(
-      (row) =>
-        Number(row.oper_id ?? row.operId) === operationId &&
-        Number(row.assemble_id ?? row.assembleId) === assembleId &&
-        Number(row.kol ?? 0) >= 1 &&
-        row.ban !== true,
+    response && getRows<ApiRow>(response.data?.current?.marks).some(
+      (row) => Number(row.oper_id) === operationId && Number(row.assemble_id) === assembleId && Number(row.kol) >= 1 && row.ban !== true,
     ),
-    `Не найдена отметка по операции ${operationId} и assemble ${assembleId}. Ответ: ${JSON.stringify(response?.data)}`,
+    `Не найдена отметка по операции ${operationId} и assemble ${assembleId}. Ответ: ${JSON.stringify(lastResponse)}`,
   ).toBe(true);
 };
 
@@ -493,36 +491,24 @@ const expectComplectKitId = async (
   assembleId: number,
   token?: string,
 ) => {
+  let lastResponse: ApiResult | undefined;
   const response = await eventually(
     async () => {
-      const res = await apiGet(request, `api/marks/marks/byoperation/${operationId}`, token);
+      const res = await apiGet(request, `api/assemble/complectkit/getbyassembly/${assembleId}`, token);
+      lastResponse = res;
       return res;
     },
     (res) =>
       hasNoServerError(res) &&
-      getRows<ApiRow>(res.data).some(
-        (row) =>
-          Number(row.oper_id ?? row.operId) === operationId &&
-          Number(row.assemble_id ?? row.assembleId) === assembleId &&
-          Number(row.assemble_kit_id ?? row.assembleKitId) > 0 &&
-          Number(row.kol ?? 0) >= 1 &&
-          row.ban !== true,
-      ),
+      getRows<ApiRow>(res.data).some((row) => Number(row.id) > 0 && row.ban !== true),
     { attempts: 15, intervalMs: 1000 },
   );
 
-  const mark = response
-    ? getRows<ApiRow>(response.data).find(
-        (row) =>
-          Number(row.oper_id ?? row.operId) === operationId &&
-          Number(row.assemble_id ?? row.assembleId) === assembleId &&
-          Number(row.assemble_kit_id ?? row.assembleKitId) > 0 &&
-          Number(row.kol ?? 0) >= 1 &&
-          row.ban !== true,
-      )
+  const kit = response
+    ? getRows<ApiRow>(response.data).find((row) => Number(row.id) > 0 && row.ban !== true)
     : undefined;
-  const kitId = Number(mark?.assemble_kit_id ?? mark?.assembleKitId);
-  expect(kitId, `Не найден id набора по операции ${operationId} и assemble ${assembleId}. Ответ: ${JSON.stringify(response?.data)}`).toBeGreaterThan(0);
+  const kitId = Number(kit?.id);
+  expect(kitId, `Не найден id набора по операции ${operationId} и assemble ${assembleId}. Ответ: ${JSON.stringify(lastResponse)}`).toBeGreaterThan(0);
 
   return kitId;
 };

@@ -396,7 +396,7 @@ export const runDeficitsAPINew = () => {
       accessToken = await getAuthToken(request);
     });
 
-    test('читает таблицу дефицитов и дефициты материалов', async ({ request }) => {
+    test('читает таблицу дефицитов', async ({ request }) => {
       const table = await deficitsAPI.getDeficitTable(request, accessToken);
       expectNoServerError(table);
       if (!clientErrorCodes.includes(table.status)) {
@@ -406,17 +406,6 @@ export const runDeficitsAPINew = () => {
         }
       }
 
-      for (const working of ['metall', 'assemble', '', 'unknown-working-type']) {
-        const materials = await deficitsAPI.getMaterialDeficits(request, { working }, accessToken);
-        expectNoServerError(materials);
-        if (!clientErrorCodes.includes(materials.status)) {
-          expect(successCodes, JSON.stringify(materials.data)).toContain(materials.status);
-          expect(Array.isArray(getRows(materials.data)), JSON.stringify(materials.data)).toBe(true);
-          for (const row of getRows<ApiRow>(materials.data)) {
-            expectMaterialDeficitRowShape(row);
-          }
-        }
-      }
     });
 
     test('обновляет и восстанавливает строку таблицы дефицитов', async ({ request }) => {
@@ -458,7 +447,7 @@ export const runDeficitsAPINew = () => {
       }
     });
 
-    test('читает принадлежность и отгрузки по изолированному материалу', async ({ request }) => {
+    test('читает принадлежность по изолированному материалу', async ({ request }) => {
       const material = await createIsolatedMaterial(request, uniqueApiSuffix('deficit-relations'), accessToken);
 
       try {
@@ -468,11 +457,6 @@ export const runDeficitsAPINew = () => {
           expectMaterialParentsContract(parents.data);
         }
 
-        const shipments = await deficitsAPI.getMaterialShipmentAttractions(request, material.materialId, accessToken);
-        expectNoServerError(shipments);
-        if (!clientErrorCodes.includes(shipments.status)) {
-          expectMaterialShipmentsContract(shipments.data);
-        }
       } finally {
         await archiveIsolatedMaterial(request, material, accessToken);
       }
@@ -492,20 +476,6 @@ export const runDeficitsAPINew = () => {
       expectEndpointReached(response);
     });
 
-    test('materials/shipments/:id/:type возвращает данные без серверной ошибки', async ({ request }) => {
-      const shipment = await createIsolatedShipment(request, accessToken);
-
-      try {
-        const response = await deficitsAPI.getMaterialForShipment(request, shipment.shipmentId, 'cbed', accessToken);
-        expectNoServerError(response);
-        if (!clientErrorCodes.includes(response.status)) {
-          expect(successCodes, JSON.stringify(response.data)).toContain(response.status);
-          expect(Array.isArray(response.data), JSON.stringify(response.data)).toBe(true);
-        }
-      } finally {
-        await archiveIsolatedShipment(request, shipment, accessToken);
-      }
-    });
   });
 
   test.describe.serial('Deficits API: тестовый материал и архив', () => {
@@ -551,19 +521,6 @@ export const runDeficitsAPINew = () => {
       const parentRows = getRows<ApiRow>(parents.data).filter((row) => row.type !== 'provider');
       expect(parentRows, JSON.stringify(parents.data)).toHaveLength(0);
 
-      const shipments = await deficitsAPI.getMaterialShipmentAttractions(request, createdMaterialId, accessToken);
-      expectNoServerError(shipments);
-      expectMaterialShipmentsContract(shipments.data);
-      expect(getRows(shipments.data), JSON.stringify(shipments.data)).toHaveLength(0);
-
-      for (const working of ['metall', 'assemble']) {
-        const materialDeficits = await deficitsAPI.getMaterialDeficits(request, { working }, accessToken);
-        expectNoServerError(materialDeficits);
-        expect(
-          getRows<ApiRow>(materialDeficits.data).some((row) => Number(row.id) === createdMaterialId),
-          JSON.stringify(materialDeficits.data),
-        ).toBe(false);
-      }
     });
 
     test('архивирует материал и проверяет, что active deficit-чтение остается стабильным', async ({ request }) => {
@@ -603,14 +560,6 @@ export const runDeficitsAPINew = () => {
         ).toBe(true);
       }
 
-      for (const working of ['metall', 'assemble']) {
-        const materialDeficits = await deficitsAPI.getMaterialDeficits(request, { working }, accessToken);
-        expectNoServerError(materialDeficits);
-        expect(
-          getRows<ApiRow>(materialDeficits.data).some((row) => Number(row.id) === materialId),
-          JSON.stringify(materialDeficits.data),
-        ).toBe(false);
-      }
 
       const secondArchive = await materialsAPI.banMaterial(request, materialId, accessToken);
       expectNoServerError(secondArchive);

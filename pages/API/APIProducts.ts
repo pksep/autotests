@@ -208,15 +208,6 @@ export class ProductsAPI extends APIPageObject {
     return this.result(response);
   }
 
-  async actualAvatar(request: APIRequestContext, accessToken?: string) {
-    logger.info(`Actualizing product avatars`);
-
-    const response = await request.put(this.base() + '/ava/update', {
-      headers: this.productAuthHeaders(accessToken, { compress: 'no-compress' }),
-    });
-
-    return this.result(response);
-  }
 
   async getProductDeficits(request: APIRequestContext, deficitData: Record<string, unknown>, accessToken?: string) {
     logger.info(`Getting product deficits with data:`, deficitData);

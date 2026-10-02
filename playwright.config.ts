@@ -18,7 +18,7 @@ export default defineConfig({
   timeout: 30000,
   globalTimeout: isParallel || isApiSuite ? 60 * 60 * 1000 : 30 * 60 * 1000, // parallel and API suites can run longer than the old 30m cap
   workers,
-  fullyParallel: isParallel || isApiSuite, // required so multiple workers run when only one file (main.spec.ts) matches
+  fullyParallel: (isParallel || isApiSuite) && selectedSuiteKey !== 'all_api_tests',
   retries: 0,
   use: {
     baseURL: process.env.BASE_URL || ENV.BASE_URL, //setgit a this in your config.ts

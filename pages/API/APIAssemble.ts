@@ -215,15 +215,6 @@ export class AssembleAPI extends APIPageObject {
     return this.result(response);
   }
 
-  async getRelativeKitChild(request: APIRequestContext, id: number, type: string, accessToken?: string) {
-    logger.info(`Getting relative kit child for ${type}:${id}`);
-
-    const response = await request.get(this.base() + `/relative/kit/child/${id}/${encodeURIComponent(type)}`, {
-      headers: this.assembleAuthHeaders(accessToken, { compress: 'no-compress' }),
-    });
-
-    return this.result(response);
-  }
 
   async getById(request: APIRequestContext, id: number, accessToken?: string) {
     logger.info(`Getting assemble by ID: ${id}`);
@@ -255,15 +246,6 @@ export class AssembleAPI extends APIPageObject {
     return this.result(response);
   }
 
-  async getByIzdLight(request: APIRequestContext, id: number, typeIzd: string, accessToken?: string) {
-    logger.info(`Getting light assemble by izd ${typeIzd}:${id}`);
-
-    const response = await request.get(this.base() + `/byizd/light/${id}/${encodeURIComponent(typeIzd)}`, {
-      headers: this.assembleAuthHeaders(accessToken, { compress: 'no-compress' }),
-    });
-
-    return this.result(response);
-  }
 
   async getByIzd(request: APIRequestContext, id: number, typeIzd: string, accessToken?: string) {
     logger.info(`Getting assemble by izd ${typeIzd}:${id}`);

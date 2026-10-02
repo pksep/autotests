@@ -58,11 +58,6 @@ export class ProductionTasksAPI extends APIPageObject {
     });
   }
 
-  async getProductionTaskCount(request: APIRequestContext, accessToken?: string) {
-    return this.apiRequest(request, 'GET', this.base() + '/count', {
-      accessToken: this.token(accessToken),
-    });
-  }
 
   async updateStatusProductionTask(request: APIRequestContext, statusData: any, accessToken?: string) {
     return this.apiRequest(request, 'PUT', this.base() + '/due-date', {

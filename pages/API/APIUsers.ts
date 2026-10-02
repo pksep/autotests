@@ -212,34 +212,6 @@ export class UsersAPI extends APIPageObject {
     }
   }
 
-  async getUsersByRoleId(request: APIRequestContext, roleId: string, authToken?: string) {
-    logger.info(`Getting users by role ID: ${roleId}`);
-
-    const headers = {
-      compress: 'no-compress',
-      ...this.authHeaders(authToken),
-    };
-
-    const response = await request.get(ENV.API_BASE_URL + `api/users/role/${roleId}`, {
-      headers: headers,
-    });
-
-    let responseData;
-    try {
-      responseData = await response.json();
-    } catch (e) {
-      responseData = await response.text();
-      logger.error(`Failed to parse JSON response, got text instead: ${responseData.substring(0, 100)}...`);
-    }
-
-    if (response.ok()) {
-      logger.info(`Successfully retrieved users by role ID`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get users by role ID, status: ${response.status()}`);
-      return { status: response.status(), data: responseData };
-    }
-  }
 
   async changeUserRole(request: APIRequestContext, newRoleId: string, oldRoleId: string, authToken?: string) {
     logger.info(`Changing user role from ${oldRoleId} to ${newRoleId}`);

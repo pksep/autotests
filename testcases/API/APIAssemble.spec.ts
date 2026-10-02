@@ -404,158 +404,9 @@ export const runAssembleAPINew = () => {
       }
     });
 
-    test('читает изолированную сборку по id и light endpoint', async ({ request }) => {
-      const created = await createIsolatedAssemble(request, accessToken);
-      const assembleId = created.assembleId;
 
-      try {
-        const byId = await assembleAPI.getById(request, assembleId, accessToken);
-        expectNoServerError(byId);
-        if (!clientErrorCodes.includes(byId.status)) {
-          expect(successCodes).toContain(byId.status);
-          expect(Number(byId.data?.id), JSON.stringify(byId.data)).toBe(assembleId);
-          expectAssembleRowShape(byId.data, assembleId);
-        }
 
-        const light = await assembleAPI.getByIdLight(request, assembleId, accessToken);
-        expectNoServerError(light);
-        if (!clientErrorCodes.includes(light.status)) {
-          expect(successCodes).toContain(light.status);
-          expect(Number(light.data?.id), JSON.stringify(light.data)).toBe(assembleId);
-          expectAssembleRowShape(light.data, assembleId);
-        }
 
-        if (!clientErrorCodes.includes(byId.status) && !clientErrorCodes.includes(light.status)) {
-          expect(Object.keys(byId.data || {}).length).toBeGreaterThanOrEqual(Object.keys(light.data || {}).length);
-        }
-      } finally {
-        const archiveAssemble = await assembleAPI.deleteAssemble(request, assembleId, accessToken);
-        expectNoServerError(archiveAssemble);
-
-        const archiveProduct = await productsAPI.deleteProduct(request, created.productId, accessToken);
-        expectNoServerError(archiveProduct);
-      }
-    });
-
-    test('проверяет связи сборки с родительскими сущностями по реальной сборке', async ({ request }) => {
-      const created = await createIsolatedAssemble(request, accessToken);
-      const parentEntity = { id: created.productId, type: 'product' as const };
-
-      try {
-        const byParent = await assembleAPI.getAssembleByParent(request, parentEntity, accessToken);
-        expectNoServerError(byParent);
-        if (!clientErrorCodes.includes(byParent.status)) {
-          expect(successCodes).toContain(byParent.status);
-          expect(Array.isArray(getRows(byParent.data)) || Array.isArray(byParent.data), JSON.stringify(byParent.data)).toBe(true);
-          const rows = getRows<ApiRow>(byParent.data);
-          if (rows.length > 0) {
-            expectParentChildReference(rows, parentEntity);
-          }
-        }
-
-        const byIzd = await assembleAPI.getByIzd(request, parentEntity.id, parentEntity.type, accessToken);
-        expectNoServerError(byIzd);
-        if (!clientErrorCodes.includes(byIzd.status) && byIzd.data) {
-          expect(successCodes).toContain(byIzd.status);
-          expectAssembleRowShape(byIzd.data, created.assembleId);
-          expect(Number(byIzd.data.product_id ?? byIzd.data.productId ?? byIzd.data.cbed_id ?? byIzd.data.cbedId), JSON.stringify(byIzd.data)).toBe(parentEntity.id);
-        }
-      } finally {
-        const archiveAssemble = await assembleAPI.deleteAssemble(request, created.assembleId, accessToken);
-        expectNoServerError(archiveAssemble);
-
-        const archiveProduct = await productsAPI.deleteProduct(request, created.productId, accessToken);
-        expectNoServerError(archiveProduct);
-      }
-    });
-
-    test('создает реальный комплект и читает его по id, сборке и pagination', async ({ request }) => {
-      const fixture = await createIsolatedAssembleKit(request, accessToken);
-
-      try {
-        const byId = await assembleAPI.getComplectKitById(request, fixture.kitId, accessToken);
-        expectNoServerError(byId);
-        if (!clientErrorCodes.includes(byId.status)) {
-          expect(successCodes).toContain(byId.status);
-          expectKitShape(byId.data, { kitId: fixture.kitId, assembleId: fixture.assembleId });
-        }
-
-        const byAssembly = await assembleAPI.getComplectKitByAssembly(request, fixture.assembleId, accessToken);
-        expectNoServerError(byAssembly);
-        if (!clientErrorCodes.includes(byAssembly.status)) {
-          expect(successCodes).toContain(byAssembly.status);
-          const rows = getRows<ApiRow>(byAssembly.data);
-          expect(rows.length, JSON.stringify(byAssembly.data)).toBeGreaterThanOrEqual(1);
-          expectKitShape(rows.find((kit) => Number(kit.id) === fixture.kitId) as ApiRow, {
-            kitId: fixture.kitId,
-            assembleId: fixture.assembleId,
-          });
-        }
-
-        const pagination = await assembleAPI.getComplectKitPagination(
-          request,
-          kitPaginationDto({ assemblyId: fixture.assembleId }),
-          accessToken,
-        );
-        expectRowsAndCount(pagination, 25);
-        if (!clientErrorCodes.includes(pagination.status)) {
-          const assembleRow = getRows<ApiRow>(pagination.data).find((row) => Number(row.id) === fixture.assembleId);
-          expect(assembleRow, JSON.stringify(pagination.data)).toBeTruthy();
-          expectAssembleRowShape(assembleRow as ApiRow, fixture.assembleId);
-          const kits = getRows<ApiRow>((assembleRow as ApiRow).assembly_kits ?? (assembleRow as ApiRow).assemblyKits);
-          expect(kits.some((kit) => Number(kit.id) === fixture.kitId), JSON.stringify(assembleRow)).toBe(true);
-        }
-      } finally {
-        const archiveAssemble = await assembleAPI.deleteAssemble(request, fixture.assembleId, accessToken);
-        expectNoServerError(archiveAssemble);
-
-        const archiveProduct = await productsAPI.deleteProduct(request, fixture.productId, accessToken);
-        expectNoServerError(archiveProduct);
-      }
-    });
-
-    test('обновляет реальный комплект и проверяет статус/количество, затем раскомплектовывает', async ({ request }) => {
-      const fixture = await createIsolatedAssembleKit(request, accessToken);
-      const description = `API assemble kit update ${uniqueApiSuffix('kit-update')}`;
-
-      try {
-        const update = await assembleAPI.updateAssemble(
-          request,
-          {
-            idKit: fixture.kitId,
-            description,
-            receivingUserId: Number(API_CONST.API_TEST_TABEL),
-            docs: '[]',
-            addedQuantity: 1,
-            actionSendlerId: Number(API_CONST.API_TEST_TABEL),
-          },
-          API_CONST.API_TEST_TABEL,
-          accessToken,
-        );
-        expectNoServerError(update);
-        if (!clientErrorCodes.includes(update.status)) {
-          expect(successCodes).toContain(update.status);
-          expectKitShape(update.data, { kitId: fixture.kitId, assembleId: fixture.assembleId });
-          expect(String(update.data.description ?? ''), JSON.stringify(update.data)).toBe(description);
-          expect(Number(update.data.kolvo_submitted ?? update.data.kolvoSubmitted), JSON.stringify(update.data)).toBeGreaterThanOrEqual(1);
-        }
-
-        const uncomplect = await assembleAPI.uncomplectKit(request, fixture.kitId, 1, accessToken);
-        expectNoServerError(uncomplect);
-        if (!clientErrorCodes.includes(uncomplect.status)) {
-          expect(successCodes).toContain(uncomplect.status);
-          expectKitShape(uncomplect.data, { kitId: fixture.kitId, assembleId: fixture.assembleId });
-          expect(Number(uncomplect.data.kolvo_collected ?? uncomplect.data.kolvoCollected), JSON.stringify(uncomplect.data)).toBe(0);
-          expect(uncomplect.data.ban, JSON.stringify(uncomplect.data)).toBe(true);
-        }
-      } finally {
-        const archiveAssemble = await assembleAPI.deleteAssemble(request, fixture.assembleId, accessToken);
-        expectNoServerError(archiveAssemble);
-
-        const archiveProduct = await productsAPI.deleteProduct(request, fixture.productId, accessToken);
-        expectNoServerError(archiveProduct);
-      }
-    });
 
     test('проверяет дополнительные read/count маршруты сборки без серверных ошибок', async ({ request }) => {
       const assemble = firstAssemble ?? await findAnyAssemble(request, accessToken);
@@ -564,9 +415,6 @@ export const runAssembleAPINew = () => {
       const assembleId = Number(assemble?.id);
       const parent = getAssembleParent(assemble as ApiRow);
       test.skip(!Number.isFinite(parent.id) || parent.id <= 0, `Не найден parent id в сборке: ${JSON.stringify(assemble)}`);
-
-      const byIzdLight = await assembleAPI.getByIzdLight(request, parent.id, parent.type, accessToken);
-      expectNoServerError(byIzdLight);
 
       const waybill = await assembleAPI.getAssembleWaybill(request, assembleId, accessToken);
       expectNoServerError(waybill);
@@ -601,8 +449,6 @@ export const runAssembleAPINew = () => {
         expect(Number(disactiveAll.data), JSON.stringify(disactiveAll.data)).toBeGreaterThanOrEqual(0);
       }
 
-      const relativeChild = await assembleAPI.getRelativeKitChild(request, 999999999, 'listCbed', accessToken);
-      expectNoServerError(relativeChild);
     });
   });
 
@@ -635,9 +481,6 @@ export const runAssembleAPINew = () => {
     test('несуществующие id и невалидное создание не приводят к серверным ошибкам', async ({ request }) => {
       const byId = await assembleAPI.getById(request, 999999999, accessToken);
       expectNoServerError(byId);
-
-      const byIzdLight = await assembleAPI.getByIzdLight(request, 999999999, 'product', accessToken);
-      expectNoServerError(byIzdLight);
 
       const byParent = await assembleAPI.getAssembleByParent(
         request,

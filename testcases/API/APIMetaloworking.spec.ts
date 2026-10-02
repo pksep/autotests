@@ -332,43 +332,7 @@ export const runMetaloworkingAPINew = () => {
       }
     });
 
-    test('читает изолированную металлообработку по id и light endpoint', async ({ request }) => {
-      const fixture = await createIsolatedMetaloworking(request, uniqueApiSuffix('metal-read'), accessToken);
-      const metaloworkingId = fixture.metaloworkingId;
 
-      try {
-        const byId = await metaloworkingAPI.getById(request, metaloworkingId, accessToken);
-        expectNoServerError(byId);
-        if (!clientErrorCodes.includes(byId.status)) {
-          expect(successCodes).toContain(byId.status);
-          expect(Number(byId.data?.id), JSON.stringify(byId.data)).toBe(metaloworkingId);
-        }
-
-        const light = await metaloworkingAPI.getByIdLight(request, metaloworkingId, accessToken);
-        expectNoServerError(light);
-        if (!clientErrorCodes.includes(light.status)) {
-          expect(successCodes).toContain(light.status);
-          expect(Number(light.data?.id), JSON.stringify(light.data)).toBe(metaloworkingId);
-        }
-
-        if (!clientErrorCodes.includes(byId.status) && !clientErrorCodes.includes(light.status)) {
-          expect(Object.keys(byId.data || {}).length).toBeGreaterThanOrEqual(Object.keys(light.data || {}).length);
-        }
-      } finally {
-        await archiveIsolatedMetaloworking(request, fixture, accessToken);
-      }
-    });
-
-    test('проверяет связь изолированной металлообработки с деталью без серверных ошибок', async ({ request }) => {
-      const fixture = await createIsolatedMetaloworking(request, uniqueApiSuffix('metal-detail'), accessToken);
-
-      try {
-        const byDetail = await metaloworkingAPI.getByDetalLight(request, Number(fixture.detail.id), accessToken);
-        expectApiContract(byDetail);
-      } finally {
-        await archiveIsolatedMetaloworking(request, fixture, accessToken);
-      }
-    });
   });
 
   test.describe('Metaloworking API: defensive-сценарии', () => {

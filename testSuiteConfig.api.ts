@@ -23,15 +23,12 @@ import { runMaterialsAPINew } from './testcases/API/APIMaterials.spec';
 import { runMaintenanceAPINew } from './testcases/API/APIMaintenance.spec';
 import { runMetaloworkingAPINew } from './testcases/API/APIMetaloworking.spec';
 import { runMarksAPINew } from './testcases/API/APIMarks.spec';
-import { runMovementErrorsAPINew } from './testcases/API/APIMovementErrors.spec';
 import { runMovementObjectAPINew } from './testcases/API/APIMovementObject.spec';
-import { runMovingAPINew } from './testcases/API/APIMoving.spec';
 import { runNeo4jAPINew } from './testcases/API/APINeo4j.spec';
 import { runNegativeCoverageAPINew } from './testcases/API/APINegativeCoverage.spec';
 import { runNotificationAPINew } from './testcases/API/APINotification.spec';
 import { runProductionTasksAPINew } from './testcases/API/APIProductionTasks.spec';
 import { runProductionShipmentFlowAPI } from './testcases/API/APIProductionShipmentFlow.spec';
-import { runProviderAPINew } from './testcases/API/APIProvider.spec';
 import { runProviderDeliveriesAPINew } from './testcases/API/APIProviderDeliveries.spec';
 import { runQueuesAPINew } from './testcases/API/APIQueues.spec';
 import { runRackAPINew } from './testcases/API/APIRack.spec';
@@ -170,28 +167,6 @@ const apiSuitesByModule = {
         test: runMovementObjectAPINew,
         description:
           'Тестирует api/movement-object: историю с пагинацией, чтение одного перемещения и фильтрацию по родителям.'
-      }
-    ]
-  },
-
-  moving_api: {
-    description: 'Набор тестов Moving API для списка, no-op create и defensive-сценариев.',
-    tests: [
-      {
-        test: runMovingAPINew,
-        description:
-          'Тестирует api/moving: получение списка, no-op создание без фантомной записи и defensive-сценарий невалидного payload.'
-      }
-    ]
-  },
-
-  movement_errors_api: {
-    description: 'Набор тестов Movement Errors API для списка ошибок перемещений и defensive-сценариев.',
-    tests: [
-      {
-        test: runMovementErrorsAPINew,
-        description:
-          'Проверяет, что api/movement-errors возвращает список, а чтение отсутствующей записи обрабатывается без 5xx.'
       }
     ]
   },
@@ -368,17 +343,6 @@ const apiSuitesByModule = {
         test: runProviderDeliveriesAPINew,
         description:
           'Тестирует поставки: создание компании-поставщика, заказ поставщика с материалом, чтение позиций, архив и безопасную обработку ошибочных запросов.'
-      }
-    ]
-  },
-
-  provider_api: {
-    description: 'Набор тестов Provider API для проверки поставщиков, архива, файлов и defensive-сценариев.',
-    tests: [
-      {
-        test: runProviderAPINew,
-        description:
-          'Тестирует api/provider: список, пагинацию, архив, проверку имени, чтение по id, attach-file, архивирование и безопасную обработку ошибочных запросов.'
       }
     ]
   },
@@ -625,16 +589,6 @@ const apiSuitesByModule = {
           'Тестирует api/movement-object: историю перемещений и чтение по id.'
       },
       {
-        test: runMovingAPINew,
-        description:
-          'Тестирует api/moving: список, no-op создание без фантомной записи и defensive-сценарий.'
-      },
-      {
-        test: runMovementErrorsAPINew,
-        description:
-          'Тестирует api/movement-errors: успешное чтение списка и defensive-сценарий отсутствующей записи.'
-      },
-      {
         test: runUsersAPINew,
         description:
           'Тестирует эндпоинты API пользователей: списки, пагинацию, получение по id, уникальность табеля, архив, роли и безопасную обработку ошибочных мутаций.'
@@ -688,11 +642,6 @@ const apiSuitesByModule = {
         test: runProviderDeliveriesAPINew,
         description:
           'Тестирует поставки: создание компании-поставщика, заказ поставщика с материалом, чтение позиций, архив и defensive-сценарии.'
-      },
-      {
-        test: runProviderAPINew,
-        description:
-          'Тестирует api/provider: поставщиков, пагинацию, архив, файлы и defensive-сценарии.'
       },
       {
         test: runRackAPINew,
@@ -811,7 +760,6 @@ const apiFunctionalSuiteKeys = [
   'production_shipment_flow_api',
   'production_tasks_api',
   'product_api',
-  'provider_api',
   'provider_deliveries_api',
   'roles_api',
   'shipments_api',
@@ -843,7 +791,6 @@ const apiContractSuiteKeys = [
   'materials_api',
   'metaloworking_api',
   'movement_object_api',
-  'moving_api',
   'neo4j_api',
   'notification_api',
   'operation_api',
@@ -877,7 +824,6 @@ const apiNegativeSuiteKeys = [
   'marks_api',
   'materials_api',
   'metaloworking_api',
-  'movement_errors_api',
   'movement_object_api',
   'negative_coverage_api',
   'neo4j_api',
@@ -940,7 +886,7 @@ const apiSerialHeavySuiteKeys = [
 const apiSerialHeavySuiteKeySet = new Set<ApiSuiteKey>(apiSerialHeavySuiteKeys);
 const apiParallelSafeSuiteKeys = allApiSuiteKeys.filter((key) => !apiSerialHeavySuiteKeySet.has(key));
 
-export const serialApiSuiteKeys = ['api_serial_heavy_tests'] as const;
+export const serialApiSuiteKeys = ['api_serial_heavy_tests', 'all_api_tests'] as const;
 
 export const apiSuites = {
   ...apiSuitesByModule,

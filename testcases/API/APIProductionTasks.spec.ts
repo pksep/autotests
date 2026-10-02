@@ -1269,7 +1269,7 @@ export const runProductionTasksAPINew = () => {
       await runLifecycleScenario(request, 'metall');
     });
 
-    test('возвращает список, список с операциями и count без серверных ошибок', async ({ request }) => {
+    test('возвращает список и список с операциями без серверных ошибок', async ({ request }) => {
       const list = await productionTasksAPI.getProductionTaskPaginate(
         request,
         productionTaskPaginationDto(),
@@ -1295,10 +1295,6 @@ export const runProductionTasksAPINew = () => {
         expectPaginationContract(listWithOperations.data, 5);
       }
 
-      const count = await productionTasksAPI.getProductionTaskCount(request, accessToken);
-      expect(count.status).toBe(200);
-      expectNoServerError(count);
-      expect(Number(count.data), JSON.stringify(count.data)).toBeGreaterThanOrEqual(0);
     });
 
     test('пагинация поддерживает пустой поиск и граничные page/pageSize', async ({ request }) => {

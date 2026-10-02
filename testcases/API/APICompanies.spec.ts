@@ -408,42 +408,6 @@ export const runCompaniesAPINew = () => {
       }
     });
 
-    test('открепляет контакт от компании без серверных ошибок', async ({ request }) => {
-      expect(companyId).toBeTruthy();
-      expect(contactId).toBeTruthy();
-
-      const response = await companiesAPI.unpinContact(request, companyId as number, contactId as number, accessToken);
-      expectNoServerError(response);
-      if (!clientErrorCodes.includes(response.status)) {
-        expect(successCodes).toContain(response.status);
-      }
-
-      const includeCompany = await companiesAPI.getInclude(request, { id: companyId, includes: ['contacts'] }, accessToken);
-      expectNoServerError(includeCompany);
-      if (!clientErrorCodes.includes(includeCompany.status)) {
-        expect(successCodes).toContain(includeCompany.status);
-        expect(Array.isArray(includeCompany.data?.contacts), JSON.stringify(includeCompany.data)).toBe(true);
-        expect(
-          includeCompany.data.contacts.some((contact: EntityLike) => contact.id === contactId),
-          JSON.stringify(includeCompany.data),
-        ).toBe(false);
-      }
-
-      const includeContact = await contactsAPI.getInclude(request, { id: contactId, includes: ['companies'] }, accessToken);
-      expectNoServerError(includeContact);
-      if (!clientErrorCodes.includes(includeContact.status)) {
-        expect(successCodes).toContain(includeContact.status);
-        expect(Array.isArray(includeContact.data?.companies), JSON.stringify(includeContact.data)).toBe(true);
-        expect(
-          includeContact.data.companies.some((company: EntityLike) => company.id === companyId),
-          JSON.stringify(includeContact.data),
-        ).toBe(false);
-      }
-
-      const repeatUnpin = await companiesAPI.unpinContact(request, companyId as number, contactId as number, accessToken);
-      expectNoServerError(repeatUnpin);
-      expect([...successCodes, 400, 404, 409, 410, 422], JSON.stringify(repeatUnpin.data)).toContain(repeatUnpin.status);
-    });
 
     test('архивирует компанию и проверяет архивную выдачу', async ({ request }) => {
       expect(companyId).toBeTruthy();

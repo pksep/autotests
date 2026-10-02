@@ -9,10 +9,6 @@ export class MarksAPI extends APIPageObject {
 
   private base = () => ENV.API_BASE_URL + 'api/marks';
 
-  async getMarks(request: APIRequestContext, accessToken?: string) {
-    return this.apiRequest(request, 'GET', this.base() + '/marks', { accessToken });
-  }
-
   async createMark(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
     return this.apiRequest(request, 'POST', this.base() + '/mark', {
       data: dto,
@@ -55,13 +51,4 @@ export class MarksAPI extends APIPageObject {
     return this.apiRequest(request, 'DELETE', this.base() + `/delete/mark/${id}`, { accessToken });
   }
 
-  async getMarksByOperation(request: APIRequestContext, operationId: number, accessToken?: string) {
-    return this.apiRequest(request, 'GET', this.base() + `/marks/byoperation/${operationId}`, { accessToken });
-  }
-
-  async getMarksByOperationRaw(request: APIRequestContext, operationId: string, accessToken?: string) {
-    return this.apiRequest(request, 'GET', this.base() + `/marks/byoperation/${encodeURIComponent(operationId)}`, {
-      accessToken,
-    });
-  }
 }

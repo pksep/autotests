@@ -91,18 +91,7 @@ export class OperationAPI extends APIPageObject {
     });
   }
 
-  async getAllOperations(request: APIRequestContext, accessToken?: string) {
-    return this.apiRequest(request, 'GET', this.base() + '/operation/get/', {
-      accessToken: this.token(accessToken),
-    });
-  }
 
-  async updateOperationTech(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
-    return this.apiRequest(request, 'POST', this.base() + '/operation/up/tech', {
-      data: dto,
-      accessToken: this.token(accessToken),
-    });
-  }
 
   async banOperation(request: APIRequestContext, id: number, accessToken?: string) {
     return this.apiRequest(request, 'DELETE', this.base() + `/operation/${id}`, {

@@ -363,12 +363,6 @@ export const runOperationAPINew = () => {
         expect(Array.isArray(staticTypes.data), JSON.stringify(staticTypes.data)).toBe(true);
       }
 
-      const operations = await operationAPI.getAllOperations(request, accessToken);
-      expectNoServerError(operations);
-      if (!clientErrorCodes.includes(operations.status)) {
-        expect(successCodes).toContain(operations.status);
-        expect(Array.isArray(operations.data), JSON.stringify(operations.data)).toBe(true);
-      }
     });
 
     test('читает существующую операцию из списка, если она есть', async ({ request }) => {
@@ -411,12 +405,6 @@ export const runOperationAPINew = () => {
       );
       expectClientError(invalidOperationCreate);
 
-      const invalidTechUpdate = await operationAPI.updateOperationTech(
-        request,
-        { operationId: 999999999, instrumentList: [], eqList: [] },
-        accessToken,
-      );
-      expectNoServerError(invalidTechUpdate);
     });
   });
 };

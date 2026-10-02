@@ -40,11 +40,6 @@ export class WaybillAPI extends APIPageObject {
     });
   }
 
-  async deleteWaybill(request: APIRequestContext, id: number | string, accessToken?: string) {
-    return this.apiRequest(request, 'DELETE', this.base() + `/${encodeURIComponent(String(id))}`, {
-      accessToken: this.token(accessToken),
-    });
-  }
 
   async getWaybillPagination(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
     return this.apiRequest(request, 'POST', this.base() + '/pagination', {

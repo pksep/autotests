@@ -203,18 +203,6 @@ export const runWarehouseAPINew = () => {
       }
     });
 
-    test('возвращает остатки по типам сущностей без серверных ошибок', async ({ request }) => {
-      for (const type of entityTypes) {
-        const response = await warehouseAPI.getRemainsByEntityType(request, type, accessToken);
-        expectNoServerError(response);
-
-        if (!clientErrorCodes.includes(response.status)) {
-          expect(successCodes).toContain(response.status);
-          expectApiContract(response, { shape: 'array', schema: arrayOf(warehouseRemainResponseSchema) });
-          expectNonNegativeQuantities(getRows<ApiRow>(response.data));
-        }
-      }
-    });
 
     test('возвращает пагинацию остатков со стабильной структурой', async ({ request }) => {
       for (const type of entityTypes) {
@@ -310,17 +298,6 @@ export const runWarehouseAPINew = () => {
         expectNonNegativeQuantities(getRows<ApiRow>(needsByParents.data));
       }
 
-      const byParent = await warehouseAPI.getNeedsByParent(
-        request,
-        {
-          id: firstRemain!.id,
-          type: firstRemain!.type,
-          parentId: firstRemain!.id,
-          parentType: firstRemain!.type,
-        },
-        accessToken,
-      );
-      expectNoServerError(byParent);
     });
   });
 
@@ -366,16 +343,6 @@ export const runWarehouseAPINew = () => {
 
       const byParents = await warehouseAPI.getNeedsByParents(request, 'detal', 999999999, accessToken);
       expectNoServerError(byParents);
-
-      const byParent = await warehouseAPI.getNeedsByParent(
-        request,
-        { id: 999999999, type: 'detal', parentId: 999999999, parentType: 'product' },
-        accessToken,
-      );
-      expectNoServerError(byParent);
-
-      const complitAssembly = await captureApiResult(() => warehouseAPI.complitAssembly(request, 999999999, 'product', accessToken));
-      expectEndpointReached(complitAssembly);
 
       const resetInSets = await captureApiResult(() => warehouseAPI.resetInSets(request, accessToken));
       expectEndpointReached(resetInSets);

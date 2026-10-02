@@ -425,8 +425,6 @@ export const runToolsAPINew = () => {
       expectNoServerError(toolPagination);
       if (!clientErrorCodes.includes(toolPagination.status)) expectPaginationContract(toolPagination.data);
 
-      const deficits = await toolsAPI.getDeficitTools(request, accessToken);
-      expectNoServerError(deficits);
     });
 
     test('защитные payload и несуществующие id не приводят к 5xx', async ({ request }) => {

@@ -17,17 +17,8 @@ export class RackAPI extends APIPageObject {
     return this.apiRequest(request, 'PUT', this.base(), { data: dto, accessToken });
   }
 
-  async updateCell(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
-    return this.apiRequest(request, 'PUT', this.base() + '/update/cell', { data: dto, accessToken });
-  }
 
-  async addDataToCell(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
-    return this.apiRequest(request, 'PUT', this.base() + '/add/cell', { data: dto, accessToken });
-  }
 
-  async deleteDataByIds(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
-    return this.apiRequest(request, 'DELETE', this.base() + '/delete/cell', { data: dto, accessToken });
-  }
 
   async banRack(request: APIRequestContext, id: number, accessToken?: string) {
     return this.apiRequest(request, 'DELETE', this.base() + `/${id}`, { accessToken });

@@ -29,14 +29,6 @@ export class SpecificationsAPI extends APIPageObject {
     return { status: response.status(), data };
   }
 
-  async calculateProductionTime(request: APIRequestContext, type: string, id: number, accessToken?: string) {
-    logger.info(`PUT specification/time/${type}/${id}`);
-    const response = await request.put(this.base() + `/time/${encodeURIComponent(type)}/${id}`, {
-      headers: { compress: 'no-compress', ...this.authHeaders(accessToken) },
-    });
-    const data = await this.parseJsonBody(response);
-    return { status: response.status(), data };
-  }
 
   async getFirstLevelChildren(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
     logger.info(`POST specification/first-level-children`);

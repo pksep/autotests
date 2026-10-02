@@ -268,13 +268,7 @@ export const runDocumentsAPINew = () => {
       expect(await waitForDocumentAbsentFromActivePagination(request, documentId as number, createdName, accessToken)).toBe(true);
     });
 
-    test('возвращает список имен и presign URL без серверных ошибок', async ({ request }) => {
-      const names = await documentsAPI.getDocumentNames(request, accessToken);
-      expect(successCodes, JSON.stringify(names.data)).toContain(names.status);
-      expectNoServerError(names);
-      expect(Array.isArray(names.data), JSON.stringify(names.data)).toBe(true);
-      expect(names.data.some((row: ApiRow) => row.name === updatedName), JSON.stringify(names.data)).toBe(true);
-
+    test('возвращает presign URL без серверных ошибок', async ({ request }) => {
       const presign = await documentsAPI.presignPut(
         request,
         { originalName: updatedName, contentType: 'text/plain' },
@@ -418,91 +412,7 @@ export const runDocumentsAPINew = () => {
       expect(secondEquipmentId, JSON.stringify(createSecondEquipment.data)).toBeGreaterThan(0);
     });
 
-    test('прикрепляет и открепляет один документ от оборудования', async ({ request }) => {
-      expect(equipmentId).toBeTruthy();
-      const document = await createTestDocument(request, `API Documents single ${uniqueApiSuffix('file')}.txt`, accessToken);
-      const documentId = Number(document.id);
-      documentIds.push(documentId);
 
-      const attach = await documentsAPI.attachDocumentToEntity(
-        request,
-        { idEntity: equipmentId, idDocument: documentId, typeEntity: 'equipment' },
-        accessToken,
-      );
-      expect(successCodes, JSON.stringify(attach.data)).toContain(attach.status);
-      expectNoServerError(attach);
-      expect(getRows<ApiRow>(attach.data).some((row) => row.id === documentId), JSON.stringify(attach.data)).toBe(true);
-
-      let equipmentDocuments = await getEquipmentDocuments(request, equipmentId as number, accessToken);
-      expect(equipmentDocuments.some((row) => row.id === documentId), JSON.stringify(equipmentDocuments)).toBe(true);
-
-      const unpin = await documentsAPI.unpinDocuments(
-        request,
-        { idEntity: equipmentId, idDocument: documentId, typeEntity: 'equipment' },
-        accessToken,
-      );
-      expect(successCodes, JSON.stringify(unpin.data)).toContain(unpin.status);
-      expectNoServerError(unpin);
-
-      equipmentDocuments = await getEquipmentDocuments(request, equipmentId as number, accessToken);
-      expect(equipmentDocuments.some((row) => row.id === documentId), JSON.stringify(equipmentDocuments)).toBe(false);
-
-      const repeatUnpin = await documentsAPI.unpinDocuments(
-        request,
-        { idEntity: equipmentId, idDocument: documentId, typeEntity: 'equipment' },
-        accessToken,
-      );
-      expectNoServerError(repeatUnpin);
-      expect([...successCodes, 400, 404, 409, 410, 422], JSON.stringify(repeatUnpin.data)).toContain(repeatUnpin.status);
-
-      equipmentDocuments = await getEquipmentDocuments(request, equipmentId as number, accessToken);
-      expect(equipmentDocuments.some((row) => row.id === documentId), JSON.stringify(equipmentDocuments)).toBe(false);
-    });
-
-    test('массово прикрепляет и открепляет документы от оборудования', async ({ request }) => {
-      expect(equipmentId).toBeTruthy();
-      const suffix = uniqueApiSuffix('bulk-file');
-      const documents = [
-        await createTestDocument(request, `API Documents bulk A ${suffix}.txt`, accessToken),
-        await createTestDocument(request, `API Documents bulk B ${suffix}.txt`, accessToken),
-      ];
-      const bulkDocumentIds = documents.map((document) => Number(document.id));
-      documentIds.push(...bulkDocumentIds);
-
-      const attach = await documentsAPI.attachDocumentToEntity(
-        request,
-        { idEntity: equipmentId, idDocument: bulkDocumentIds, typeEntity: 'equipment' },
-        accessToken,
-      );
-      expect(successCodes, JSON.stringify(attach.data)).toContain(attach.status);
-      expectNoServerError(attach);
-
-      let equipmentDocuments = await getEquipmentDocuments(request, equipmentId as number, accessToken);
-      for (const documentId of bulkDocumentIds) {
-        expect(equipmentDocuments.some((row) => row.id === documentId), JSON.stringify(equipmentDocuments)).toBe(true);
-      }
-
-      const unpin = await documentsAPI.unpinDocuments(
-        request,
-        { idEntity: equipmentId, idDocument: bulkDocumentIds, typeEntity: 'equipment' },
-        accessToken,
-      );
-      expect(successCodes, JSON.stringify(unpin.data)).toContain(unpin.status);
-      expectNoServerError(unpin);
-
-      equipmentDocuments = await getEquipmentDocuments(request, equipmentId as number, accessToken);
-      for (const documentId of bulkDocumentIds) {
-        expect(equipmentDocuments.some((row) => row.id === documentId), JSON.stringify(equipmentDocuments)).toBe(false);
-      }
-
-      const repeatUnpin = await documentsAPI.unpinDocuments(
-        request,
-        { idEntity: equipmentId, idDocument: bulkDocumentIds, typeEntity: 'equipment' },
-        accessToken,
-      );
-      expectNoServerError(repeatUnpin);
-      expect([...successCodes, 400, 404, 409, 410, 422], JSON.stringify(repeatUnpin.data)).toContain(repeatUnpin.status);
-    });
 
     test('актуализирует avatar-флаг документа при привязке к оборудованию', async ({ request }) => {
       expect(equipmentId).toBeTruthy();
@@ -607,104 +517,7 @@ export const runDocumentsAPINew = () => {
       documentIds.splice(documentIds.indexOf(documentId), 1);
     });
 
-    test('проверяет изоляцию unpin при привязке документа к двум оборудованиям', async ({ request }) => {
-      expect(equipmentId).toBeTruthy();
-      expect(secondEquipmentId).toBeTruthy();
-      const document = await createTestDocument(request, `API Documents multi attach ${uniqueApiSuffix('file')}.txt`, accessToken);
-      const documentId = Number(document.id);
-      documentIds.push(documentId);
 
-      const attachFirst = await documentsAPI.attachDocumentToEntity(
-        request,
-        { idEntity: equipmentId, idDocument: documentId, typeEntity: 'equipment' },
-        accessToken,
-      );
-      expect(successCodes, JSON.stringify(attachFirst.data)).toContain(attachFirst.status);
-      expectNoServerError(attachFirst);
-
-      const attachSecond = await documentsAPI.attachDocumentToEntity(
-        request,
-        { idEntity: secondEquipmentId, idDocument: documentId, typeEntity: 'equipment' },
-        accessToken,
-      );
-      expectNoServerError(attachSecond);
-      expect([...successCodes, 400, 404, 409, 410, 422], JSON.stringify(attachSecond.data)).toContain(attachSecond.status);
-
-      const firstDocumentsAfterAttach = await getEquipmentDocuments(request, equipmentId as number, accessToken);
-      expect(firstDocumentsAfterAttach.some((row) => row.id === documentId), JSON.stringify(firstDocumentsAfterAttach)).toBe(true);
-
-      if (!successCodes.includes(attachSecond.status)) {
-        return;
-      }
-
-      let secondDocuments = await getEquipmentDocuments(request, secondEquipmentId as number, accessToken);
-      expect(secondDocuments.some((row) => row.id === documentId), JSON.stringify(secondDocuments)).toBe(true);
-
-      const unpinFirst = await documentsAPI.unpinDocuments(
-        request,
-        { idEntity: equipmentId, idDocument: documentId, typeEntity: 'equipment' },
-        accessToken,
-      );
-      expect(successCodes, JSON.stringify(unpinFirst.data)).toContain(unpinFirst.status);
-      expectNoServerError(unpinFirst);
-
-      const firstDocuments = await getEquipmentDocuments(request, equipmentId as number, accessToken);
-      expect(firstDocuments.some((row) => row.id === documentId), JSON.stringify(firstDocuments)).toBe(false);
-
-      secondDocuments = await getEquipmentDocuments(request, secondEquipmentId as number, accessToken);
-      expect(secondDocuments.some((row) => row.id === documentId), JSON.stringify(secondDocuments)).toBe(true);
-    });
-
-    test('проверяет изоляцию bulk unpin для двух документов на двух оборудованиях', async ({ request }) => {
-      expect(equipmentId).toBeTruthy();
-      expect(secondEquipmentId).toBeTruthy();
-      const suffix = uniqueApiSuffix('bulk-isolation-file');
-      const documents = [
-        await createTestDocument(request, `API Documents bulk isolation A ${suffix}.txt`, accessToken),
-        await createTestDocument(request, `API Documents bulk isolation B ${suffix}.txt`, accessToken),
-      ];
-      const bulkDocumentIds = documents.map((document) => Number(document.id));
-      documentIds.push(...bulkDocumentIds);
-
-      for (const targetEquipmentId of [equipmentId as number, secondEquipmentId as number]) {
-        const attach = await documentsAPI.attachDocumentToEntity(
-          request,
-          { idEntity: targetEquipmentId, idDocument: bulkDocumentIds, typeEntity: 'equipment' },
-          accessToken,
-        );
-        expectNoServerError(attach);
-        expect([...successCodes, 400, 404, 409, 410, 422], JSON.stringify(attach.data)).toContain(attach.status);
-      }
-
-      let firstDocuments = await getEquipmentDocuments(request, equipmentId as number, accessToken);
-      for (const documentId of bulkDocumentIds) {
-        expect(firstDocuments.some((row) => row.id === documentId), JSON.stringify(firstDocuments)).toBe(true);
-      }
-
-      let secondDocuments = await getEquipmentDocuments(request, secondEquipmentId as number, accessToken);
-      const secondHasAllDocuments = bulkDocumentIds.every((documentId) => secondDocuments.some((row) => row.id === documentId));
-      if (!secondHasAllDocuments) {
-        return;
-      }
-
-      const bulkUnpinFirst = await documentsAPI.unpinDocuments(
-        request,
-        { idEntity: equipmentId, idDocument: bulkDocumentIds, typeEntity: 'equipment' },
-        accessToken,
-      );
-      expect(successCodes, JSON.stringify(bulkUnpinFirst.data)).toContain(bulkUnpinFirst.status);
-      expectNoServerError(bulkUnpinFirst);
-
-      firstDocuments = await getEquipmentDocuments(request, equipmentId as number, accessToken);
-      for (const documentId of bulkDocumentIds) {
-        expect(firstDocuments.some((row) => row.id === documentId), JSON.stringify(firstDocuments)).toBe(false);
-      }
-
-      secondDocuments = await getEquipmentDocuments(request, secondEquipmentId as number, accessToken);
-      for (const documentId of bulkDocumentIds) {
-        expect(secondDocuments.some((row) => row.id === documentId), JSON.stringify(secondDocuments)).toBe(true);
-      }
-    });
 
     test('попытка привязать документ к архивному оборудованию не возвращает его в active', async ({ request }) => {
       expect(secondEquipmentId).toBeTruthy();
@@ -827,13 +640,6 @@ export const runDocumentsAPINew = () => {
       expectNoServerError(invalidUpdate);
       expectClientError(invalidUpdate);
 
-      const changeType = await captureApiResult(() => documentsAPI.changeDocumentType(request, { id: missingId, type: 'missing' }, String(missingId)));
-      expectEndpointReached(changeType);
-      if (!(changeType instanceof Error)) expectApiContract(changeType);
-      if (!(changeType instanceof Error) && clientErrorCodes.includes(changeType.status)) {
-        expectErrorResponseContract(changeType);
-      }
-
       const invalidAttach = await documentsAPI.attachDocumentToEntity(
         request,
         { idEntity: missingId, idDocument: missingId, typeEntity: 'detal' },
@@ -842,13 +648,6 @@ export const runDocumentsAPINew = () => {
       expectNoServerError(invalidAttach);
       expectClientError(invalidAttach);
 
-      const invalidUnpin = await documentsAPI.unpinDocuments(
-        request,
-        { idEntity: missingId, idDocument: missingId, typeEntity: 'detal' },
-        accessToken,
-      );
-      expectNoServerError(invalidUnpin);
-      expectClientError(invalidUnpin);
     });
   });
 };

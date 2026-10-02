@@ -170,9 +170,4 @@ export class ToolsAPI extends APIPageObject {
     });
   }
 
-  async getDeficitTools(request: APIRequestContext, accessToken?: string) {
-    return this.apiRequest(request, 'GET', this.base() + '/instrumentdeficit/', {
-      accessToken: this.token(accessToken),
-    });
-  }
 }

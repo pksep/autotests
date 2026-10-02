@@ -47,11 +47,8 @@ export const runMaintenanceAPINew = () => {
       }
     });
 
-    test('[maintenance] глобальные актуализации аватаров и отгрузок достигают endpoint', async ({ request }) => {
+    test('[maintenance] глобальная актуализация отгрузок достигает endpoint', async ({ request }) => {
       const responses = [
-        await captureApiResult(() => cbedAPI.actualAvatar(request, accessToken)),
-        await captureApiResult(() => detailsAPI.updateDetailAvatar(request, accessToken)),
-        await captureApiResult(() => productsAPI.actualAvatar(request, accessToken)),
         await captureApiResult(() => shipmentsAPI.actualAllShipments(request, accessToken)),
       ];
 
@@ -63,7 +60,6 @@ export const runMaintenanceAPINew = () => {
     test('[maintenance] складские и settings операции достигают endpoint', async ({ request }) => {
       const responses = [
         await captureApiResult(() => warehouseAPI.resetInSets(request, accessToken)),
-        await captureApiResult(() => warehouseAPI.complitAssembly(request, missingId, 'product', accessToken)),
         await captureApiResult(() => settingsAPI.newDB(request, accessToken)),
         await captureApiResult(() => assembleAPI.banComplect(request, missingId, accessToken)),
         await captureApiResult(() => assembleAPI.updateResponsibleKit(request, missingId, missingId, accessToken)),

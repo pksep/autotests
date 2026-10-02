@@ -215,12 +215,6 @@ export class ShipmentsAPI extends APIPageObject {
     return this.result(response);
   }
 
-  async getShipmentsByProduct(request: APIRequestContext, productId: number, accessToken?: string) {
-    const response = await request.get(this.base() + `/by-product/${productId}`, {
-      headers: { ...this.authHeaders(this.token(accessToken)), compress: 'no-compress' },
-    });
-    return this.result(response);
-  }
 
   async getShipmentDocuments(request: APIRequestContext, shipmentId: number, accessToken?: string) {
     const response = await request.get(this.base() + `/documents/${shipmentId}`, {

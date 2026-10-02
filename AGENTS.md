@@ -107,5 +107,7 @@ $env:TEST_SUITE='auth_api'; pnpm test
 $env:TEST_SUITE='parallel'; pnpm test
 ```
 
+- For the complete API run use `TEST_SUITE=all_api_tests` with `API_BASE_URL` set to the target environment. This suite runs with one worker in registration order and preserves stateful `test.describe.serial` flows. Do not set `API_INDEPENDENT_TESTS` for this run.
+
 - Do not run spec files directly when they only export runner functions that are called from a suite; Playwright may report `No tests found`. Direct file runs are only appropriate for files with top-level Playwright `test(...)` declarations and when `playwright.config.ts` test matching allows them.
 - Run API suites against external `pksep.ru` environments (`dev`, `stage`, etc.) with network/escalated permission. If an API run fails with `connect EACCES` against these hosts, rerun the same command with network/escalated permission; this is a sandbox/network access issue, not a test failure.

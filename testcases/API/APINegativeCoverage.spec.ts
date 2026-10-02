@@ -194,7 +194,6 @@ export const runNegativeCoverageAPINew = () => {
       const probes: Array<{ method: HttpMethod; route: string; data?: unknown }> = [
         { method: 'DELETE', route: 'api/companies/bulk/1,bad,999999999' },
         { method: 'DELETE', route: 'api/contacts/bulk/1,bad,999999999' },
-        { method: 'PUT', route: 'api/companies/unpin-contact/999999999/bad-id' },
         { method: 'PUT', route: 'api/rack/add/cell', data: { rackId: 999999999, cellIds: [1, 'bad', 999999999] } },
         { method: 'PUT', route: 'api/rack/update/cell', data: { id: 'bad-id', rackId: 999999999 } },
         { method: 'DELETE', route: 'api/rack/delete/cell', data: { ids: [1, 'bad', 999999999] } },

@@ -5,6 +5,7 @@ import { apiSuites, serialApiSuiteKeys } from './testSuiteConfig.api';
 import { runSetup } from './setup';
 import logger from './lib/utils/logger';
 import { tagBrowserScript } from './lib/utils/scriptBadge';
+import { enableUnauthenticatedAudit } from './lib/helpers/APITestUtils';
 
 // Suppress allure-js-commons NoopTestRuntime warning (appears when using allure.step() with dynamic test registration)
 const ALLURE_NOOP_MESSAGE = 'no test runtime is found. Please check test framework configuration';
@@ -13,6 +14,39 @@ console.log = (...args: unknown[]) => {
   if (args[0] === ALLURE_NOOP_MESSAGE) return;
   _consoleLog.apply(console, args);
 };
+
+// The complete API run includes stateful flows; preserve their serial groups and hooks.
+const runApiTestsIndependently = ENV.TEST_SUITE !== 'all_api_tests' &&
+  (process.env.API_NO_AUTH === 'true' || process.env.API_INDEPENDENT_TESTS === 'true');
+
+if (runApiTestsIndependently) {
+  // Keep API cases independent: Playwright otherwise skips later serial cases after a failure.
+  (test.describe as any).serial = test.describe;
+}
+
+if (process.env.API_NO_AUTH === 'true') {
+  // Unauthenticated probes must not share setup that requires a valid session.
+  (test as any).beforeAll = () => {};
+} else if (runApiTestsIndependently && process.env.API_INDEPENDENT_TESTS === 'true') {
+  const originalBeforeAll = test.beforeAll.bind(test) as any;
+  (test as any).beforeAll = (...args: any[]) => {
+    const hook = args[args.length - 1];
+    if (typeof hook !== 'function') return originalBeforeAll(...args);
+
+    let setupError: unknown;
+    originalBeforeAll(...args.slice(0, -1), async ({ request }: any) => {
+      try {
+        await hook({ request });
+      } catch (error) {
+        setupError = error;
+        logger.error('Independent API setup failed; dependent tests will be reported individually.', error);
+      }
+    });
+    test.beforeEach(() => {
+      if (setupError) throw setupError;
+    });
+  };
+}
 
 type TestSuiteKeys = keyof typeof testSuites;
 type SuiteLoginCredentials = {
@@ -52,6 +86,12 @@ function registerSuite(suiteKey: TestSuiteKeys) {
   describeSuite(`Test Suite: ${suiteKey} - ${suite.description}`, () => {
     if (isApi && !isSerialApi) {
       test.describe.configure({ mode: 'parallel' });
+    }
+
+    if (isApi && process.env.API_NO_AUTH === 'true') {
+      test.beforeEach(async ({ request }) => {
+        enableUnauthenticatedAudit(request);
+      });
     }
 
     if (!isApi) {

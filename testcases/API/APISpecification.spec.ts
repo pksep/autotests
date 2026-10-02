@@ -519,35 +519,8 @@ export const runSpecificationAPINew = () => {
       }
     });
 
-    test('запускает пересчет времени для существующих product/cbed/detal, если они есть', async ({ request }) => {
-      const suffix = uniqueApiSuffix('spec-time');
-      const product = await createProduct(request, `${suffix}-product`, accessToken);
-      const cbed = await createCbed(request, `${suffix}-cbed`, accessToken);
-      const detail = await createDetail(request, `${suffix}-detail`, accessToken);
 
-      try {
-        for (const current of [
-          { id: product.id, type: 'product' },
-          { id: cbed.id, type: 'cbed' },
-          { id: detail.id, type: 'detal' },
-        ]) {
-          const response = await specificationsAPI.calculateProductionTime(request, current.type, current.id, accessToken);
-          expectNoServerError(response);
-          expect(successCodes, JSON.stringify(response.data)).toContain(response.status);
-        }
-      } finally {
-        await cleanupSpecificationFixtures(
-          request,
-          { productId: product.id, cbedId: cbed.id, detailId: detail.id },
-          accessToken,
-        );
-      }
-    });
-
-    test('запускает пересчет времени и обрабатывает невалидные dto без 5xx', async ({ request }) => {
-      const calculate = await specificationsAPI.calculateProductionTime(request, 'product', 999999999, accessToken);
-      expectNoServerError(calculate);
-
+    test('обрабатывает невалидные dto без 5xx', async ({ request }) => {
       const invalidAttributes = await specificationsAPI.createSpecification(
         request,
         { cbedIds: 'bad', detalIds: null, materialIds: {}, attributes: 'id' },

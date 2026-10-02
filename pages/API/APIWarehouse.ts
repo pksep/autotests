@@ -35,18 +35,6 @@ export class WarehouseAPI extends APIPageObject {
     return { status: response.status(), data };
   }
 
-  async getNeedsByParent(request: APIRequestContext, parentData: any, accessToken?: string) {
-    logger.info(`needs_by_parent:`, parentData);
-    const response = await request.post(this.base() + '/needs_by_parent', {
-      headers: { ...this.authHeaders(accessToken), 'Content-Type': 'application/json', compress: 'no-compress' },
-      data: parentData,
-    });
-    const data = await this.parseJsonBody(response);
-    if (!response.ok()) {
-      logger.error(`getNeedsByParent failed: ${response.status()}`);
-    }
-    return { status: response.status(), data };
-  }
 
   async resetInSets(request: APIRequestContext, accessToken?: string) {
     logger.info(`reset_in_sets`);
@@ -74,17 +62,6 @@ export class WarehouseAPI extends APIPageObject {
     return { status: response.status(), data };
   }
 
-  async getRemainsByEntityType(request: APIRequestContext, entityType: string, accessToken?: string) {
-    logger.info(`remains/${entityType}`);
-    const response = await request.get(this.base() + `/remains/${entityType}`, {
-      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
-    });
-    const data = await this.parseJsonBody(response);
-    if (!response.ok()) {
-      logger.error(`getRemainsByEntityType failed: ${response.status()}`);
-    }
-    return { status: response.status(), data };
-  }
 
   async updateWarehouseItem(request: APIRequestContext, itemData: any, accessToken?: string) {
     logger.info(`PUT remains (revision):`, itemData);
@@ -112,17 +89,6 @@ export class WarehouseAPI extends APIPageObject {
     return { status: response.status(), data };
   }
 
-  async complitAssembly(request: APIRequestContext, izdId: number, typeIzd: string, accessToken?: string) {
-    logger.info(`complitass ${izdId} ${typeIzd}`);
-    const response = await request.get(this.base() + `/complitass/${izdId}/${typeIzd}`, {
-      headers: { ...this.authHeaders(accessToken), compress: 'no-compress' },
-    });
-    const data = await this.parseJsonBody(response);
-    if (!response.ok()) {
-      logger.error(`complitAssembly failed: ${response.status()}`);
-    }
-    return { status: response.status(), data };
-  }
 
   /**
    * Legacy helper used by defensive specs: hits POST `/remains` with arbitrary JSON

@@ -4,15 +4,13 @@ import { OperationAPI } from '../../pages/API/APIOperation';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import {
   clientErrorCodes,
-  expectArrayResponse,
   expectNoServerError,
   expectClientError,
   expectPaginationContract,
-  expectValidationError,
   getRows,
   successCodes,
 } from '../../lib/helpers/APIAssertions';
-import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import { getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 import logger from '../../lib/utils/logger';
 
 const marksAPI = new MarksAPI(null);
@@ -102,9 +100,9 @@ const markUpdatePayloadFromExisting = (
 });
 
 const findSeedMarks = async (request: any, accessToken?: string): Promise<ApiRow[]> => {
-  const marks = await marksAPI.getMarks(request, accessToken);
-  expectNoServerError(marks);
-  if (clientErrorCodes.includes(marks.status)) return [];
+  const marks = await marksAPI.getResultWorks(request, resultWorksDto(), accessToken);
+  expect(successCodes, JSON.stringify(marks.data)).toContain(marks.status);
+  expectResultWorksContract(marks.data);
 
   return getRows<ApiRow>(marks.data).filter(
     (mark) =>
@@ -126,17 +124,7 @@ export const runMarksAPINew = () => {
       accessToken = await getAuthToken(request);
     });
 
-    test('читает список отметок и результаты выполненных работ', async ({ request }) => {
-      const marks = await marksAPI.getMarks(request, accessToken);
-      expectNoServerError(marks);
-      if (!clientErrorCodes.includes(marks.status)) {
-        expect(successCodes, JSON.stringify(marks.data)).toContain(marks.status);
-        expect(Array.isArray(marks.data), JSON.stringify(marks.data)).toBe(true);
-        for (const mark of getRows<ApiRow>(marks.data).slice(0, 10)) {
-          expectMarkShape(mark);
-        }
-      }
-
+    test('читает результаты выполненных работ', async ({ request }) => {
       const resultWorks = await marksAPI.getResultWorks(request, resultWorksDto(), accessToken);
       expectNoServerError(resultWorks);
       if (!clientErrorCodes.includes(resultWorks.status)) {
@@ -146,7 +134,7 @@ export const runMarksAPINew = () => {
     });
 
     test('resultworks поддерживает фильтры, пустую выдачу и граничные page/dateRange', async ({ request }) => {
-      const marks = await marksAPI.getMarks(request, accessToken);
+      const marks = await marksAPI.getResultWorks(request, resultWorksDto(), accessToken);
       expectNoServerError(marks);
       const seed = getRows<ApiRow>(marks.data).find((row) => row.user_id ?? row.userId);
 
@@ -187,44 +175,8 @@ export const runMarksAPINew = () => {
       }
     });
 
-    test('читает отметки по операции, если операция есть', async ({ request }) => {
-      const operations = await operationAPI.getAllOperations(request, accessToken);
-      expectNoServerError(operations);
-      test.skip(clientErrorCodes.includes(operations.status), 'Operations API недоступен.');
 
-      const operation = getRows<Record<string, any>>(operations.data).find((row) => row.id);
-      test.skip(!operation, 'В dev-базе нет операций для проверки marks/byoperation.');
 
-      const byOperation = await marksAPI.getMarksByOperation(request, Number(operation!.id), accessToken);
-      expectNoServerError(byOperation);
-      if (!clientErrorCodes.includes(byOperation.status)) {
-        expect(successCodes, JSON.stringify(byOperation.data)).toContain(byOperation.status);
-        expect(Array.isArray(byOperation.data), JSON.stringify(byOperation.data)).toBe(true);
-        for (const mark of getRows<ApiRow>(byOperation.data)) {
-          expect(Number(mark.oper_id ?? mark.operId), JSON.stringify(mark)).toBe(Number(operation!.id));
-          expectMarkShape(mark);
-        }
-      }
-    });
-
-    test('marks/byoperation для операции без отметок возвращает стабильный пустой массив', async ({ request }) => {
-      const response = await marksAPI.getMarksByOperation(request, 999999999, accessToken);
-
-      expectNoServerError(response);
-      if (!clientErrorCodes.includes(response.status)) {
-        expect(successCodes, JSON.stringify(response.data)).toContain(response.status);
-        expect(getRows(response.data), JSON.stringify(response.data)).toEqual([]);
-      }
-
-      const byOperationPayload = await marksAPI.getMarkForOperation(request, { operationId: 999999999 }, accessToken);
-      expectNoServerError(byOperationPayload);
-      if (successCodes.includes(byOperationPayload.status)) expectArrayResponse(byOperationPayload.data);
-    });
-
-    test('граничные route id не приводят к 5xx', async ({ request }) => {
-      const byOperation = await marksAPI.getMarksByOperation(request, 0, accessToken);
-      expectNoServerError(byOperation);
-    });
 
     test('невалидные payload для создания/обновления отметки не приводят к успешной мутации', async ({ request }) => {
       const create = await marksAPI.createMark(
@@ -239,9 +191,6 @@ export const runMarksAPINew = () => {
     });
 
     test('чтение без авторизации не падает, мутации без авторизации запрещены', async ({ request }) => {
-      const readMarks = await marksAPI.getMarks(request);
-      expectNoServerError(readMarks);
-
       const readResultWorks = await marksAPI.getResultWorks(request, resultWorksDto());
       expectNoServerError(readResultWorks);
 
@@ -279,7 +228,7 @@ export const runMarksAPINew = () => {
       expectNoServerError(remove);
     });
 
-    test('создает тестовую отметку и находит ее в marks/byoperation', async ({ request }) => {
+    test('создает тестовую отметку и читает ее по id', async ({ request }) => {
       const candidates = (await findSeedMarks(request, accessToken)).slice(0, 20);
       test.skip(candidates.length === 0, 'В dev-базе нет отметок-образцов для создания.');
 
@@ -306,22 +255,9 @@ export const runMarksAPINew = () => {
 
       test.skip(!acceptedCreate || !seedMark || !operationId, 'Не найден seed mark, на котором dev-сервер принимает createMark.');
 
-      const created = await eventually(
-        async () => {
-          const response = await marksAPI.getMarksByOperation(request, operationId as number, accessToken);
-          expectNoServerError(response);
-          return response;
-        },
-        (response) => getRows<ApiRow>(response.data).some((row) => row.description === createDescription && row.ban !== true),
-        { attempts: 12, intervalMs: 700 },
-      );
-
-      const mark = created
-        ? getRows<ApiRow>(created.data).find((row) => row.description === createDescription && row.ban !== true)
-        : undefined;
-      expect(mark, JSON.stringify(created?.data)).toBeTruthy();
-      expectMarkShape(mark!);
-      createdMarkId = Number(mark!.id);
+      createdMarkId = Number(acceptedCreate?.data?.data?.id ?? acceptedCreate?.data?.id);
+      expect(createdMarkId, JSON.stringify(acceptedCreate?.data)).toBeGreaterThan(0);
+      expectMarkShape(acceptedCreate?.data?.data ?? acceptedCreate?.data);
     });
 
     test('обновляет тестовую отметку', async ({ request }) => {
@@ -338,22 +274,10 @@ export const runMarksAPINew = () => {
       expectNoServerError(update);
       expect(successCodes, JSON.stringify(update.data)).toContain(update.status);
 
-      const updated = await eventually(
-        async () => {
-          const response = await marksAPI.getMarksByOperation(request, operationId as number, accessToken);
-          expectNoServerError(response);
-          return response;
-        },
-        (response) => getRows<ApiRow>(response.data).some((row) => Number(row.id) === createdMarkId && row.description === updateDescription),
-        { attempts: 12, intervalMs: 700 },
-      );
-
-      const mark = updated
-        ? getRows<ApiRow>(updated.data).find((row) => Number(row.id) === createdMarkId)
-        : undefined;
-      expect(mark, JSON.stringify(updated?.data)).toBeTruthy();
-      expect(mark!.description, JSON.stringify(mark)).toBe(updateDescription);
-      expect(mark!.brak, JSON.stringify(mark)).toBe(true);
+      const mark = update.data?.data ?? update.data;
+      expect(Number(mark?.id), JSON.stringify(update.data)).toBe(createdMarkId);
+      expect(mark?.description, JSON.stringify(update.data)).toBe(updateDescription);
+      expect(mark?.brak, JSON.stringify(update.data)).toBe(true);
     });
 
     test('архивирует тестовую отметку', async ({ request }) => {
@@ -363,20 +287,9 @@ export const runMarksAPINew = () => {
       expectNoServerError(remove);
       expect(successCodes, JSON.stringify(remove.data)).toContain(remove.status);
 
-      const archived = await eventually(
-        async () => {
-          const response = await marksAPI.getMarksByOperation(request, operationId as number, accessToken);
-          expectNoServerError(response);
-          return response;
-        },
-        (response) => {
-          const mark = getRows<ApiRow>(response.data).find((row) => Number(row.id) === createdMarkId);
-          return !mark || mark.ban === true;
-        },
-        { attempts: 12, intervalMs: 700 },
-      );
-
-      expect(archived, `Отметка ${createdMarkId} не ушла из активной выдачи`).toBeTruthy();
+      const archived = remove.data?.data ?? remove.data;
+      expect(Number(archived?.id), JSON.stringify(remove.data)).toBe(createdMarkId);
+      expect(archived?.ban, JSON.stringify(remove.data)).toBe(true);
       createdMarkId = undefined;
     });
   });

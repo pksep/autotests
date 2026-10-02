@@ -233,9 +233,6 @@ export const runCBEDAPINew = () => {
       expectCbedShape(byId.data);
       expect(byId.data.designation).toBe(createdDesignation);
 
-      const specification = await cbedAPI.getOneCBEDSpecification(request, createdCbedId as number, false, accessToken);
-      expectNoServerError(specification);
-
       const pagination = await cbedAPI.getCBEDPagination(
         request,
         cbedPaginationDto({ searchString: createdDesignation }),
@@ -497,9 +494,6 @@ export const runCBEDAPINew = () => {
 
       const drafts = await captureApiResult(() => cbedAPI.getDrafts(request, 999999999, accessToken));
       expectEndpointReached(drafts);
-
-      const actualAvatar = await captureApiResult(() => cbedAPI.actualAvatar(request, accessToken));
-      expectEndpointReached(actualAvatar);
 
       const deleteResponse = await cbedAPI.banCBED(request, 999999999, testUserId, accessToken);
       expectClientError(deleteResponse);

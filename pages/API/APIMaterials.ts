@@ -145,38 +145,8 @@ export class MaterialsAPI extends APIPageObject {
     return this.result(response);
   }
 
-  async getMaterialsProviderPagination(request: APIRequestContext, paginationData: Record<string, unknown>, accessToken?: string) {
-    logger.info(`Getting provider materials pagination with data:`, paginationData);
 
-    const response = await request.post(this.base() + '/pagination/materials-provider', {
-      headers: this.jsonHeaders(accessToken),
-      data: paginationData,
-    });
 
-    return this.result(response);
-  }
-
-  async getTypeMaterialsProviderPagination(request: APIRequestContext, paginationData: Record<string, unknown>, accessToken?: string) {
-    logger.info(`Getting provider type materials pagination with data:`, paginationData);
-
-    const response = await request.post(this.base() + '/pagination/typematerials-provider', {
-      headers: this.jsonHeaders(accessToken),
-      data: paginationData,
-    });
-
-    return this.result(response);
-  }
-
-  async getSubtypeMaterialsProviderPagination(request: APIRequestContext, paginationData: Record<string, unknown>, accessToken?: string) {
-    logger.info(`Getting provider subtype materials pagination with data:`, paginationData);
-
-    const response = await request.post(this.base() + '/pagination/subtypematerials-provider', {
-      headers: this.jsonHeaders(accessToken),
-      data: paginationData,
-    });
-
-    return this.result(response);
-  }
 
   async getMaterialById(request: APIRequestContext, id: number, light = true, accessToken?: string) {
     logger.info(`Getting material by id: ${id}, light: ${light}`);
@@ -218,15 +188,6 @@ export class MaterialsAPI extends APIPageObject {
     return this.result(response);
   }
 
-  async getAllMaterialDeficit(request: APIRequestContext, accessToken?: string) {
-    logger.info(`Getting all material deficit`);
-
-    const response = await request.get(this.base() + '/materialdeficit', {
-      headers: { compress: 'no-compress', ...this.authHeaders(accessToken) },
-    });
-
-    return this.result(response);
-  }
 
   async attachFileToMaterial(request: APIRequestContext, materialId: number, fileId: number, accessToken?: string) {
     logger.info(`Attaching file ${fileId} to material ${materialId}`);
@@ -302,16 +263,6 @@ export class MaterialsAPI extends APIPageObject {
     return this.result(response);
   }
 
-  async createMaterialAlias(request: APIRequestContext, aliasData: Record<string, unknown>, accessToken?: string) {
-    logger.info(`Creating material alias with data:`, aliasData);
-
-    const response = await request.post(this.base() + '/aliases', {
-      headers: this.jsonHeaders(accessToken),
-      data: aliasData,
-    });
-
-    return this.result(response);
-  }
 
   async getMaterialShipmentsAndOrders(request: APIRequestContext, id: number, accessToken?: string) {
     logger.info(`Getting material shipments and orders for id: ${id}`);
@@ -388,13 +339,4 @@ export class MaterialsAPI extends APIPageObject {
     }
   }
 
-  async getAllSubtypeMaterial(request: APIRequestContext, instans: string, accessToken?: string) {
-    logger.info(`Getting all subtype materials for instans: ${instans}`);
-
-    const response = await request.get(ENV.API_BASE_URL + `api/material/subtype-material/${instans}`, {
-      headers: { compress: 'no-compress', ...this.authHeaders(accessToken) },
-    });
-
-    return this.result(response);
-  }
 }

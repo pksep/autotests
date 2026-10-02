@@ -102,15 +102,6 @@ export class CBEDAPI extends APIPageObject {
     return this.result(response);
   }
 
-  async getOneCBEDSpecification(request: APIRequestContext, id: number, isFull: boolean, accessToken?: string) {
-    logger.info(`Getting CBED specification by id: ${id}, isFull: ${isFull}`);
-
-    const response = await request.get(this.base() + `/one/spetification/${isFull}/${id}`, {
-      headers: this.cbedAuthHeaders(accessToken, { compress: 'no-compress' }),
-    });
-
-    return this.result(response);
-  }
 
   async getOneCBEDById(request: APIRequestContext, cbedData: Record<string, unknown>, accessToken?: string) {
     logger.info(`Getting CBED by ID`);
@@ -156,15 +147,6 @@ export class CBEDAPI extends APIPageObject {
     return this.result(response);
   }
 
-  async actualAvatar(request: APIRequestContext, accessToken?: string) {
-    logger.info(`Actualizing CBED avatars`);
-
-    const response = await request.put(this.base() + '/ava/update', {
-      headers: this.cbedAuthHeaders(accessToken, { compress: 'no-compress' }),
-    });
-
-    return this.result(response);
-  }
 
   async getAllCBED(request: APIRequestContext, full: boolean, page?: number, pageSize?: number, accessToken?: string) {
     logger.info(`Getting all CBEDs, full: ${full}, page: ${page}, pageSize: ${pageSize}`);
@@ -317,20 +299,4 @@ export class CBEDAPI extends APIPageObject {
     return this.result(response);
   }
 
-  async removeDocumentCBED(request: APIRequestContext, documentData: Record<string, unknown>, accessToken?: string) {
-    logger.info(`Removing document from CBED`);
-
-    const response = await request.put(ENV.API_BASE_URL + 'api/documents/unpin-documents', {
-      headers: this.cbedAuthHeaders(accessToken, {
-        'Content-Type': 'application/json',
-        compress: 'no-compress',
-      }),
-      data: {
-        typeEntity: 'cbed',
-        ...documentData,
-      },
-    });
-
-    return this.result(response);
-  }
 }

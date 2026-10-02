@@ -6,7 +6,44 @@ import { extractAccessToken } from './APIAssertions';
 const authAPI = new AuthAPI();
 const tokenByRequest = new WeakMap<APIRequestContext, string>();
 
+const unauthenticatedSuccesses = new WeakMap<APIRequestContext, Set<string>>();
+
+export function enableUnauthenticatedAudit(request: APIRequestContext): void {
+  if (unauthenticatedSuccesses.has(request)) return;
+
+  const recorded = new Set<string>();
+  unauthenticatedSuccesses.set(request, recorded);
+  const outputFile = process.env.NO_AUTH_AUDIT_FILE;
+  if (!outputFile) return;
+
+  for (const method of ['get', 'post', 'put', 'delete', 'patch'] as const) {
+    const original = (request as any)[method].bind(request) as (...args: any[]) => Promise<any>;
+    (request as any)[method] = async (...args: any[]) => {
+      const options = args[1] || {};
+      const headers = { ...(options.headers || {}) };
+      delete headers.Authorization;
+      delete headers.authorization;
+      headers.Cookie = '';
+      args[1] = { ...options, headers };
+
+      const response = await original(...args);
+      if (response.status() >= 200 && response.status() < 400) {
+        const entry = JSON.stringify({ method: method.toUpperCase(), url: response.url(), status: response.status() });
+        if (!recorded.has(entry)) {
+          recorded.add(entry);
+          require('fs').appendFileSync(outputFile, `${entry}\n`);
+        }
+      }
+      return response;
+    };
+  }
+}
 export const getAuthToken = async (request: APIRequestContext): Promise<string> => {
+  if (process.env.API_NO_AUTH === 'true') {
+    enableUnauthenticatedAudit(request);
+    return '';
+  }
+
   if (tokenByRequest.has(request)) return tokenByRequest.get(request) as string;
 
   let loginResponse: Awaited<ReturnType<AuthAPI['login']>> | undefined;

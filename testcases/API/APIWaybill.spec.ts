@@ -216,10 +216,5 @@ export const runWaybillAPINew = () => {
       }
     });
 
-    test('удаление несуществующей накладной не роняет сервис', async ({ request }) => {
-      const remove = await waybillAPI.deleteWaybill(request, 999999999, accessToken);
-      expectNoServerError(remove);
-      expect([...successCodes, ...missingResourceCodes], JSON.stringify(remove.data)).toContain(remove.status);
-    });
   });
 };

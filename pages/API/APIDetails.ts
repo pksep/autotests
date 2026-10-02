@@ -57,20 +57,6 @@ export class DetailsAPI extends APIPageObject {
     }
   }
 
-  async getAttributeByParamId(request: APIRequestContext, id: number, attributes: string[], authToken?: string) {
-    logger.info(`Getting attributes by route param for detail ID: ${id}`);
-
-    const response = await request.post(this.base() + `/getattribute/${id}`, {
-      headers: this.detailAuthHeaders(authToken, {
-        accept: '*/*',
-        'Content-Type': 'application/json',
-        compress: 'no-compress',
-      }),
-      data: { attributes },
-    });
-
-    return this.result(response);
-  }
 
   async getIncludeById(request: APIRequestContext, id: string, includes: string[], authToken?: string) {
     logger.info(`Getting includes for detail ID: ${id}`);
@@ -380,32 +366,6 @@ export class DetailsAPI extends APIPageObject {
     }
   }
 
-  async updateDetailAvatar(request: APIRequestContext, authToken?: string) {
-    logger.info(`Updating detail avatar`);
-
-    const headers = {
-      accept: '*/*',
-      ...this.authHeaders(authToken),
-      compress: 'no-compress',
-    };
-
-    const response = await request.put(ENV.API_BASE_URL + 'api/detal/ava/update', {
-      headers: headers,
-    });
-
-    try {
-      const responseData = await response.json();
-      logger.info(`Update detail avatar response received`);
-      return { status: response.status(), data: responseData };
-    } catch (error) {
-      if (response.status() === 201) {
-        logger.info(`Update detail avatar successful with empty response body`);
-        return { status: response.status(), data: { success: true } };
-      }
-      logger.error(`Failed to parse response, status: ${response.status()}`);
-      return { status: response.status(), data: null };
-    }
-  }
 
   async deleteDetail(request: APIRequestContext, detailId: string, userId: string, authToken?: string) {
     logger.info(`Deleting detail with ID: ${detailId}`);
@@ -491,60 +451,7 @@ export class DetailsAPI extends APIPageObject {
     }
   }
 
-  async getDetailSpecification(request: APIRequestContext, detailId: string, isFull: boolean, authToken?: string) {
-    logger.info(`Getting detail specification for ID: ${detailId}, isFull: ${isFull}`);
 
-    const headers = {
-      accept: '*/*',
-      ...this.authHeaders(authToken),
-      compress: 'no-compress',
-    };
-
-    const response = await request.get(ENV.API_BASE_URL + `api/detal/one/spetification/${detailId}/${isFull}`, {
-      headers: headers,
-    });
-
-    try {
-      const responseData = await response.json();
-      logger.info(`Get detail specification response received`);
-      return { status: response.status(), data: responseData };
-    } catch (error) {
-      if (response.status() === 201) {
-        logger.info(`Get detail specification successful with empty response body`);
-        return { status: response.status(), data: { success: true } };
-      }
-      logger.error(`Failed to parse response, status: ${response.status()}`);
-      return { status: response.status(), data: null };
-    }
-  }
-
-  async getAllDetails(request: APIRequestContext, light: boolean, attributes: string[], authToken?: string) {
-    logger.info(`Getting all details`);
-
-    const headers = {
-      accept: '*/*',
-      ...this.authHeaders(authToken),
-      compress: 'no-compress',
-    };
-
-    const encodedAttributes = encodeURIComponent(JSON.stringify(attributes));
-    const response = await request.get(ENV.API_BASE_URL + `api/detal/all/${light}/${encodedAttributes}`, {
-      headers: headers,
-    });
-
-    try {
-      const responseData = await response.json();
-      logger.info(`Get all details response received`);
-      return { status: response.status(), data: responseData };
-    } catch (error) {
-      if (response.status() === 201) {
-        logger.info(`Get all details successful with empty response body`);
-        return { status: response.status(), data: { success: true } };
-      }
-      logger.error(`Failed to parse response, status: ${response.status()}`);
-      return { status: response.status(), data: null };
-    }
-  }
 
   async getDetailDeficits(request: APIRequestContext, deficitData: any, authToken?: string) {
     logger.info(`Getting detail deficits`);

@@ -126,11 +126,8 @@ export const runSettingsAPINew = () => {
       expect(afterRestore.data.inaction).toBe(originalValue);
     });
 
-    test('невалидные мутации справочников настроек возвращают error contract', async ({ request }) => {
+    test('невалидное обновление нормы часов возвращает error contract', async ({ request }) => {
       const responses = [
-        await settingsAPI.createTypeEdizm(request, { name: 123 }, accessToken),
-        await settingsAPI.createEdizm(request, { name: 123, short_name: false, typeEdizmId: 'bad' }, accessToken),
-        await settingsAPI.updateEdizm(request, { id: 'bad', name: 123, short_name: false }, accessToken),
         await settingsAPI.updateNormHoursValue(request, { value: 'bad' }, accessToken),
       ];
 

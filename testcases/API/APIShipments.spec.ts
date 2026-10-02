@@ -541,24 +541,6 @@ export const runShipmentsAPINew = () => {
       }
     });
 
-    test('проверяет связи отгрузок с изделием без серверных ошибок', async ({ request }) => {
-      const fixture = await createIsolatedShipment(request, uniqueApiSuffix('shipment-product'), accessToken);
-
-      try {
-        const byProduct = await shipmentsAPI.getShipmentsByProduct(request, Number(fixture.product.id), accessToken);
-        expectNoServerError(byProduct);
-        expect(successCodes, JSON.stringify(byProduct.data)).toContain(byProduct.status);
-        expectArrayResponse(byProduct.data);
-        if (getRows<ApiRow>(byProduct.data).length > 0) {
-          expect(
-            getRows<ApiRow>(byProduct.data).some((shipment) => Number(shipment.id) === fixture.shipmentId),
-            JSON.stringify(byProduct.data),
-          ).toBe(true);
-        }
-      } finally {
-        await archiveIsolatedShipment(request, fixture, accessToken);
-      }
-    });
 
     test('фильтры, сортировка и выбор атрибутов пагинаций работают без серверных ошибок', async ({ request }) => {
       const dateRange = {
@@ -773,15 +755,6 @@ export const runShipmentsAPINew = () => {
       const shipmentId = createdShipmentId as number;
       const productId = Number(activeProduct?.id);
 
-      const byProduct = await shipmentsAPI.getShipmentsByProduct(request, productId, accessToken);
-      expectNoServerError(byProduct);
-      expect(successCodes, JSON.stringify(byProduct.data)).toContain(byProduct.status);
-      expectApiContract(byProduct, { shape: 'array', schema: arrayOf(shipmentResponseSchema) });
-      const byProductRows = getRows<ApiRow>(byProduct.data);
-      expect(byProductRows.some((shipment) => Number(shipment.id) === shipmentId), JSON.stringify(byProduct.data)).toBe(true);
-      expectNonNegativeQuantities(byProductRows);
-      expectRowsLinkedToEntity(byProductRows.filter((shipment) => Number(shipment.id) === shipmentId), 'product', productId);
-
       const attributes = ['id', 'number_order', 'status', 'warehouse_readiness_date'];
       const attributesResponse = await shipmentsAPI.getAttributes(
         request,
@@ -963,9 +936,6 @@ export const runShipmentsAPINew = () => {
 
       const items = await shipmentsAPI.getShipmentItems(request, 999999999, accessToken);
       expectMissingShipmentResource(items);
-
-      const byProduct = await shipmentsAPI.getShipmentsByProduct(request, 999999999, accessToken);
-      expectNoServerError(byProduct);
 
       const itemsByEntity = await shipmentsAPI.getItemsByEntity(request, 'product', 999999999, accessToken);
       expectNoServerError(itemsByEntity);

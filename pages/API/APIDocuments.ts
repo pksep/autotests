@@ -33,30 +33,6 @@ export class DocumentsAPI extends APIPageObject {
     return { status: response.status(), data: await this.parseJsonBody(response) };
   }
 
-  async attachFileToUser(request: APIRequestContext, userToUpdateId: number, fileId: number, unpin: boolean, userId: string) {
-    logger.info(`Attaching file ${fileId} to user ${userToUpdateId}, unpin: ${unpin}`);
-
-    const response = await request.put(ENV.API_BASE_URL + (unpin ? 'api/documents/unpin-documents' : 'api/documents/attach-to-entity'), {
-      headers: {
-        'Content-Type': 'application/json',
-        'user-id': userId,
-      },
-      data: {
-        idEntity: userToUpdateId,
-        idDocument: fileId,
-        typeEntity: 'user',
-      },
-    });
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`File attached to user successfully`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to attach file to user, status: ${response.status()}`);
-      throw new Error(`Failed to attach file to user with status: ${response.status()}`);
-    }
-  }
 
   async getFileById(request: APIRequestContext, id: number, light: boolean, accessToken?: string) {
     logger.info(`Getting file by id: ${id}, light: ${light}`);
@@ -84,13 +60,6 @@ export class DocumentsAPI extends APIPageObject {
     });
   }
 
-  async getDocumentNames(request: APIRequestContext, accessToken?: string) {
-    logger.info(`Getting document names`);
-
-    return this.apiRequest(request, 'GET', ENV.API_BASE_URL + 'api/documents/names', {
-      accessToken,
-    });
-  }
 
   async presignPut(request: APIRequestContext, data: Record<string, unknown>, accessToken?: string) {
     logger.info(`Getting presigned upload url`);
@@ -154,34 +123,7 @@ export class DocumentsAPI extends APIPageObject {
     });
   }
 
-  async unpinDocuments(request: APIRequestContext, data: Record<string, unknown>, accessToken?: string) {
-    logger.info(`Unpinning documents`);
 
-    return this.apiRequest(request, 'PUT', ENV.API_BASE_URL + 'api/documents/unpin-documents', {
-      data,
-      accessToken,
-    });
-  }
-
-  async changeDocumentType(request: APIRequestContext, typeData: any, userId: string) {
-    logger.info(`Changing document type:`, typeData);
-
-    const response = await request.post(ENV.API_BASE_URL + 'api/documents/editype', {
-      headers: {
-        'Content-Type': 'application/json',
-        'user-id': userId,
-      },
-      data: typeData,
-    });
-
-    if (response.ok()) {
-      logger.info(`Document type changed successfully`);
-    } else {
-      logger.error(`Failed to change document type, status: ${response.status()}`);
-    }
-
-    return { status: response.status(), data: await this.parseJsonBody(response), headers: response.headers() };
-  }
 
   async deleteDocument(request: APIRequestContext, id: number, userId: string, accessToken?: string) {
     logger.info(`Deleting document with id: ${id}`);

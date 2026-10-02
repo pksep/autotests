@@ -87,10 +87,6 @@ export const runMovementObjectAPINew = () => {
         expectMissingResource(response);
       });
 
-      test('отклоняет нечисловой id перемещения как validation error', async ({ request }) => {
-        const response = await movementObjectAPI.getOneMovementObjectRaw(request, 'bad-id', accessToken);
-        expectValidationError(response);
-      });
 
       test('отклоняет невалидный payload истории перемещений как validation error', async ({ request }) => {
         const response = await movementObjectAPI.getObjectsHistory(

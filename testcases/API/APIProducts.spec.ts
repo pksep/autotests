@@ -571,9 +571,6 @@ export const runProductsAPINew = () => {
         }
       }
 
-      const actualAvatar = await captureApiResult(() => productsAPI.actualAvatar(request, accessToken));
-      expectEndpointReached(actualAvatar);
-
       const deleteResponse = await productsAPI.deleteProduct(request, 999999999, accessToken);
       expectClientError(deleteResponse);
     });

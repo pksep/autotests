@@ -8,27 +8,6 @@ export class PartsAPI extends APIPageObject {
     super(page);
   }
 
-  async getPartAttribute(request: APIRequestContext, id: number, body: { attributes: string[] } = { attributes: ['id'] }, accessToken?: string) {
-    logger.info(`Getting part attribute by ID: ${id}`);
-
-    const response = await request.post(ENV.API_BASE_URL + `api/detal/getattribute/${id}/`, {
-      headers: {
-        'Content-Type': 'application/json',
-        compress: 'no-compress',
-        ...this.authHeaders(accessToken),
-      },
-      data: body,
-    });
-
-    if (response.ok()) {
-      const responseData = await response.json();
-      logger.info(`Successfully retrieved part attribute`);
-      return { status: response.status(), data: responseData };
-    } else {
-      logger.error(`Failed to get part attribute, status: ${response.status()}`);
-      throw new Error(`Failed to get part attribute with status: ${response.status()}`);
-    }
-  }
 
   async getPartInclude(request: APIRequestContext, id: number, includeData: any) {
     logger.info(`Getting part include by ID: ${id}`);

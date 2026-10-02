@@ -20,22 +20,8 @@ export class DeficitsAPI extends APIPageObject {
     });
   }
 
-  async getMaterialDeficits(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
-    return this.apiRequest(request, 'POST', this.base() + '/materials', {
-      data: dto,
-      accessToken,
-    });
-  }
 
-  async getMaterialForShipment(request: APIRequestContext, shipmentId: number, type: string, accessToken?: string) {
-    return this.apiRequest(request, 'GET', this.base() + `/materials/shipments/${shipmentId}/${type}`, {
-      accessToken,
-    });
-  }
 
-  async getMaterialShipmentAttractions(request: APIRequestContext, materialId: number, accessToken?: string) {
-    return this.apiRequest(request, 'GET', this.base() + `/materialonecshipments/${materialId}`, { accessToken });
-  }
 
   async getMaterialParents(request: APIRequestContext, materialId: number, accessToken?: string) {
     return this.apiRequest(request, 'GET', this.base() + `/materialparents/${materialId}`, { accessToken });

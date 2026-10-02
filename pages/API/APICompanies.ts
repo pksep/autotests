@@ -90,10 +90,4 @@ export class CompaniesAPI extends APIPageObject {
     return this.result(response);
   }
 
-  async unpinContact(request: APIRequestContext, companyId: number, contactId: number, accessToken?: string) {
-    const response = await request.put(this.base() + `/unpin-contact/${companyId}/${contactId}`, {
-      headers: { compress: 'no-compress', ...this.authHeaders(this.token(accessToken)) },
-    });
-    return this.result(response);
-  }
 }

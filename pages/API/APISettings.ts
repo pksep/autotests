@@ -10,13 +10,7 @@ export class SettingsAPI extends APIPageObject {
 
   private base = () => ENV.API_BASE_URL + 'api/settings';
 
-  async createTypeEdizm(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
-    return this.apiRequest(request, 'POST', this.base() + '/typeedizm', { data: dto, accessToken });
-  }
 
-  async createEdizm(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
-    return this.apiRequest(request, 'POST', this.base() + '/edizm', { data: dto, accessToken });
-  }
 
   async getAllEdizm(request: APIRequestContext, accessToken?: string) {
     return this.apiRequest(request, 'GET', this.base() + '/edizm', { accessToken });
@@ -26,9 +20,6 @@ export class SettingsAPI extends APIPageObject {
     return this.apiRequest(request, 'GET', this.base() + '/typeedizm', { accessToken });
   }
 
-  async updateEdizm(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
-    return this.apiRequest(request, 'POST', this.base() + '/edizm/update', { data: dto, accessToken });
-  }
 
   async updateNormHoursValue(request: APIRequestContext, dto: Record<string, unknown>, accessToken?: string) {
     return this.apiRequest(request, 'POST', this.base() + '/norm-hours', { data: dto, accessToken });
