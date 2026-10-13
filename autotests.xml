@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<fb version="0.19.6" size="396088">
+<fb version="0.19.6" size="396335">
   <f>
     <added t="I">8</added>
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">76.382564144</seconds>
+    <seconds t="F">46.640146491</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-10-12T23:14:50Z</when>
+    <when t="T">2026-10-13T03:52:36Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -26575,12 +26575,28 @@ The average number of releases per month (0.0) is staying still.</text>
     <when t="T">2026-10-12T06:31:51Z</when>
   </f>
   <f>
-    <_id t="I">2088</_id>
-    <_job t="I">38320902136</_job>
-    <_time t="T">2026-10-12T23:13:36Z</_time>
+    <_id t="I">2089</_id>
+    <_job t="I">99128</_job>
+    <_time t="T">2026-10-12T23:15:32Z</_time>
+    <_version t="S">0.19.16/0.61.1/0.17.11!0.17.23</_version>
+    <ac t="I">0</ac>
+    <cost_of_qod t="F">2.3482471255444626</cost_of_qod>
+    <ev t="I">0</ev>
+    <pv t="I">9177</pv>
+    <qod t="I">0</qod>
+    <qod_per_day t="F">16.45033503262167</qod_per_day>
+    <qod_per_sec t="F">0.0</qod_per_sec>
+    <start t="T">2026-02-17T09:19:57Z</start>
+    <what t="S">earned-value</what>
+    <when t="T">2026-10-12T23:15:32Z</when>
+  </f>
+  <f>
+    <_id t="I">2090</_id>
+    <_job t="I">38343621028</_job>
+    <_time t="T">2026-10-13T03:51:52Z</_time>
     <_version t="S">0.19.6/0.60.0/0.17.11</_version>
     <earliest_issue_was_found t="I">1</earliest_issue_was_found>
-    <events_were_scanned t="I">23804094257</events_were_scanned>
+    <events_were_scanned t="I">23819736429</events_were_scanned>
     <latest_issue_was_found t="I">529</latest_issue_was_found>
     <min_pull_was_found t="I">529</min_pull_was_found>
     <repository t="I">935866864</repository>
