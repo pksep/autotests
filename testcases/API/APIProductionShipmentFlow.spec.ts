@@ -1457,9 +1457,24 @@ export const runProductionShipmentFlowAPI = () => {
         await expectStock(request, 'detal', detailId, names.detail, 0, 0, accessToken);
       });
 
-      await test.step('Оприходовать и отгрузить изделие, проверить финальные остатки и наборы', async () => {
+      await test.step('Подтвердить готовность заказа к отгрузке после прихода изделия на склад', async () => {
+        const readyToShip = await shipmentsAPI.updateReadyToShipStatus(
+          request,
+          shipmentId,
+          { readyToShip: true },
+          accessToken,
+        );
+        expectNoServerError(readyToShip);
+        expect(successCodes, JSON.stringify(readyToShip.data)).toContain(readyToShip.status);
+        expect(Number(readyToShip.data?.id), JSON.stringify(readyToShip.data)).toBe(shipmentId);
+        expect(readyToShip.data?.status, JSON.stringify(readyToShip.data)).toBe('Готово к отгрузке');
+      });
+
+      await test.step('Отгрузить готовое изделие, проверить финальные остатки и наборы', async () => {
         const shipmentForShCheck = await shipmentsAPI.getShipmentById(request, shipmentId, accessToken);
         expectNoServerError(shipmentForShCheck);
+        expect(shipmentForShCheck.status, JSON.stringify(shipmentForShCheck.data)).toBe(200);
+        expect(shipmentForShCheck.data?.status, JSON.stringify(shipmentForShCheck.data)).toBe('Готово к отгрузке');
         expect(Number(shipmentForShCheck.data?.productId), JSON.stringify(shipmentForShCheck.data)).toBe(productId);
         expect(Number(shipmentForShCheck.data?.kol), JSON.stringify(shipmentForShCheck.data)).toBe(1);
 

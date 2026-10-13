@@ -466,15 +466,34 @@ export const runShipmentsAPINew = () => {
         );
         expectNoServerError(shCheck);
         if (!successCodes.includes(shCheck.status)) {
+          expectErrorResponseContract(shCheck);
           const message = String(shCheck.data?.message || '');
           expect([404, 409], JSON.stringify(shCheck.data)).toContain(shCheck.status);
+          expect(shCheck.data?.statusCode, JSON.stringify(shCheck.data)).toBe(shCheck.status);
+          expect(shCheck.data?.reqId, JSON.stringify(shCheck.data)).toEqual(expect.any(String));
+          expect(shCheck.data.reqId.trim(), JSON.stringify(shCheck.data)).not.toBe('');
           if (shCheck.status === 404) {
-            expect(message, JSON.stringify(shCheck.data)).toContain('timed out');
+            // AllExceptionsFilter заменяет внутренний тайм-аут публичным контрактом NOT_FOUND.
+            expect(shCheck.data?.code, JSON.stringify(shCheck.data)).toBe('NOT_FOUND');
+            expect(message, JSON.stringify(shCheck.data)).toBe(
+              'Запись не найдена. Возможно, она была удалена. Обновите список.',
+            );
+            test.info().annotations.push({
+              type: 'known-server-error',
+              description: 'POST /shcheck вернул NOT_FOUND для существующего заказа; публичный ответ не раскрывает причину сбоя.',
+            });
           } else {
+            expect(shCheck.data?.code, JSON.stringify(shCheck.data)).toBe('BUSINESS_ERROR');
             expect(message, JSON.stringify(shCheck.data)).toMatch(
               /недостаточно доступного количества|больше заказанного количества/,
             );
           }
+
+          const afterRejected = await shipmentsAPI.getShipmentById(request, fixture.shipmentId, accessToken);
+          expectNoServerError(afterRejected);
+          expect(afterRejected.status, JSON.stringify(afterRejected.data)).toBe(200);
+          expect(Number(afterRejected.data?.shipped), JSON.stringify(afterRejected.data)).toBe(Number(candidate.data.shipped));
+          expect(Number(afterRejected.data?.kol), JSON.stringify(afterRejected.data)).toBe(Number(candidate.data.kol));
           return;
         }
 

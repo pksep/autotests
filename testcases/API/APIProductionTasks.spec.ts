@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { runProductionTaskSplittingAPI } from './APIProductionTaskSplitting.spec';
 import { EquipmentAPI } from '../../pages/API/APIEquipment';
 import { MetaloworkingAPI } from '../../pages/API/APIMetaloworking';
 import { ProductionTasksAPI } from '../../pages/API/APIProductionTasks';
@@ -724,6 +725,29 @@ const getOperationPosIds = (task: ApiRow | undefined): number[] => {
     .filter((id: number) => Number.isFinite(id) && id > 0);
 };
 
+const waitForCreatedTaskOperations = async (
+  request: any,
+  productionTaskId: number,
+  accessToken?: string,
+): Promise<ApiResult> => {
+  let lastResponse: ApiResult | undefined;
+  const ready = await eventually(
+    async () => {
+      lastResponse = await productionTasksAPI.getProductionTaskById(request, productionTaskId, accessToken);
+      expectNoServerError(lastResponse);
+      expect(lastResponse.status, JSON.stringify(lastResponse.data)).toBe(200);
+      return lastResponse;
+    },
+    (response) => Boolean(findOperationPosIdForTask(response.data)),
+    { attempts: 30, intervalMs: 1000 },
+  );
+  expect(
+    ready,
+    `Operations for production task ${productionTaskId} were not created by the queue: ${JSON.stringify(lastResponse?.data)}`,
+  ).toBeTruthy();
+  return ready!;
+};
+
 const extractDateValue = (value: unknown): string | undefined => {
   if (!value) return undefined;
   if (typeof value === 'string' && Number.isFinite(Date.parse(value))) return value;
@@ -936,6 +960,7 @@ const productionOperationPosPayload = (
 });
 
 export const runProductionTasksAPINew = () => {
+  runProductionTaskSplittingAPI();
   logger.info('Starting Production Tasks API coverage suite');
 
   test.describe('Production Tasks API: контракты чтения и производственные связи', () => {
@@ -1023,7 +1048,7 @@ export const runProductionTasksAPINew = () => {
         createdReadFixtureTaskId = Number(getQueueData(createResponse.data)?.id);
         expect(createdReadFixtureTaskId, JSON.stringify(createResponse.data)).toBeGreaterThan(0);
 
-        const byId = await productionTasksAPI.getProductionTaskById(request, createdReadFixtureTaskId, accessToken);
+        const byId = await waitForCreatedTaskOperations(request, createdReadFixtureTaskId, accessToken);
         expectNoServerError(byId);
         expect(successCodes, JSON.stringify(byId.data)).toContain(byId.status);
 
@@ -1083,7 +1108,7 @@ export const runProductionTasksAPINew = () => {
         expect(createdProductionTaskId, JSON.stringify(createResponse.data)).toBeGreaterThan(0);
         expect(createdTask?.description, JSON.stringify(createdTask)).toBe(`API production task lifecycle ${suffix}`);
 
-        const byId = await productionTasksAPI.getProductionTaskById(request, createdProductionTaskId, accessToken);
+        const byId = await waitForCreatedTaskOperations(request, createdProductionTaskId, accessToken);
         expect(byId.status).toBe(200);
         expectNoServerError(byId);
         expect(Number(byId.data?.id), JSON.stringify(byId.data)).toBe(createdProductionTaskId);

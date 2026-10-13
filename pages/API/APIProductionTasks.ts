@@ -31,6 +31,20 @@ export class ProductionTasksAPI extends APIPageObject {
     });
   }
 
+  async splitProductionTask(request: APIRequestContext, sourceProductionTaskId: number, dto: unknown, accessToken?: string) {
+    return this.apiRequest(request, 'POST', this.base() + `/${sourceProductionTaskId}/subtasks`, {
+      data: dto,
+      accessToken: this.token(accessToken),
+    });
+  }
+
+  async splitOperationPosition(request: APIRequestContext, operationPositionId: number, dto: unknown, accessToken?: string) {
+    return this.apiRequest(request, 'POST', this.base() + `/operation-positions/${operationPositionId}/assignments`, {
+      data: dto,
+      accessToken: this.token(accessToken),
+    });
+  }
+
   async getProductionTaskPaginate(request: APIRequestContext, paginationData: any, accessToken?: string) {
     return this.apiRequest(request, 'POST', this.base() + '/list', {
       data: paginationData,
