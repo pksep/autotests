@@ -4,11 +4,9 @@ import { MaterialsAPI } from '../../pages/API/APIMaterials';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import {
-  captureApiResult,
   clientErrorCodes,
   expectApiContract,
   expectClientError,
-  expectEndpointReached,
   expectNoServerError,
   expectPaginationContract,
   expectSortedDescendingByKnownDate,
@@ -343,9 +341,6 @@ export const runWarehouseAPINew = () => {
 
       const byParents = await warehouseAPI.getNeedsByParents(request, 'detal', 999999999, accessToken);
       expectNoServerError(byParents);
-
-      const resetInSets = await captureApiResult(() => warehouseAPI.resetInSets(request, accessToken));
-      expectEndpointReached(resetInSets);
     });
 
     test('невалидная ревизия остатков отклоняется без серверных ошибок', async ({ request }) => {

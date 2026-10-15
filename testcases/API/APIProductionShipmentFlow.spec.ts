@@ -3,6 +3,7 @@ import { ENV } from '../../config';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import { expectNoServerError, getRows, serverErrorCodes, successCodes } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import { rollbackShChecksAndWait } from '../../lib/helpers/APIShipmentCleanup';
 import { expectRepeatOperationRejectedOrIdempotent } from '../../lib/helpers/APIDataInvariants';
 import { ProductsAPI } from '../../pages/API/APIProducts';
 import { CBEDAPI } from '../../pages/API/APICBED';
@@ -11,6 +12,8 @@ import { ShipmentsAPI } from '../../pages/API/APIShipments';
 import { StockOrderAPI } from '../../pages/API/APIStockOrder';
 import { ProductionTasksAPI } from '../../pages/API/APIProductionTasks';
 import { CompaniesAPI } from '../../pages/API/APICompanies';
+import { AssembleAPI } from '../../pages/API/APIAssemble';
+import { WaybillAPI } from '../../pages/API/APIWaybill';
 
 type ApiRow = Record<string, any>;
 type ApiResult = { status: number; data: any };
@@ -25,6 +28,8 @@ const shipmentsAPI = new ShipmentsAPI(null as any);
 const stockOrderAPI = new StockOrderAPI(null);
 const productionTasksAPI = new ProductionTasksAPI(null);
 const companiesAPI = new CompaniesAPI(null);
+const assembleAPI = new AssembleAPI(null);
+const waybillAPI = new WaybillAPI(null);
 const testUserId = API_CONST.API_TEST_TABEL;
 const API_TIMEOUT_MS = 60000;
 const shipmentManagerId = Number(API_CONST.API_CREATOR_USER_ID_66);
@@ -489,28 +494,89 @@ const expectComplectKitId = async (
   request: APIRequestContext,
   operationId: number,
   assembleId: number,
+  entityType: 'cbed' | 'product',
   token?: string,
 ) => {
+  const matchesKit = (row: ApiRow) =>
+    Number(row.id) > 0 && row.ban === false && row.actual_spetificatoin === true &&
+    Number(row.assemble_id) === assembleId && row.type_izd === entityType &&
+    Number(row.kolvo_collected) === 1 && Number(row.quantity_received) === 0;
   let lastResponse: ApiResult | undefined;
   const response = await eventually(
     async () => {
       const res = await apiGet(request, `api/assemble/complectkit/getbyassembly/${assembleId}`, token);
+      expectNoServerError(res);
+      expect(successCodes, JSON.stringify(res.data)).toContain(res.status);
       lastResponse = res;
       return res;
     },
     (res) =>
       hasNoServerError(res) &&
-      getRows<ApiRow>(res.data).some((row) => Number(row.id) > 0 && row.ban !== true),
+      getRows<ApiRow>(res.data).some(matchesKit),
     { attempts: 15, intervalMs: 1000 },
   );
 
   const kit = response
-    ? getRows<ApiRow>(response.data).find((row) => Number(row.id) > 0 && row.ban !== true)
+    ? getRows<ApiRow>(response.data).find(matchesKit)
     : undefined;
   const kitId = Number(kit?.id);
   expect(kitId, `Не найден id набора по операции ${operationId} и assemble ${assembleId}. Ответ: ${JSON.stringify(lastResponse)}`).toBeGreaterThan(0);
 
   return kitId;
+};
+
+const expectAssemblyReceipt = async (
+  request: APIRequestContext,
+  create: ApiResult,
+  expected: {
+    entityType: 'cbed' | 'product'; entityId: number; name: string;
+    description: string; assembleId: number; kitId: number;
+  },
+  token?: string,
+) => {
+  expectNoServerError(create);
+  expect(successCodes, JSON.stringify(create.data)).toContain(create.status);
+  let waybillId = Number(queueData(create.data)?.id);
+  if (!(waybillId > 0)) {
+    const page = await eventually(async () => {
+      const response = await waybillAPI.getWaybillPagination(request, {
+        page: 0, searchString: expected.name, typeComing: ['Сборка'],
+      }, token);
+      expectNoServerError(response);
+      expect(successCodes, JSON.stringify(response.data)).toContain(response.status);
+      return response;
+    }, (response) => getRows<ApiRow>(response.data).some((row) => row.description === expected.description),
+    { attempts: 30, intervalMs: 1000 });
+    const waybill = page && getRows<ApiRow>(page.data).find((row) => row.description === expected.description);
+    waybillId = Number(waybill?.id);
+  }
+  expect(waybillId, `Не найден созданный приход ${expected.description}`).toBeGreaterThan(0);
+  const byId = await waybillAPI.getWaybillById(request, waybillId, token);
+  expectNoServerError(byId);
+  expect(successCodes, JSON.stringify(byId.data)).toContain(byId.status);
+  expect(byId.data?.description, JSON.stringify(byId.data)).toBe(expected.description);
+  const positions = getRows<ApiRow>(byId.data?.waybill_product);
+  expect(positions, JSON.stringify(byId.data)).toHaveLength(1);
+  const position = positions[0];
+  expect(position.entity_type).toBe(expected.entityType);
+  expect(Number(position[`${expected.entityType}_id`])).toBe(expected.entityId);
+  expect(Number(position.assemble_id)).toBe(expected.assembleId);
+  expect(Number(position.quantity)).toBe(1);
+  expect(position.kits_selected).toEqual([{ id: expected.kitId, count_to_received: 1 }]);
+
+  // Receipt processing in Bull must consume the selected kit before the next step.
+  const receivedKit = await eventually(async () => {
+    const response = await assembleAPI.getComplectKitById(request, expected.kitId, token);
+    expectNoServerError(response);
+    expect(successCodes, JSON.stringify(response.data)).toContain(response.status);
+    return response;
+  }, (response) =>
+    Number(response.data?.id) === expected.kitId &&
+    Number(response.data?.assemble_id) === expected.assembleId &&
+    Number(response.data?.quantity_received) === 1 &&
+    Number(response.data?.kolvo_collected) === 0 && response.data?.ban === true,
+  { attempts: 30, intervalMs: 1000 });
+  expect(receivedKit, `Набор ${expected.kitId} не списан приходом ${waybillId}`).toBeTruthy();
 };
 
 const apiPost = async (
@@ -880,7 +946,7 @@ export const runProductionShipmentFlowAPI = () => {
     let assembleProductId: number;
     let cbedKitId: number;
     let buyerId: number;
-    let createdEntitiesCleanedUp = false;
+    let cleanupStarted = false;
     const suffix = uniqueApiSuffix('prod-flow');
     const names = {
       product: `API Flow Product ${suffix}`,
@@ -904,17 +970,18 @@ export const runProductionShipmentFlowAPI = () => {
     });
 
     const cleanupCreatedEntities = async (request: APIRequestContext) => {
-      if (repeatedShCheckId) await ignoreCleanupError(() => shipmentsAPI.rollbackShCheck(request, repeatedShCheckId, accessToken));
-      if (shCheckId) await ignoreCleanupError(() => shipmentsAPI.rollbackShCheck(request, shCheckId, accessToken));
+      if (cleanupStarted) return;
+      cleanupStarted = true;
+      // Cancellation runs in Bull; archive its fixtures only after it completes.
+      await rollbackShChecksAndWait(request, shipmentsAPI, [repeatedShCheckId, shCheckId], accessToken);
       if (shipmentId) await ignoreCleanupError(() => shipmentsAPI.deleteShipment(request, shipmentId, accessToken));
       if (productId) await ignoreCleanupError(() => productsAPI.deleteProduct(request, productId, accessToken));
       if (cbedId) await ignoreCleanupError(() => cbedAPI.banCBED(request, cbedId, testUserId, accessToken));
       if (detailId) await ignoreCleanupError(() => detailsAPI.deleteDetail(request, String(detailId), testUserId, accessToken));
-      createdEntitiesCleanedUp = true;
     };
 
     test.afterAll(async ({ request }) => {
-      if (!createdEntitiesCleanedUp) await cleanupCreatedEntities(request);
+      await cleanupCreatedEntities(request);
     });
 
     test('сквозной API-сценарий: от создания изделия до отгрузки', async ({ request }) => {
@@ -1256,7 +1323,7 @@ export const runProductionShipmentFlowAPI = () => {
           () => productionTasksAPI.getPlanForProductionTask(request, productionPlanDto('ass', names.cbed), accessToken),
           (row) => Number(row.cbed_id ?? row.cbedId ?? row.id) === cbedId || row.name === names.cbed,
         );
-        assembleCbedId = planAssembleId(cbedAssPlan) || cbedId;
+        assembleCbedId = planAssembleId(cbedAssPlan) || 0;
         const cbedTech = await cbedAPI.getTechByCBEDId(request, cbedId, accessToken);
         expectNoServerError(cbedTech);
         const cbedAssOperationId =
@@ -1308,7 +1375,7 @@ export const runProductionShipmentFlowAPI = () => {
           accessToken,
         );
         expect(successCodes, JSON.stringify(cbedKit.data)).toContain(cbedKit.status);
-        cbedKitId = await expectComplectKitId(request, cbedAssemblyOperationId, assembleCbedId, accessToken);
+        cbedKitId = await expectComplectKitId(request, cbedAssemblyOperationId, assembleCbedId, 'cbed', accessToken);
 
         const cbedComing = await apiPost(
           request,
@@ -1328,13 +1395,17 @@ export const runProductionShipmentFlowAPI = () => {
                 ezId: 1,
                 unitType: 1,
                 sum: 0,
-                kitsSelected: cbedKitId ? [{ id: cbedKitId, count_to_received: 1 }] : [],
+                kitsSelected: [{ id: cbedKitId, count_to_received: 1 }],
               },
             ],
           },
           accessToken,
         );
         expect(successCodes, JSON.stringify(cbedComing.data)).toContain(cbedComing.status);
+        await expectAssemblyReceipt(request, cbedComing, {
+          entityType: 'cbed', entityId: cbedId, name: names.cbed,
+          description: `API flow cbed incoming ${suffix}`, assembleId: assembleCbedId, kitId: cbedKitId,
+        }, accessToken);
         await expectStock(request, 'cbed', cbedId, names.cbed, 1, 0, accessToken);
         await expectStock(request, 'detal', detailId, names.detail, 1, 0, accessToken);
       });
@@ -1344,7 +1415,7 @@ export const runProductionShipmentFlowAPI = () => {
           () => productionTasksAPI.getPlanForProductionTask(request, productionPlanDto('ass', names.product), accessToken),
           (row) => Number(row.product_id ?? row.productId ?? row.id) === productId || row.name === names.product,
         );
-        assembleProductId = planAssembleId(productAssPlan) || productId;
+        assembleProductId = planAssembleId(productAssPlan) || 0;
         const productTech = await apiGet(request, `api/product/tech_by_id_product/${productId}`, accessToken);
         expectNoServerError(productTech);
         const productComplectOperationId =
@@ -1403,6 +1474,7 @@ export const runProductionShipmentFlowAPI = () => {
           request,
           productAssemblyComplectOperationId,
           assembleProductId,
+          'product',
           accessToken,
         );
 
@@ -1445,13 +1517,17 @@ export const runProductionShipmentFlowAPI = () => {
                 ezId: 1,
                 unitType: 1,
                 sum: 0,
-                kitsSelected: productKitId ? [{ id: productKitId, count_to_received: 1 }] : [],
+                kitsSelected: [{ id: productKitId, count_to_received: 1 }],
               },
             ],
           },
           accessToken,
         );
         expect(successCodes, JSON.stringify(productComing.data)).toContain(productComing.status);
+        await expectAssemblyReceipt(request, productComing, {
+          entityType: 'product', entityId: productId, name: names.product,
+          description: `API flow product incoming ${suffix}`, assembleId: assembleProductId, kitId: productKitId,
+        }, accessToken);
         await expectStock(request, 'product', productId, names.product, 1, 0, accessToken);
         await expectStock(request, 'cbed', cbedId, names.cbed, 0, 0, accessToken);
         await expectStock(request, 'detal', detailId, names.detail, 0, 0, accessToken);
@@ -1538,10 +1614,21 @@ export const runProductionShipmentFlowAPI = () => {
           'У детали не должно остаться дефицита после отгрузки',
         );
 
-        const secondShCheck = await createShCheckWithFallback(request, shCheckPayload, accessToken);
+        // Observe the repeat response directly; finding the original is not a successful repeat.
+        const secondShCheck = await shipmentsAPI.createShCheck(request, shCheckPayload, accessToken);
         expectNoServerError(secondShCheck);
         repeatedShCheckId = Number(queueData(secondShCheck.data)?.id) || 0;
         expectRepeatOperationRejectedOrIdempotent(shCheck.status, secondShCheck.status, successCodes, [400, 404, 409, 410, 422]);
+        if (successCodes.includes(secondShCheck.status)) {
+          expect(repeatedShCheckId, 'An idempotent repeat must return the original completion').toBe(shCheckId);
+        }
+        const afterRepeat = await shipmentsAPI.getShipmentById(request, shipmentId, accessToken);
+        expectNoServerError(afterRepeat);
+        expect(afterRepeat.status, JSON.stringify(afterRepeat.data)).toBe(200);
+        expect(Number(afterRepeat.data?.shipped), JSON.stringify(afterRepeat.data)).toBe(1);
+        expect(Number(afterRepeat.data?.kol), JSON.stringify(afterRepeat.data)).toBe(0);
+        expect(afterRepeat.data?.status, JSON.stringify(afterRepeat.data)).toBe('Отгружено');
+        await expectStock(request, 'product', productId, names.product, 0, 0, accessToken);
         await cleanupCreatedEntities(request);
       });
     });

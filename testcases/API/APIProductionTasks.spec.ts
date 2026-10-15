@@ -25,6 +25,7 @@ import {
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import { getProductionRequiredReadyDates } from '../../lib/helpers/ProductionRequiredReadyDates';
 import { expectArchivedOnlyInArchiveSelection, expectRepeatOperationRejectedOrIdempotent } from '../../lib/helpers/APIDataInvariants';
 import {
   paginationOf,
@@ -32,6 +33,7 @@ import {
 } from '../../lib/helpers/APIContractSchemas';
 
 type ApiRow = Record<string, any>;
+type DateQueueRow = { position: ApiRow; operation: ApiRow; context: string; priority: number };
 type LifecycleType = 'ass' | 'metall';
 type LifecycleSource = {
   typeWork: LifecycleType;
@@ -40,6 +42,7 @@ type LifecycleSource = {
   quantity: number;
   availableQuantity: number;
   equipmentId?: number;
+  operations: ApiRow[];
 };
 
 const productionTasksAPI = new ProductionTasksAPI(null);
@@ -337,6 +340,9 @@ const findArchivedProductionEntities = (data: unknown, label: string): string[] 
 
 
 const isWorkDay = (date: Date): boolean => {
+  // Производственный календарь calculateEndDate/calculateStartDate/DateMethods:
+  // 1–14 января исключаются из рабочего времени независимо от дня недели.
+  if (date.getUTCMonth() === 0 && date.getUTCDate() <= 14) return false;
   const day = date.getUTCDay();
   return day !== 0 && day !== 6;
 };
@@ -513,6 +519,7 @@ const getOperationFormulaDurationMinutes = (operation: ApiRow | undefined, quant
   const mainTime = Number(operation?.mainTime || 0);
   const helperTime = Number(operation?.helperTime || 0);
   const quantity = Number(quantityValue || 0);
+  if (quantity === 0) return 0;
   const hasFormulaTime = [operation?.preTime, operation?.mainTime, operation?.helperTime].some((value) =>
     Number.isFinite(Number(value)),
   );
@@ -556,6 +563,8 @@ const expectOperationCellFields = (
   orderedQuantity: unknown,
   executionQuantity: unknown,
   context: string,
+  operationDetails?: ApiRow,
+  checkDate = expectSameDate,
 ) => {
   if (expectedIdx === null) {
     expect(operation?.id || null, `${context}; actual=${operation?.id ?? null}; expected=null`).toBeNull();
@@ -572,10 +581,28 @@ const expectOperationCellFields = (
   const expectedExecutionTime = getOperationFormulaDurationMinutes(operation || undefined, executionQuantity);
   expect(expectedExecutionTime, `Время выполнения ячейки операции: ${context}`).toBeGreaterThanOrEqual(0);
 
-  const expectedDateExecute = operation?.startTime
-    ? calculateEndDateLocal(operation.startTime, getOperationDurationMinutes(operation))
-    : null;
-  expectSameDate(operation?.calculateNeedsTime || null, expectedDateExecute, `Дата выполнения ячейки операции: ${context}`);
+  // Соседняя ячейка показывает общий срок операции, а текущая — срок ресурса.
+  // Полные доли получаем через tasks/operations: в соседней ячейке их нет.
+  const assignments = operationDetails?.assignments as ApiRow[] | undefined;
+  let expectedDateExecute: Date | null;
+  if (assignments?.length) {
+    const ends = assignments.filter((assignment) => assignment.isRelevant !== false && assignment.startTime)
+      .map((assignment) => {
+        const end = calculateEndDateLocal(
+          assignment.startTime,
+          getOperationFormulaDurationMinutes(operationDetails, assignment.quantity),
+        );
+        checkDate(assignment.calculateNeedsTime, end, `Дата выполнения доли ${assignment.id}: ${context}`);
+        return end.getTime();
+      });
+    expectedDateExecute = ends.length ? new Date(Math.max(...ends)) : null;
+  } else {
+    const duration = operationDetails
+      ? getOperationFormulaDurationMinutes(operationDetails, operationDetails.quantityMax)
+      : getOperationDurationMinutes(operation || undefined);
+    expectedDateExecute = operation?.startTime ? calculateEndDateLocal(operation.startTime, duration) : null;
+  }
+  checkDate(operation?.calculateNeedsTime || null, expectedDateExecute, `Дата выполнения ячейки операции: ${context}`);
 };
 
 const getWorkStartCalcType = (position: ApiRow, operation: ApiRow): string => {
@@ -588,6 +615,66 @@ const getWorkStartCalcType = (position: ApiRow, operation: ApiRow): string => {
     : null;
 
   return String(techProcessOperation?.workStartCalcType || techProcessOperation?.typeOperation?.workStartCalcType || 'automatic');
+};
+
+const createRequiredReadyDateReader = (request: any, accessToken?: string) => {
+  const cache = new Map<string, Map<number, string | null>>();
+  return async (position: ApiRow): Promise<string | null> => {
+    const entityType = String(position.entityType || '');
+    const entityId = Number(position.entity?.id || position.mainEntity?.id);
+    const taskId = Number(position.productionTaskId);
+    expect(['product', 'cbed', 'detal'], 'Тип сущности для сводки требуемой готовности').toContain(entityType);
+    expect(entityId, 'ID сущности для сводки требуемой готовности').toBeGreaterThan(0);
+    expect(taskId, 'ID ПЗ для требуемой готовности').toBeGreaterThan(0);
+    const key = `${entityType}:${entityId}`;
+    if (!cache.has(key)) {
+      const summary = await productionTasksAPI.getOrdersSummaryByEntity(request, entityType, entityId, accessToken);
+      expectNoServerError(summary);
+      expect(successCodes, JSON.stringify(summary.data)).toContain(summary.status);
+      expect(Array.isArray(summary.data?.rows), 'Сводка заказов должна содержать rows').toBeTruthy();
+      cache.set(key, getProductionRequiredReadyDates(summary.data.rows, entityType));
+    }
+    const dates = cache.get(key)!;
+    expect(dates.has(taskId), `ПЗ ${taskId} должно присутствовать в сводке ${key}`).toBeTruthy();
+    return dates.get(taskId) ?? null;
+  };
+};
+
+const checkAutomaticResourceQueue = async (
+  rows: DateQueueRow[],
+  readStart: () => Promise<ApiResult>,
+  resource: string,
+  checkDate: (actual: unknown, expected: unknown, context: string) => void,
+) => {
+  const queue = rows.filter(({ position, operation }) =>
+    !position.isManualStartTime && operation.isRelevance !== false && getWorkStartCalcType(position, operation) === 'automatic',
+  ).sort((left, right) => {
+    const leftReady = left.position.planReadyTime ? Date.parse(left.position.planReadyTime) : Infinity;
+    const rightReady = right.position.planReadyTime ? Date.parse(right.position.planReadyTime) : Infinity;
+    const leftOrder = left.position.requiredReadyGlobalOrderIndex ?? Infinity;
+    const rightOrder = right.position.requiredReadyGlobalOrderIndex ?? Infinity;
+    return (leftReady === rightReady ? 0 : leftReady - rightReady) ||
+      (leftOrder === rightOrder ? 0 : Number(leftOrder) - Number(rightOrder)) ||
+      Number(left.position.operationPostionsId || left.position.operationPositionId) -
+        Number(right.position.operationPostionsId || right.position.operationPositionId) ||
+      left.priority - right.priority;
+  });
+  if (!queue.length) return;
+  const response = await readStart();
+  expectNoServerError(response);
+  expect(successCodes, JSON.stringify(response.data)).toContain(response.status);
+  const savedStart = extractDateValue(response.data);
+  expect(savedStart, `Начало очереди ${resource} должно быть задано`).toBeTruthy();
+  let expectedStart = calculateEndDateLocal(savedStart!, 0);
+  for (const row of queue) {
+    checkDate(row.position.startTime, expectedStart, `Фактическое начало автоматической очереди ${resource}: ${row.context}`);
+    // Ошибка одной строки не должна становиться ожидаемым началом следующей.
+    const quantity = row.position.myQuantity ?? row.position.orderedByCurrentTask;
+    const duration = row.position.assignmentId
+      ? getOperationFormulaDurationMinutes(row.operation, quantity)
+      : getOperationDurationMinutes(row.operation);
+    expectedStart = calculateEndDateLocal(expectedStart, duration);
+  }
 };
 
 const getEquipmentRows = (data: unknown): ApiRow[] => {
@@ -838,35 +925,6 @@ const expectRelativeDateContract = (data: unknown) => {
   }
 };
 
-const findOperationIdForLifecycle = (value: unknown): number | undefined => {
-  const stack = [value];
-  const seen = new Set<unknown>();
-
-  while (stack.length > 0) {
-    const current = stack.pop();
-    if (!current || typeof current !== 'object' || seen.has(current)) continue;
-    seen.add(current);
-
-    const record = current as ApiRow;
-    if (
-      Number.isFinite(Number(record.id)) &&
-      (
-        Number.isFinite(Number(record.tOperationId)) ||
-        Number.isFinite(Number(record.type_operation_id)) ||
-        Number.isFinite(Number(record.typeOperationId))
-      )
-    ) {
-      return Number(record.id);
-    }
-
-    for (const child of Object.values(record)) {
-      if (child && typeof child === 'object') stack.push(child);
-    }
-  }
-
-  return undefined;
-};
-
 const findLifecycleSource = async (
   request: any,
   preferredTypeWork?: LifecycleType,
@@ -884,12 +942,13 @@ const findLifecycleSource = async (
 
     const row = getRows<ApiRow>(plan.data).find((item) => {
       const available = Number(item.maxAvailable ?? item.myQuantity ?? 0);
-      return item.id && available >= 1 && findOperationIdForLifecycle(item);
+      return item.id && available >= 1 && item.entity?.techProcesses?.operations?.some((operation: ApiRow) => !operation.ban && operation.id);
     });
     if (!row) continue;
 
-    const operationId = findOperationIdForLifecycle(row);
-    if (!operationId) continue;
+    const operations = (row.entity.techProcesses.operations as ApiRow[])
+      .filter((operation) => !operation.ban).sort((left, right) => Number(left.idx) - Number(right.idx));
+    const operationId = Number(operations[0].id);
 
     const availableQuantity = Number(row.myQuantity || row.maxAvailable || 1);
 
@@ -900,6 +959,7 @@ const findLifecycleSource = async (
       quantity: 1,
       availableQuantity: Math.max(1, Math.floor(availableQuantity)),
       equipmentId: findNumberByKeys(row, ['equipment_id', 'equipmentId']),
+      operations: JSON.parse(JSON.stringify(operations)),
     };
   }
 
@@ -926,16 +986,20 @@ const createProductionTaskPayload = (
       id: source.entityId,
       idx: 0,
       quantity: source.quantity,
-      operationPositions: [
-        {
-          operationId: source.operationId,
-          employeeId,
-          equipmentId: source.typeWork === 'metall' ? source.equipmentId || null : null,
-        },
-      ],
+      expectedOperations: source.operations,
+      operationPositions: lifecycleOperationAssignments(source, employeeId),
     },
   ],
 });
+
+const lifecycleOperationAssignments = (source: LifecycleSource, employeeId: number) =>
+  source.operations.map((operation) => ({
+    operationId: Number(operation.id),
+    employeeId: Number(operation.typeOperation?.users?.[0]?.id || employeeId),
+    equipmentId: source.typeWork === 'metall'
+      ? Number(operation.typeOperation?.equipments?.[0]?.id || source.equipmentId) || null
+      : null,
+  }));
 
 const productionOperationPosPayload = (
   source: LifecycleSource,
@@ -949,13 +1013,7 @@ const productionOperationPosPayload = (
   metall_id: source.typeWork === 'metall' ? source.entityId : null,
   idx: 0,
   quantity: source.quantity,
-  operation_positions: [
-    {
-      operationId: source.operationId,
-      employeeId,
-      equipmentId: source.typeWork === 'metall' ? source.equipmentId || null : null,
-    },
-  ],
+  operation_positions: lifecycleOperationAssignments(source, employeeId),
   ...overrides,
 });
 
@@ -1742,38 +1800,17 @@ export const runProductionTasksAPINew = () => {
       const equipmentRows = getEquipmentRows(allEquipment.data).filter((equipment) => Number.isFinite(Number(equipment.id)));
       expect(equipmentRows.length, 'No equipment is available for production task date validation.').toBeGreaterThan(0);
 
-      const relativeDateCache = new Map<string, string | null>();
+      const getLastOperationRequiredReadyDate = createRequiredReadyDateReader(request, accessToken);
       const operationDetailsCache = new Map<string, ApiRow[]>();
       let checkedPositions = 0;
+      let dateChecks = 0;
+      const resourceCoverage: { id: number; positions: number; pages: number }[] = [];
 
       const dateMismatches: string[] = [];
       const checkSameDate = (actual: unknown, expected: unknown, context: string, toleranceMs = DATE_TOLERANCE_MS) => {
+        dateChecks += 1;
         const mismatch = getSameDateMismatch(actual, expected, context, toleranceMs);
         if (mismatch) dateMismatches.push(mismatch);
-      };
-
-      const getLastOperationRequiredReadyDate = async (position: ApiRow): Promise<string | null> => {
-        const entityType = position.entityType;
-        const entityId = Number(position.mainEntity?.id || position.productionEntityId);
-        if (!entityType || !Number.isFinite(entityId)) return null;
-
-        const cacheKey = `${entityType}:${entityId}`;
-        if (relativeDateCache.has(cacheKey)) return relativeDateCache.get(cacheKey) || null;
-
-        const relativeDate = await productionTasksAPI.getRelativeDateForEntity(
-          request,
-          String(entityType),
-          entityId,
-          accessToken,
-        );
-        expectNoServerError(relativeDate);
-
-        const value =
-          !clientErrorCodes.includes(relativeDate.status) && relativeDate.data?.relativeDate
-            ? String(relativeDate.data.relativeDate)
-            : null;
-        relativeDateCache.set(cacheKey, value);
-        return value;
       };
 
       const getOperationDetailsRows = async (position: ApiRow, operation: ApiRow): Promise<ApiRow[]> => {
@@ -1806,7 +1843,7 @@ export const runProductionTasksAPINew = () => {
         const equipmentId = Number(equipment.id);
         let page = 0;
         let count = 0;
-        let previousEquipmentCalculatedCreateTime: unknown = null;
+        const queueRows: DateQueueRow[] = [];
 
         do {
           const tasksByEquipment = await productionTasksAPI.getTaskByEquipment(
@@ -1825,7 +1862,7 @@ export const runProductionTasksAPINew = () => {
 
           for (const position of positions) {
             const operation = position.mainOperation as ApiRow | undefined;
-            if (!operation?.id) continue;
+            if (!operation?.id) throw new Error('Строка производственного задания должна содержать текущую операцию');
 
             const context = [
               `equipment=${equipmentId}`,
@@ -1843,7 +1880,9 @@ export const runProductionTasksAPINew = () => {
               `страница оборудования: ${context}`,
             );
 
-            const duration = getOperationDurationMinutes(operation);
+            const duration = position.assignmentId
+              ? getOperationFormulaDurationMinutes(operation, position.orderedByCurrentTask)
+              : getOperationDurationMinutes(operation);
             const expectedCalculatedCreateTime = position.startTime
               ? calculateEndDateLocal(position.startTime, duration)
               : null;
@@ -1881,6 +1920,7 @@ export const runProductionTasksAPINew = () => {
               currentOperationDetailsIndex >= 0
                 ? currentProductionOperationDetailsRows[currentOperationDetailsIndex]
                 : undefined;
+            expect(currentOperationDetails, `Текущая операция должна присутствовать в tasks/operations: ${context}`).toBeTruthy();
 
             const prevOperationDetails =
               currentOperationDetailsIndex > 0
@@ -1896,6 +1936,8 @@ export const runProductionTasksAPINew = () => {
               position.orderedByCurrentTask,
               position.remainingByProductionTask,
               `Предыдущая операция, страница оборудования: ${context}`,
+              prevOperationDetails,
+              checkSameDate,
             );
             expectOperationCellFields(
               operation,
@@ -1903,6 +1945,10 @@ export const runProductionTasksAPINew = () => {
               position.orderedByCurrentTask,
               position.remainingByProductionTask,
               `Текущая операция, страница оборудования: ${context}`,
+              position.assignmentId
+                ? { ...currentOperationDetails, quantityMax: position.orderedByCurrentTask, assignments: undefined }
+                : currentOperationDetails,
+              checkSameDate,
             );
             expectOperationCellFields(
               nextOperation,
@@ -1910,18 +1956,20 @@ export const runProductionTasksAPINew = () => {
               position.orderedByCurrentTask,
               position.remainingByProductionTask,
               `Следующая операция, страница оборудования: ${context}`,
+              nextOperationDetails,
+              checkSameDate,
             );
             const workStartCalcType = getWorkStartCalcType(position, operation);
-
-            if (workStartCalcType === 'automatic' && previousEquipmentCalculatedCreateTime) {
-              checkSameDate(
-                position.startTime,
-                previousEquipmentCalculatedCreateTime,
-                `Начало работ автоматической операции равно расчётной дате предыдущей строки оборудования: ${context}`,
-              );
+            const assignment = (currentOperationDetails?.assignments as ApiRow[] | undefined)
+              ?.find((item) => Number(item.id) === Number(position.assignmentId));
+            if (position.assignmentId) {
+              expect(assignment, `Доля ${position.assignmentId} должна присутствовать в tasks/operations: ${context}`).toBeTruthy();
             }
+            const resourceDetails = assignment ? { ...currentOperationDetails, ...assignment } : currentOperationDetails;
+            checkSameDate(position.startTime, resourceDetails?.startTime, `Начало оборудования в таблице и подробностях: ${context}`);
+            queueRows.push({ position, operation, context, priority: Number(assignment?.priority ?? 0) });
 
-            if (workStartCalcType === 'prevOperationReadinessDate') {
+            if (!position.isManualStartTime && workStartCalcType === 'prevOperationReadinessDate') {
               if (prevOperationDetails?.calculateNeedsTime) {
                 checkSameDate(
                   position.startTime,
@@ -1931,15 +1979,12 @@ export const runProductionTasksAPINew = () => {
               }
             }
 
-            if (workStartCalcType === 'nextOperationWorkStart') {
-              const referenceStartTime = nextOperationDetails
+            if (!position.isManualStartTime && workStartCalcType === 'nextOperationWorkStart') {
+              const expectedStartTime = nextOperationDetails
                 ? nextOperationDetails.startTime
-                : currentOperationDetails?.planReadyTime ||
-                  position.planReadyTime ||
-                  (await getLastOperationRequiredReadyDate(position));
-              const expectedStartTime = referenceStartTime
-                ? calculateStartDateLocal(referenceStartTime, duration)
-                : null;
+                  ? calculateStartDateLocal(nextOperationDetails.startTime, duration)
+                  : null
+                : resourceDetails?.calculateStartTime ?? null;
               checkSameDate(
                 position.startTime,
                 expectedStartTime,
@@ -1948,27 +1993,44 @@ export const runProductionTasksAPINew = () => {
             }
 
             const nextOperationWorkStartCalcType = nextOperationDetails
-              ? getWorkStartCalcType(position, nextOperationDetails)
+              ? getWorkStartCalcType(position, { ...nextOperationDetails, id: nextOperationDetails.operationId })
               : null;
+            const isMetallOperation = String(position.operationPosType || currentOperationDetails?.type) === 'metall';
             const expectedPlanReadyTime = nextOperationDetails
-              ? nextOperationWorkStartCalcType === 'prevOperationReadinessDate'
-                ? nextOperationDetails.calculateStartTime
-                : nextOperationDetails.startTime
-              : currentOperationDetails?.planReadyTime || (await getLastOperationRequiredReadyDate(position));
+              ? isMetallOperation && nextOperationWorkStartCalcType !== 'prevOperationReadinessDate'
+                ? nextOperationDetails.startTime
+                : nextOperationDetails.calculateStartTime
+              : await getLastOperationRequiredReadyDate(position);
             checkSameDate(
               position.planReadyTime,
               expectedPlanReadyTime,
               `Дата требуемой готовности на операцию: ${context}`,
             );
+            checkSameDate(currentOperationDetails?.planReadyTime, expectedPlanReadyTime, `Требуемая готовность в подробностях оборудования: ${context}`);
+            const expectedCalculatedStart = expectedPlanReadyTime
+              ? calculateStartDateLocal(expectedPlanReadyTime, duration)
+              : null;
+            checkSameDate(resourceDetails?.calculateStartTime, expectedCalculatedStart, `Расчётное начало оборудования: ${context}`);
 
             checkedPositions += 1;
-            previousEquipmentCalculatedCreateTime = position.calculatedCreateTime;
           }
 
           page += 1;
         } while (page * 50 < count);
+        resourceCoverage.push({ id: equipmentId, positions: queueRows.length, pages: page });
+
+        await checkAutomaticResourceQueue(
+          queueRows,
+          () => productionTasksAPI.getStartTimeByEquipment(request, equipmentId, accessToken),
+          'оборудования ' + equipmentId,
+          checkSameDate,
+        );
       }
 
+      await test.info().attach('production-date-check-coverage', {
+        body: Buffer.from(JSON.stringify({ checkedPositions, dateChecks, resources: resourceCoverage, dateMismatches }, null, 2)),
+        contentType: 'application/json',
+      });
       expect(checkedPositions, 'No equipment production task operation positions were checked.').toBeGreaterThan(0);
       if (dateMismatches.length) {
         throw new Error(`Found ${dateMismatches.length} equipment operation date mismatches:\n${dateMismatches.join('\n')}`);
@@ -1986,40 +2048,17 @@ export const runProductionTasksAPINew = () => {
       const userRows = getRows<ApiRow>(allUsers.data).filter((user) => Number.isFinite(Number(user.id)));
       expect(userRows.length, 'No users are available for production task date validation.').toBeGreaterThan(0);
 
-      const relativeDateCache = new Map<string, string | null>();
+      const getLastOperationRequiredReadyDate = createRequiredReadyDateReader(request, accessToken);
       const operationDetailsCache = new Map<string, ApiRow[]>();
       let checkedPositions = 0;
+      let dateChecks = 0;
+      const resourceCoverage: { id: number; positions: number; pages: number }[] = [];
 
       const dateMismatches: string[] = [];
       const checkSameDate = (actual: unknown, expected: unknown, context: string, toleranceMs = DATE_TOLERANCE_MS) => {
+        dateChecks += 1;
         const mismatch = getSameDateMismatch(actual, expected, context, toleranceMs);
         if (mismatch) dateMismatches.push(mismatch);
-      };
-
-      const getLastOperationRequiredReadyDate = async (position: ApiRow): Promise<string | null> => {
-        const entityType = position.entityType;
-        const entityId = Number(
-          position.entity?.id || position.mainEntity?.id || position.productionEntityId || position.productionItemId,
-        );
-        if (!entityType || !Number.isFinite(entityId)) return null;
-
-        const cacheKey = `${entityType}:${entityId}`;
-        if (relativeDateCache.has(cacheKey)) return relativeDateCache.get(cacheKey) || null;
-
-        const relativeDate = await productionTasksAPI.getRelativeDateForEntity(
-          request,
-          String(entityType),
-          entityId,
-          accessToken,
-        );
-        expectNoServerError(relativeDate);
-
-        const value =
-          !clientErrorCodes.includes(relativeDate.status) && relativeDate.data?.relativeDate
-            ? String(relativeDate.data.relativeDate)
-            : null;
-        relativeDateCache.set(cacheKey, value);
-        return value;
       };
 
       const getOperationDetailsRows = async (position: ApiRow, operation: ApiRow): Promise<ApiRow[]> => {
@@ -2052,6 +2091,7 @@ export const runProductionTasksAPINew = () => {
         const userId = Number(user.id);
         let page = 0;
         let count = 0;
+        const queueRows: DateQueueRow[] = [];
 
         do {
           const tasksByUser = await productionTasksAPI.getProductionTaskByUser(
@@ -2070,7 +2110,7 @@ export const runProductionTasksAPINew = () => {
 
           for (const position of positions) {
             const operation = position.mainOperation as ApiRow | undefined;
-            if (!operation?.id) continue;
+            if (!operation?.id) throw new Error('Строка производственного задания должна содержать текущую операцию');
 
             const context = [
               `user=${userId}`,
@@ -2103,6 +2143,7 @@ export const runProductionTasksAPINew = () => {
               currentOperationDetailsIndex >= 0
                 ? currentProductionOperationDetailsRows[currentOperationDetailsIndex]
                 : undefined;
+            expect(operationDetails, `Текущая операция должна присутствовать в tasks/operations: ${context}`).toBeTruthy();
             const prevOperationDetails =
               currentOperationDetailsIndex > 0
                 ? currentProductionOperationDetailsRows[currentOperationDetailsIndex - 1]
@@ -2111,8 +2152,19 @@ export const runProductionTasksAPINew = () => {
               currentOperationDetailsIndex >= 0
                 ? currentProductionOperationDetailsRows[currentOperationDetailsIndex + 1]
                 : undefined;
-            const employeeStartTime = operationDetails?.calculateStartTime || null;
-            const duration = getOperationDurationMinutes(operationDetails || operation);
+            const assignment = position.assignmentId
+              ? (operationDetails?.assignments as ApiRow[] | undefined)?.find((item) => Number(item.id) === Number(position.assignmentId))
+              : undefined;
+            if (position.assignmentId) {
+              expect(assignment, `Доля ${position.assignmentId} должна присутствовать в tasks/operations: ${context}`).toBeTruthy();
+            }
+            const resourceDetails = assignment
+              ? { ...operationDetails, ...assignment, quantityMax: assignment.quantity }
+              : operationDetails;
+            checkSameDate(position.startTime, resourceDetails?.startTime, `Начало сотрудника в таблице и подробностях: ${context}`);
+            const duration = position.assignmentId
+              ? getOperationFormulaDurationMinutes(operation, position.myQuantity)
+              : getOperationDurationMinutes(operation);
             const expectedCalculatedCreateTime = position.startTime
               ? calculateEndDateLocal(position.startTime, duration)
               : null;
@@ -2122,17 +2174,7 @@ export const runProductionTasksAPINew = () => {
               `Расчётная дата изготовления на операцию: ${context}`,
             );
 
-            if (operationDetails?.calculateStartTime) {
-              const employeeDuration = getOperationDurationMinutes(operationDetails);
-              const expectedEmployeeStartTime = operationDetails.planReadyTime
-                ? calculateStartDateLocal(operationDetails.planReadyTime, employeeDuration)
-                : null;
-              checkSameDate(
-                operationDetails.calculateStartTime,
-                expectedEmployeeStartTime,
-                `Расчётное начало работ сотрудника от расчётной даты изготовления: ${context}`,
-              );
-            }
+            queueRows.push({ position, operation, context, priority: Number(assignment?.priority ?? 0) });
 
             const expectedDeltaTime =
               expectedCalculatedCreateTime && position.planReadyTime
@@ -2153,6 +2195,8 @@ export const runProductionTasksAPINew = () => {
               position.myQuantity,
               position.myQuantity,
               `Предыдущая операция, страница сотрудников: ${context}`,
+              prevOperationDetails,
+              checkSameDate,
             );
             expectOperationCellFields(
               operation,
@@ -2160,6 +2204,8 @@ export const runProductionTasksAPINew = () => {
               position.myQuantity,
               position.myQuantity,
               `Текущая операция, страница сотрудников: ${context}`,
+              resourceDetails ? { ...resourceDetails, assignments: undefined } : undefined,
+              checkSameDate,
             );
             expectOperationCellFields(
               nextOperation,
@@ -2167,43 +2213,33 @@ export const runProductionTasksAPINew = () => {
               position.myQuantity,
               position.myQuantity,
               `Следующая операция, страница сотрудников: ${context}`,
+              nextOperationDetails,
+              checkSameDate,
             );
 
-            if (workStartCalcType === 'automatic' && prevOperationDetails?.planReadyTime) {
+            if (!position.isManualStartTime && workStartCalcType === 'prevOperationReadinessDate' && prevOperationDetails?.calculateNeedsTime) {
               checkSameDate(
-                employeeStartTime,
-                prevOperationDetails.planReadyTime,
-                `Расчётное начало работ автоматической операции равно расчётной дате предыдущей операции сотрудника: ${context}`,
-              );
-            }
-
-            if (workStartCalcType === 'prevOperationReadinessDate' && prevOperationDetails?.planReadyTime) {
-              checkSameDate(
-                employeeStartTime,
-                prevOperationDetails.planReadyTime,
+                position.startTime,
+                prevOperationDetails.calculateNeedsTime,
                 `Начало работ равно расчётной дате готовности предыдущей операции техпроцесса: ${context}`,
               );
             }
 
-            if (workStartCalcType === 'nextOperationWorkStart') {
-              const nextStartTime = nextOperationDetails
-                ? nextOperationDetails.calculateStartTime
-                : operationDetails?.planReadyTime ||
-                  position.planReadyTime ||
-                  (await getLastOperationRequiredReadyDate(position));
-              const employeeDuration = getOperationDurationMinutes(operationDetails || operation);
-              const expectedStartTime = nextStartTime
-                ? calculateStartDateLocal(nextStartTime, employeeDuration)
-                : null;
+            if (!position.isManualStartTime && workStartCalcType === 'nextOperationWorkStart') {
+              const expectedStartTime = nextOperationDetails
+                ? nextOperationDetails.startTime
+                  ? calculateStartDateLocal(nextOperationDetails.startTime, duration)
+                  : null
+                : resourceDetails?.calculateStartTime ?? null;
               checkSameDate(
-                employeeStartTime,
+                position.startTime,
                 expectedStartTime,
                 `Начало работ по началу следующей операции: ${context}`,
               );
             }
 
             const nextOperationWorkStartCalcType = nextOperationDetails
-              ? getWorkStartCalcType(position, nextOperationDetails)
+              ? getWorkStartCalcType(position, { ...nextOperationDetails, id: nextOperationDetails.operationId })
               : null;
             const isMetallOperation = String(
               position.operationPosType || operationDetails?.type || position.producitonTaskType || '',
@@ -2214,23 +2250,38 @@ export const runProductionTasksAPINew = () => {
                   ? nextOperationDetails.calculateStartTime
                   : nextOperationDetails.startTime
                 : nextOperationDetails.calculateStartTime
-              : operationDetails?.planReadyTime ||
-                position.planReadyTime ||
-                (await getLastOperationRequiredReadyDate(position));
-            const actualPlanReadyTime = operationDetails?.planReadyTime || position.planReadyTime;
+              : await getLastOperationRequiredReadyDate(position);
             checkSameDate(
-              actualPlanReadyTime,
+              position.planReadyTime,
               expectedPlanReadyTime,
               `Дата требуемой готовности на операцию: ${context}`,
             );
+            checkSameDate(operationDetails?.planReadyTime, expectedPlanReadyTime, `Требуемая готовность в подробностях сотрудника: ${context}`);
+            const expectedCalculatedStart = expectedPlanReadyTime
+              ? calculateStartDateLocal(expectedPlanReadyTime, duration)
+              : null;
+            checkSameDate(resourceDetails?.calculateStartTime, expectedCalculatedStart, `Расчётное начало сотрудника: ${context}`);
+            checkSameDate(position.calculatedStartTime, expectedCalculatedStart, `Расчётное начало в таблице сотрудника: ${context}`);
 
             checkedPositions += 1;
           }
 
           page += 1;
         } while (page * 40 < count);
+        resourceCoverage.push({ id: userId, positions: queueRows.length, pages: page });
+        // Очередь сотрудника рассчитывается для сборки; МО выполняется в очереди оборудования.
+        await checkAutomaticResourceQueue(
+          queueRows.filter(({ position }) => position.operationPosType === 'ass'),
+          () => productionTasksAPI.getStartTimeByUser(request, userId, accessToken),
+          'сотрудника ' + userId,
+          checkSameDate,
+        );
       }
 
+      await test.info().attach('production-date-check-coverage', {
+        body: Buffer.from(JSON.stringify({ checkedPositions, dateChecks, resources: resourceCoverage, dateMismatches }, null, 2)),
+        contentType: 'application/json',
+      });
       expect(checkedPositions, 'No user production task operation positions were checked.').toBeGreaterThan(0);
       if (dateMismatches.length) {
         throw new Error(`Found ${dateMismatches.length} user operation date mismatches:\n${dateMismatches.join('\n')}`);

@@ -48,6 +48,7 @@ const productPaginationDto = (overrides: Record<string, unknown> = {}) => ({
 
 const cbedPaginationDto = (overrides: Record<string, unknown> = {}) => ({
   page: 0,
+  listCbed: '[]',
   searchString: '',
   isSortedByAttention: false,
   isSortedByDate: true,
@@ -246,6 +247,7 @@ const findCbedByDesignation = async (request: any, designation: string, accessTo
       accessToken,
     );
     expectNoServerError(response);
+    expect(successCodes, JSON.stringify(response.data)).toContain(response.status);
     return response;
   }, (response) => getRows<ApiRow>(response.data).some((row) => row.designation === designation && row.ban !== true), asyncCreateLookupOptions);
 

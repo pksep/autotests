@@ -22,6 +22,7 @@ import {
   successCodes,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
+import { rollbackShChecksAndWait } from '../../lib/helpers/APIShipmentCleanup';
 import {
   expectArchivedOnlyInArchiveSelection,
   expectNonNegativeQuantities,
@@ -227,13 +228,14 @@ const createIsolatedBuyer = async (request: any, suffix: string, accessToken?: s
 const findShipmentByDescription = async (
   request: any,
   description: string,
+  product: ApiRow,
   accessToken?: string,
 ): Promise<ApiRow | undefined> => {
   const response = await eventually(async () => {
     const response = await shipmentsAPI.getAllShipments(
       request,
       shipmentsPaginationDto({
-        searchStr: description,
+        searchStr: String(product.name),
         dateRange: {
           start: '1970-01-01T00:00:00.000Z',
           end: '2100-12-31T23:59:59.999Z',
@@ -241,30 +243,50 @@ const findShipmentByDescription = async (
       }),
       accessToken,
     );
+    expectNoServerError(response);
+    expect(successCodes, JSON.stringify(response.data)).toContain(response.status);
     return response;
   }, (response) =>
     !serverErrorCodes.includes(response.status) &&
-    getRows<ApiRow>(response.data).some((row) => row.description === description), {
+    getRows<ApiRow>(response.data).some((row) =>
+      row.description === description && Number(row.productId) === Number(product.id),
+    ), {
     attempts: 30,
     intervalMs: 1500,
   });
 
-  return response ? getRows<ApiRow>(response.data).find((row) => row.description === description) : undefined;
+  return response ? getRows<ApiRow>(response.data).find((row) =>
+    row.description === description && Number(row.productId) === Number(product.id),
+  ) : undefined;
 };
 
 const resolveCreatedShipmentId = async (
   request: any,
   createData: any,
   description: string,
+  product: ApiRow,
   accessToken?: string,
 ): Promise<number> => {
   const idFromQueue = Number(getQueueData(createData)?.id);
-  if (idFromQueue > 0) return idFromQueue;
+  const created = idFromQueue > 0 ? undefined : await findShipmentByDescription(request, description, product, accessToken);
+  const shipmentId = idFromQueue > 0 ? idFromQueue : Number(created?.id);
+  expect(shipmentId, `Created shipment was not found: ${JSON.stringify(createData)}`).toBeGreaterThan(0);
 
-  const created = await findShipmentByDescription(request, description, accessToken);
-  const idFromSearch = Number(created?.id);
-  expect(idFromSearch, JSON.stringify(createData)).toBeGreaterThan(0);
-  return idFromSearch;
+  // Queue completion returns the ID before the creation event fills the order fields.
+  const hydrated = await waitForShipment(
+    request,
+    shipmentId,
+    (shipment) =>
+      shipment.description === description &&
+      Number(shipment.productId) === Number(product.id) &&
+      Number(shipment.kol) === 1 &&
+      Number(shipment.company_id) > 0 &&
+      Boolean(shipment.date_order && shipment.date_shipments),
+    accessToken,
+    { attempts: 30, intervalMs: 1500 },
+  );
+  expect(hydrated, `Shipment ${shipmentId} was not fully initialized after creation`).toBeTruthy();
+  return shipmentId;
 };
 
 const createIsolatedShipment = async (
@@ -279,7 +301,7 @@ const createIsolatedShipment = async (
   expect(successCodes, JSON.stringify(create.data)).toContain(create.status);
   expectNoServerError(create);
 
-  const shipmentId = await resolveCreatedShipmentId(request, create.data, description, accessToken);
+  const shipmentId = await resolveCreatedShipmentId(request, create.data, description, product, accessToken);
   return { shipmentId, product, buyerId };
 };
 
@@ -311,6 +333,8 @@ const waitForShipment = async (
 ): Promise<ApiRow | undefined> => {
   const response = await eventually(async () => {
     const response = await shipmentsAPI.getShipmentById(request, shipmentId, accessToken);
+    expectNoServerError(response);
+    expect(successCodes, JSON.stringify(response.data)).toContain(response.status);
     return response;
   }, (response) =>
     !serverErrorCodes.includes(response.status) &&
@@ -524,9 +548,7 @@ export const runShipmentsAPINew = () => {
         expect(Number(update.data?.id), JSON.stringify(update.data)).toBe(createdShCheckId);
       } finally {
         if (createdShCheckId) {
-          const rollback = await shipmentsAPI.rollbackShCheck(request, createdShCheckId, accessToken);
-          expectNoServerError(rollback);
-          expect(successCodes, JSON.stringify(rollback.data)).toContain(rollback.status);
+          await rollbackShChecksAndWait(request, shipmentsAPI, [createdShCheckId], accessToken);
         }
         await archiveIsolatedShipment(request, fixture, accessToken);
       }
@@ -682,7 +704,7 @@ export const runShipmentsAPINew = () => {
       expect(successCodes, JSON.stringify(create.data)).toContain(create.status);
       expectNoServerError(create);
 
-      createdShipmentId = await resolveCreatedShipmentId(request, create.data, initialDescription, accessToken);
+      createdShipmentId = await resolveCreatedShipmentId(request, create.data, initialDescription, activeProduct as ApiRow, accessToken);
 
       const hydrated = await waitForShipment(
         request,

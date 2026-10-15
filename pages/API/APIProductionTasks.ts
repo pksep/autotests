@@ -174,6 +174,12 @@ export class ProductionTasksAPI extends APIPageObject {
     });
   }
 
+  async getOrdersSummaryByEntity(request: APIRequestContext, entityType: string, entityId: number, accessToken?: string) {
+    return this.apiRequest(request, 'GET', this.base() + `/orders-summary/${encodeURIComponent(entityType)}/${entityId}`, {
+      accessToken: this.token(accessToken),
+    });
+  }
+
   async getShipmentByProductionTask(request: APIRequestContext, productionType: string, id: number, accessToken?: string) {
     return this.apiRequest(request, 'GET', this.base() + `/shipment/${productionType}/${id}`, {
       accessToken: this.token(accessToken),

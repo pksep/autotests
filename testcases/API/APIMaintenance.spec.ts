@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { AssembleAPI } from '../../pages/API/APIAssemble';
 import { CBEDAPI } from '../../pages/API/APICBED';
 import { DeficitsAPI } from '../../pages/API/APIDeficits';
@@ -57,9 +57,16 @@ export const runMaintenanceAPINew = () => {
       }
     });
 
+    test.skip('[maintenance] глобальный сброс резервов требует отдельной одноразовой базы', async ({ request }) => {
+      // reset_in_sets обнуляет резервы всех компонентов, сохраняя активные наборы.
+      // На общем dev этот вызов блокирует приходы существующих сборок.
+      const response = await warehouseAPI.resetInSets(request, accessToken);
+      expect(response.status).toBe(200);
+      expect(response.data).toBe(true);
+    });
+
     test('[maintenance] складские и settings операции достигают endpoint', async ({ request }) => {
       const responses = [
-        await captureApiResult(() => warehouseAPI.resetInSets(request, accessToken)),
         await captureApiResult(() => settingsAPI.newDB(request, accessToken)),
         await captureApiResult(() => assembleAPI.banComplect(request, missingId, accessToken)),
         await captureApiResult(() => assembleAPI.updateResponsibleKit(request, missingId, missingId, accessToken)),
