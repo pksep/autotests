@@ -125,11 +125,16 @@ export const runProductionTaskSplittingAPI = () => {
         expect(Number(response.id)).toBe(id);
         return read(request);
       };
+      const requestTaskSplit = async (request: APIRequestContext, id: number, dto: unknown, accessToken = token) => {
+        const result = await tasks.splitProductionTask(request, id, dto, accessToken);
+        // Negative probes can unexpectedly create children too. Track them before asserting.
+        const childId = Number(unwrap(result.data)?.id);
+        if (childId > 0) createdTaskIds.add(childId);
+        return result;
+      };
       const splitTask = async (request: APIRequestContext, source: Row, dto: unknown) => {
-        const result = await tasks.splitProductionTask(request, source.id, dto, token);
-        // Register even a malformed success for cleanup before checking its contract.
+        const result = await requestTaskSplit(request, source.id, dto);
         const id = Number(unwrap(result.data)?.id);
-        if (id > 0) createdTaskIds.add(id);
         ok(result);
         expect(id).toBeGreaterThan(0);
         return read(request, id);
@@ -141,7 +146,7 @@ export const runProductionTaskSplittingAPI = () => {
         const allUsers = ok(await users.getAllUsers(request, true, false, token));
         userIds = getRows<Row>(allUsers).filter(row => row.id && row.ban !== true)
           .map(row => Number(row.id)).slice(0, 5);
-        expect(userIds.length, 'Нужны 4 квалифицированных сотрудника и 1 без квалификации').toBe(5);
+        expect(userIds.length, 'Нужны 4 сотрудника типа операции и 1 вне типа').toBe(5);
         equipmentIds = [];
         if (typeWork === 'metall') {
           const allEquipment = ok(await equipment.getAllEquipment(request, true, token));
@@ -184,7 +189,7 @@ export const runProductionTaskSplittingAPI = () => {
         }, token)).id);
         expect(operationId).toBeGreaterThan(0);
         // Assembly entities receive default operations. Keep this isolated fixture
-        // to one qualified operation so both split APIs exercise the same scope.
+        // to one operation so both split APIs exercise the same scope.
         const createdTech = ok(await tech.getTechProcessById(request, String(techProcessId), token));
         for (const op of getRows<Row>(createdTech.operations)) {
           if (Number(op.id) !== operationId) ok(await operations.banOperation(request, Number(op.id), token));
@@ -240,10 +245,16 @@ export const runProductionTaskSplittingAPI = () => {
       });
 
       const cleanupTasks = async (request: APIRequestContext) => {
+        const errors: string[] = [];
         for (const id of [...createdTaskIds].reverse()) {
-          ok(await tasks.banProductionTask(request, id, token));
-          createdTaskIds.delete(id);
+          try {
+            ok(await tasks.banProductionTask(request, id, token));
+            createdTaskIds.delete(id);
+          } catch (error) {
+            errors.push(`ПЗ ${id}: ${String(error)}`);
+          }
         }
+        expect(errors, 'Дочерние ПЗ должны быть архивированы перед родительскими').toEqual([]);
       };
       const cleanupMarks = async (request: APIRequestContext) => {
         for (const id of createdMarkIds) {
@@ -319,14 +330,30 @@ export const runProductionTaskSplittingAPI = () => {
           { label: 'Больше доступного', dto: splitTaskDto(currentTask, 11), status: 409 },
           { label: 'Чужая позиция', dto: { positions: [{ productionOperationPosId: missingId, quantity: 1 }] }, status: 409 },
           { label: 'Чужая операция', dto: splitTaskDto(currentTask, 1, [{ operationPositionId: missingId, userId: userIds[1] }]), status: 409 },
-          { label: 'Нет квалификации', dto: splitTaskDto(currentTask, 1, [{ operationPositionId: opId, userId: userIds[4] }]), status: 409 },
+          { label: 'Несуществующий сотрудник', dto: splitTaskDto(currentTask, 1, [{ operationPositionId: opId, userId: missingId }]), status: 409 },
           { label: 'Дублирующие назначения', dto: splitTaskDto(currentTask, 1, [{ operationPositionId: opId, userId: userIds[1] }, { operationPositionId: opId, userId: userIds[2] }]), status: 400 },
         ];
         for (const entry of invalid) await test.step(entry.label, async () => {
-          rejected(await tasks.splitProductionTask(request, currentTaskId, entry.dto, token), entry.status);
+          rejected(await requestTaskSplit(request, currentTaskId, entry.dto), entry.status);
           expect(snapshot(await read(request))).toEqual(before);
         });
-        rejected(await tasks.splitProductionTask(request, missingId, splitTaskDto(currentTask, 1), token), 404);
+        rejected(await requestTaskSplit(request, missingId, splitTaskDto(currentTask, 1)), 404);
+      });
+
+      test('назначает в дочернее ПЗ сотрудника и станок вне типа операции', async ({ request }) => {
+        const child = await splitTask(request, currentTask, splitTaskDto(currentTask, 3, [{
+          operationPositionId: operation(currentTask).id, userId: userIds[4],
+          equipmentId: typeWork === 'metall' ? equipmentIds[4] : null,
+        }]));
+        expect(child.parent_production_task_id).toBe(currentTaskId);
+        expect(operation(child).user_id).toBe(userIds[4]);
+        expect(operation(child).equipment_id).toBe(typeWork === 'metall' ? equipmentIds[4] : null);
+        expect(Number(position(child).quantity)).toBe(3);
+        const root = await read(request);
+        expect(Number(position(root).quantity)).toBe(7);
+        expect(operation(root).user_id).toBe(userIds[0]);
+        expect(operation(root).equipment_id).toBe(typeWork === 'metall' ? equipmentIds[0] : null);
+        expect(root.children.map((row: Row) => row.id)).toEqual([child.id]);
       });
 
       test('разрешает перенос до остатка 1 шт. в ПЗ и в исходном назначении', async ({ request }) => {
@@ -336,7 +363,7 @@ export const runProductionTaskSplittingAPI = () => {
         const root = await read(request);
         expect(Number(position(root).quantity)).toBe(1);
         expect(Number(position(child).quantity)).toBe(9);
-        rejected(await tasks.splitProductionTask(request, currentTaskId, splitTaskDto(root, 1), token), 409);
+        rejected(await requestTaskSplit(request, currentTaskId, splitTaskDto(root, 1)), 409);
         ok(await tasks.splitOperationPosition(request, operation(child).id, resource(1, 8), token));
         const saved = await read(request, child.id);
         expect(activeAssignments(saved).map(a => Number(a.quantity))).toEqual([1, 8]);
@@ -355,7 +382,7 @@ export const runProductionTaskSplittingAPI = () => {
           splitTaskDto(child, 1),
           splitTaskDto(currentTask, 1, [{ operationPositionId: operation(child).id, userId: userIds[1] }]),
         ]) {
-          rejected(await tasks.splitProductionTask(request, currentTaskId, dto, token), 409);
+          rejected(await requestTaskSplit(request, currentTaskId, dto), 409);
           expect(snapshot(await read(request))).toEqual(rootBefore);
         }
         await splitOperation(request, resource(1, 1));
@@ -420,7 +447,7 @@ export const runProductionTaskSplittingAPI = () => {
         for (const dto of [
           { assignments: [resource(1, 2), resource(1, 1)] },
           { assignments: [resource(1, 2), resource(2, 8)] },
-          { ...resource(1, 2), additionalAssignments: [resource(4, 1)] },
+          { ...resource(1, 2), additionalAssignments: [resource(4, 1, { userId: missingId })] },
         ]) {
           rejected(await tasks.splitOperationPosition(request, operation(currentTask).id, dto, token), 409);
           expect(snapshot(await read(request))).toEqual(before);
@@ -429,25 +456,29 @@ export const runProductionTaskSplittingAPI = () => {
         const secondary = activeAssignments(saved)[1];
         before = snapshot(saved);
         rejected(await tasks.splitOperationPosition(request, operation(currentTask).id, {
-          removeAssignmentIds: [secondary.id], assignments: [resource(2, 1), resource(4, 1)],
+          removeAssignmentIds: [secondary.id], assignments: [resource(2, 1), resource(4, 1, { userId: missingId })],
         }, token), 409);
         expect(snapshot(await read(request))).toEqual(before);
         const replaced = await splitOperation(request, { removeAssignmentIds: [secondary.id], assignments: [resource(2, 3)] });
         assertShares(replaced, [{ index: 0, quantity: 7 }, { index: 2, quantity: 3 }]);
       });
 
-      test('проверяет границы количества, квалификацию, уникальность ресурсов и источник доли', async ({ request }) => {
+      test('разделяет операцию между существующими ресурсами вне типа операции', async ({ request }) => {
+        const saved = await splitOperation(request, resource(4, 3));
+        assertShares(saved, [{ index: 0, quantity: 7 }, { index: 4, quantity: 3 }]);
+      });
+
+      test('проверяет границы количества, существование и уникальность ресурсов и источник доли', async ({ request }) => {
         let before = snapshot(await read(request));
         const invalid: { label: string; dto: unknown; status: number }[] = [
           { label: 'Повторный основной ресурс', dto: resource(0, 1), status: 409 },
           { label: 'Всё назначение', dto: resource(1, 10), status: 409 },
           { label: 'Больше остатка', dto: resource(1, 11), status: 409 },
-          { label: 'Сотрудник без квалификации', dto: resource(4, 1), status: 409 },
           { label: 'Несуществующий сотрудник', dto: resource(1, 1, { userId: missingId }), status: 409 },
           { label: 'Источник для неразделённой операции', dto: resource(1, 1, { sourceAssignmentId: missingId }), status: 400 },
           ...(typeWork === 'metall' ? [
             { label: 'Без оборудования', dto: resource(1, 1, { equipmentId: null }), status: 409 },
-            { label: 'Станок вне типа операции', dto: resource(1, 1, { equipmentId: equipmentIds[4] }), status: 409 },
+            { label: 'Несуществующий станок', dto: resource(1, 1, { equipmentId: missingId }), status: 409 },
             { label: 'Повторный станок с другим сотрудником', dto: resource(1, 1, { equipmentId: equipmentIds[0] }), status: 409 },
           ] : []),
         ];
@@ -491,7 +522,7 @@ export const runProductionTaskSplittingAPI = () => {
       test('запрещает разделение ПЗ с уже разделённой операцией', async ({ request }) => {
         const saved = await splitOperation(request, resource(1, 3));
         const before = snapshot(saved);
-        rejected(await tasks.splitProductionTask(request, currentTaskId, splitTaskDto(saved, 1), token), 409);
+        rejected(await requestTaskSplit(request, currentTaskId, splitTaskDto(saved, 1)), 409);
         expect(snapshot(await read(request))).toEqual(before);
       });
 
@@ -529,13 +560,13 @@ export const runProductionTaskSplittingAPI = () => {
       test('не разрешает разделение архивного ПЗ и его операции', async ({ request }) => {
         ok(await tasks.banProductionTask(request, currentTaskId, token));
         createdTaskIds.delete(currentTaskId);
-        rejected(await tasks.splitProductionTask(request, currentTaskId, splitTaskDto(currentTask, 1), token), 404);
+        rejected(await requestTaskSplit(request, currentTaskId, splitTaskDto(currentTask, 1)), 404);
         rejected(await tasks.splitOperationPosition(request, operation(currentTask).id, resource(1, 1), token), 404);
       });
 
       test('защищает оба метода от запроса с недействительной авторизацией', async ({ request }) => {
         const before = snapshot(await read(request));
-        rejected(await tasks.splitProductionTask(request, currentTaskId, splitTaskDto(currentTask, 1), 'invalid.jwt.token'), 401);
+        rejected(await requestTaskSplit(request, currentTaskId, splitTaskDto(currentTask, 1), 'invalid.jwt.token'), 401);
         rejected(await tasks.splitOperationPosition(request, operation(currentTask).id, resource(1, 1), 'invalid.jwt.token'), 401);
         expect(snapshot(await read(request))).toEqual(before);
       });
