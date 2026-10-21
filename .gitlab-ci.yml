@@ -20,6 +20,10 @@ variables:
   GITOPS_CONTAINER_NAME: "autotests"
   GITOPS_DEV_ARGOCD_APP: "autotests-nightly"
 deploy:
+  rules:
+    - when: never
+
+deploy-autotests:
   extends: .gitops-dev-stage-deploy-template
   rules:
     - if: '$BUILD_ONLY == "true" || $ROLLBACK_PROD == "true"'
@@ -34,7 +38,7 @@ run-autotests-now:
     name: alpine/k8s:1.33.5
     entrypoint: [""]
   needs:
-    - job: deploy
+    - job: deploy-autotests
       optional: true
   rules:
     - if: '$DEPLOY_PROD == "false"'
