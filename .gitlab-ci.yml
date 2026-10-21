@@ -21,6 +21,12 @@ variables:
   GITOPS_DEV_ARGOCD_APP: "autotests-nightly"
 deploy:
   extends: .gitops-dev-stage-deploy-template
+  rules:
+    - if: '$BUILD_ONLY == "true" || $ROLLBACK_PROD == "true"'
+      when: never
+    - if: '$DEPLOY_PROD == "false"'
+      when: on_success
+    - when: never
 
 run-autotests-now:
   stage: deploy
@@ -29,6 +35,7 @@ run-autotests-now:
     entrypoint: [""]
   needs:
     - job: deploy
+      optional: true
   rules:
     - if: '$DEPLOY_PROD == "false"'
       when: manual
