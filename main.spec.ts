@@ -104,7 +104,12 @@ function registerSuite(suiteKey: TestSuiteKeys) {
     suite.tests.forEach(({ test: testFunc }) => {
       if (typeof testFunc === 'function') {
         try {
-          (testFunc as () => void)();
+          if (isApi) {
+            // Module hooks must never become hooks for the complete API run.
+            test.describe(testFunc.name, () => { (testFunc as () => void)(); });
+          } else {
+            (testFunc as () => void)();
+          }
         } catch (error) {
           logger.error(`Error in test function for suite "${suiteKey}":`, error);
         }

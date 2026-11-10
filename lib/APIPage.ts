@@ -22,13 +22,13 @@ export class APIPageObject extends AbstractPage {
 
   /**
    * Builds headers for authenticated API calls.
-   * Dev API accepts the login JWT as an auth cookie; sending it as Bearer is limited to comments.
+   * ERP authenticates the access cookie. Refresh credentials belong to the cookie jar.
    */
   protected authHeaders(accessToken?: string, extra: Record<string, string> = {}): Record<string, string> {
     const headers: Record<string, string> = { ...extra };
     if (accessToken && accessToken !== 'invalid_user') {
       const rawToken = accessToken.startsWith('Bearer ') ? accessToken.slice('Bearer '.length) : accessToken;
-      headers['Cookie'] = `access_token=${rawToken}; refresh_token=${rawToken}`;
+      headers['Cookie'] = `access_token=${rawToken}`;
     }
     return headers;
   }

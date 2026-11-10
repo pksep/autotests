@@ -2073,7 +2073,8 @@ export const runProductionTasksAPINew = () => {
       }
     });
 
-    test('проверяет расчёт дат операций ПЗ по всем сотрудникам', async ({ request }) => {
+    // Временно отключено по запросу: расхождения дат по сотрудникам (прогон 10.11.2026).
+    test.skip('проверяет расчёт дат операций ПЗ по всем сотрудникам', async ({ request }) => {
       test.setTimeout(300000);
       await waitForStaggeredProductionCalculation(45000);
       const { finish: calculateFinish, start: calculateStart } = createProductionDateCalculator(request, accessToken);

@@ -1,7 +1,7 @@
 import { APIRequestContext, expect, test } from '@playwright/test';
 import { AuthAPI } from '../../pages/API/APIAuth';
 import { API_CONST } from '../Constants/APIConstants';
-import { extractAccessToken } from './APIAssertions';
+import { loginAfterCooldown } from './APILogin';
 
 const authAPI = new AuthAPI();
 const tokenByRequest = new WeakMap<APIRequestContext, string>();
@@ -46,22 +46,19 @@ export const getAuthToken = async (request: APIRequestContext): Promise<string> 
 
   if (tokenByRequest.has(request)) return tokenByRequest.get(request) as string;
 
-  let loginResponse: Awaited<ReturnType<AuthAPI['login']>> | undefined;
-  for (let attempt = 0; attempt < 5; attempt++) {
-    loginResponse = await authAPI.login(
-      request,
-      API_CONST.API_TEST_USERNAME,
-      API_CONST.API_TEST_PASSWORD,
-      API_CONST.API_TEST_TABEL,
-    );
+  const loginResponse = await loginAfterCooldown(() => authAPI.login(
+    request,
+    API_CONST.API_TEST_USERNAME,
+    API_CONST.API_TEST_PASSWORD,
+    API_CONST.API_TEST_TABEL,
+  ), { retryServerErrors: true });
 
-    if (loginResponse.status < 500 || attempt === 4) break;
-    await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
-  }
-
-  expect(loginResponse?.status).toBe(201);
-  const accessToken = extractAccessToken(loginResponse?.data);
-  expect(accessToken).toBeTruthy();
+  expect(loginResponse.status, 'Establish API session after login cooldown').toBe(201);
+  const cookies = (await request.storageState()).cookies;
+  const host = new URL(loginResponse.url).hostname;
+  const accessToken = cookies.find(cookie => cookie.name === 'access_token' &&
+    (host === cookie.domain.replace(/^\./, '') || host.endsWith(`.${cookie.domain.replace(/^\./, '')}`)))?.value;
+  expect(Boolean(accessToken), 'Login must establish an access_token cookie').toBe(true);
 
   tokenByRequest.set(request, accessToken as string);
   return accessToken as string;

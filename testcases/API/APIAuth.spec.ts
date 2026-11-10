@@ -1,596 +1,246 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, APIRequestContext } from '@playwright/test';
 import { AuthAPI } from '../../pages/API/APIAuth';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import { ENV } from '../../config';
-import logger from '../../lib/utils/logger';
-import {
-  expectNoServerError,
-  expectStatusIn,
-  expectUnauthorizedOrForbidden,
-  expectValidationError,
-  formatApiExpectation,
-} from '../../lib/helpers/APIAssertions';
+import { loginAfterCooldown } from '../../lib/helpers/APILogin';
 
-type AuthResponseData = {
-  ok?: boolean;
-  token?: string;
-  accessToken?: string;
-  access_token?: string;
-  refreshToken?: string;
-  refresh_token?: string;
-  user?: {
-    id?: number;
-  };
-  id?: number;
-  data?: AuthResponseData;
+const expectStatusIn = (response: { status: number }, allowed: number[], context = 'Auth request') => {
+  expect(allowed.includes(response.status), `${context}: expected HTTP ${allowed.join('/')}, got ${response.status}`).toBe(true);
+};
+const expectUnauthorizedOrForbidden = (response: { status: number }) => expectStatusIn(response, [401, 403]);
+
+const auth = new AuthAPI();
+const checkedLogin = (...args: Parameters<AuthAPI['login']>) => loginAfterCooldown(() => auth.login(...args));
+
+// Retry only an explicit rejection, after the server cooldown. Never retry an unknown result.
+const loginWhenReady = async (request: APIRequestContext, headers: Record<string, string> = {}) => {
+  const response = await checkedLogin(
+    request, API_CONST.API_TEST_USERNAME, API_CONST.API_TEST_PASSWORD, API_CONST.API_TEST_TABEL, headers,
+  );
+  expectStatusIn(response, [201], 'Establish cookie session');
+  return response;
 };
 
-type AuthAPIResult = {
-  status: number;
-  data?: AuthResponseData | string;
-  headers?: Record<string, string>;
-  headersArray?: { name: string; value: string }[];
-  method?: string;
-  url?: string;
+const cookieValue = async (request: APIRequestContext, name: string) => {
+  const { cookies } = await request.storageState();
+  const host = new URL(ENV.API_BASE_URL).hostname;
+  return cookies.find(cookie => cookie.name === name &&
+    (host === cookie.domain.replace(/^\./, '') || host.endsWith(`.${cookie.domain.replace(/^\./, '')}`)))?.value;
 };
-
-const extractAccessToken = (data: AuthResponseData | string | undefined): string | undefined => {
-  if (!data) return undefined;
-  if (typeof data === 'string') return data;
-
-  return data.token || data.accessToken || data.access_token || extractAccessToken(data.data);
+const requireCookie = async (request: APIRequestContext, name: string): Promise<string> => {
+  const value = await cookieValue(request, name);
+  expect(Boolean(value), `Session must contain ${name} cookie`).toBe(true);
+  return value!;
 };
-
-const extractAccessTokenFromCookie = (response: AuthAPIResult): string | undefined => {
-  const setCookieHeaders = [
-    ...(response.headersArray || [])
-      .filter((header) => header.name.toLowerCase() === 'set-cookie')
-      .map((header) => header.value),
-    response.headers?.['set-cookie'],
-  ].filter(Boolean) as string[];
-
-  const accessCookie = setCookieHeaders.find((cookie) => cookie.includes('access_token='));
-  return accessCookie?.match(/access_token=([^;]+)/)?.[1];
-};
-
-const getAccessToken = (response: AuthAPIResult): string | undefined => {
-  return extractAccessToken(response.data) || extractAccessTokenFromCookie(response);
-};
-
-const extractUserId = (data: AuthResponseData | string | undefined): number | undefined => {
-  if (!data || typeof data === 'string') return undefined;
-
-  return data.user?.id || data.id || extractUserId(data.data);
-};
-
-const extractRefreshTokenFromBody = (data: AuthResponseData | string | undefined): string | undefined => {
-  if (!data || typeof data === 'string') return undefined;
-
-  return data.refreshToken || data.refresh_token || extractRefreshTokenFromBody(data.data);
-};
-
-const extractRefreshTokenFromCookie = (response: AuthAPIResult): string | undefined => {
-  const setCookieHeaders = [
-    ...(response.headersArray || [])
-      .filter((header) => header.name.toLowerCase() === 'set-cookie')
-      .map((header) => header.value),
-    response.headers?.['set-cookie'],
-  ].filter(Boolean) as string[];
-
-  const refreshCookie = setCookieHeaders.find((cookie) => cookie.includes('refresh_token='));
-  return refreshCookie?.match(/refresh_token=([^;]+)/)?.[1];
-};
-
-const getRefreshToken = (response: AuthAPIResult): string | undefined => {
-  return extractRefreshTokenFromCookie(response) || extractRefreshTokenFromBody(response.data);
-};
-
-const getRefreshCookie = (response: AuthAPIResult): string | undefined => {
-  return [
-    ...(response.headersArray || [])
-      .filter((header) => header.name.toLowerCase() === 'set-cookie')
-      .map((header) => header.value),
-    response.headers?.['set-cookie'],
-  ]
-    .filter(Boolean)
-    .find((cookie) => cookie?.includes('refresh_token='));
-};
-
-const redactCookie = (cookie: string | undefined): string => {
-  return cookie?.replace(/[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g, '<jwt>') ?? '<missing>';
-};
-
-const expectPasswordIsNotExposed = (data: unknown) => {
-  expect(JSON.stringify(data)).not.toContain(API_CONST.API_TEST_PASSWORD);
-};
-
-const expectSensitiveFieldsAreNotExposed = (data: unknown) => {
-  const sensitiveKeys = ['password', 'hash', 'salt'];
+const expectSafeBody = (data: unknown) => {
+  // Boolean assertions keep credentials out of failure output.
+  expect(JSON.stringify(data)?.includes(API_CONST.API_TEST_PASSWORD), 'Response must not expose the password').toBe(false);
   const stack = [data];
-
-  while (stack.length > 0) {
+  while (stack.length) {
     const current = stack.pop();
     if (!current || typeof current !== 'object') continue;
-
     for (const [key, value] of Object.entries(current)) {
-      expect(sensitiveKeys).not.toContain(key.toLowerCase());
-      if (value && typeof value === 'object') {
-        stack.push(value);
-      }
+      expect(['password', 'hash', 'salt', 'refresh_token', 'refreshtoken'].includes(key.toLowerCase()),
+        'Response must not expose password hashes or refresh credentials').toBe(false);
+      if (value && typeof value === 'object') stack.push(value);
     }
   }
 };
-
-const tamperToken = (token: string): string => {
-  const parts = token.split('.');
-  if (parts.length !== 3) return `${token}.tampered`;
-
-  const payload = Buffer.from(JSON.stringify({ sub: '999999', tampered: true })).toString('base64url');
-  return [parts[0], payload, parts[2]].join('.');
+const expectSession = async (request: APIRequestContext) => {
+  const response = await auth.getSession(request);
+  expectStatusIn(response, [200], 'GET /api/auth/session authenticates the cookie jar');
+  expect(response.data?.ok).toBe(true);
+  expectSafeBody(response.data);
 };
 
-const expiredJwtLikeToken = [
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9',
-  'eyJzdWIiOiIxIiwiZXhwIjoxLCJpYXQiOjB9',
-  'invalid_signature',
-].join('.');
-
-/**
- * Новый комплексный набор тестов авторизации для sep_erp_server
- * Охватывает вход, проверку токена, обновление, выход и сценарии безопасности
- */
 export const runAuthAPINew = () => {
-  logger.info(`Запуск нового набора тестов Auth API - Комплексное тестирование авторизации`);
+  test.describe('Auth API: cookie-only сессии', () => {
+    // One account has one login limit. Default mode continues after unrelated failures.
+    test.describe.configure({ mode: 'default', timeout: 180000 });
+    test.afterEach(async ({ request }) => { await auth.logout(request); });
 
-  const authAPI = new AuthAPI();
-
-  test.describe('Auth API: проверки общей учетной записи', () => {
     test.describe('Вход', () => {
-    test.describe.configure({ timeout: 60000 });
+      test.beforeEach(async ({ request }) => {
+        // Successful login resets the failed-password counter before each negative scenario.
+        await loginWhenReady(request);
+      });
 
-    test('Успешный вход с корректными учетными данными', async ({ request }) => {
-      logger.log('Проверка корректных учетных данных...');
-      const response = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL
-      );
-
-      expect(response.status).toBe(201);
-      expect(response.data).toBeTruthy();
-      expect(getAccessToken(response)).toBeTruthy();
-      expectPasswordIsNotExposed(response.data);
-      expectSensitiveFieldsAreNotExposed(response.data);
-    });
-
-    test('Неверный пароль для существующего пользователя', async ({ request }) => {
-      logger.log('Проверка неверного пароля для существующего пользователя...');
-      const response = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        'invalid_password',
-        API_CONST.API_TEST_TABEL
-      );
-
-      expectUnauthorizedOrForbidden(response);
-      expectPasswordIsNotExposed(response.data);
-    });
-
-    test('Неверный табель для существующего пользователя', async ({ request }) => {
-      logger.log('Проверка неверного табеля для существующего пользователя...');
-      const response = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        'invalid_tabel'
-      );
-
-      expectUnauthorizedOrForbidden(response);
-      expectPasswordIsNotExposed(response.data);
-    });
-
-    test('Ответы не раскрывают существование пользователя', async ({ request }) => {
-      logger.log('Проверка защиты от user enumeration...');
-      const existingUserWrongPassword = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        'invalid_password',
-        API_CONST.API_TEST_TABEL
-      );
-      const unknownUser = await authAPI.login(
-        request,
-        'invalid_user',
-        'invalid_password',
-        API_CONST.API_TEST_TABEL
-      );
-
-      expect(existingUserWrongPassword.status).toBe(unknownUser.status);
-      expectPasswordIsNotExposed(existingUserWrongPassword.data);
-      expectPasswordIsNotExposed(unknownUser.data);
-    });
-
-    test('Неудачный вход с некорректными учетными данными', async ({ request }) => {
-      logger.log('Проверка некорректных учетных данных...');
-      const response = await authAPI.login(
-        request,
-        'invalid_user',
-        'invalid_password',
-        'invalid_tabel'
-      );
-
-      expectUnauthorizedOrForbidden(response);
-    });
-
-    test('Вход без указания учетных данных', async ({ request }) => {
-      logger.log('Проверка отсутствующих учетных данных...');
-      const response = await authAPI.login(request, '', '', '');
-
-      expectValidationError(response);
-    });
-
-    test('Вход с частично пустыми учетными данными', async ({ request }) => {
-      logger.log('Проверка частично пустых учетных данных...');
-      const cases = [
-        { name: 'empty login', login: '', password: API_CONST.API_TEST_PASSWORD, tabel: API_CONST.API_TEST_TABEL },
-        { name: 'empty password', login: API_CONST.API_TEST_USERNAME, password: '', tabel: API_CONST.API_TEST_TABEL },
-        { name: 'empty tabel', login: API_CONST.API_TEST_USERNAME, password: API_CONST.API_TEST_PASSWORD, tabel: '' },
-      ];
-
-      for (const testCase of cases) {
-        const response = await authAPI.login(request, testCase.login, testCase.password, testCase.tabel);
-        expectNoServerError(response);
-        if (testCase.name === 'empty login') {
-          expectStatusIn(response, [201, 400, 401], testCase.name);
-          if (response.status === 201) expect(getAccessToken(response)).toBeTruthy();
-        } else {
-          expectStatusIn(response, [400, 401], testCase.name);
-        }
-        expectPasswordIsNotExposed(response.data);
-      }
-    });
-
-    test('Refresh cookie имеет безопасные flags', async ({ request }) => {
-      logger.log('Проверка security flags refresh cookie...');
-      const response = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL
-      );
-
-      expect(response.status).toBe(201);
-      const refreshCookie = getRefreshCookie(response);
-      test.skip(!refreshCookie, 'Login response не содержит refresh_token Set-Cookie.');
-      const cookie = refreshCookie as string;
-
-      expect(
-        cookie.includes('HttpOnly'),
-        formatApiExpectation(response, 'refresh cookie contains HttpOnly flag', `cookie: ${redactCookie(cookie)}`),
-      ).toBe(true);
-      expect(
-        /SameSite=(Strict|Lax|None)/i.test(cookie),
-        formatApiExpectation(response, 'refresh cookie contains SameSite flag', `cookie: ${redactCookie(cookie)}`),
-      ).toBe(true);
-      if (/SameSite=None/i.test(cookie)) {
-        expect(
-          cookie.includes('Secure'),
-          formatApiExpectation(response, 'SameSite=None refresh cookie contains Secure flag', `cookie: ${redactCookie(cookie)}`),
-        ).toBe(true);
-      }
-    });
-
-    test('SQL-инъекция в учетных данных', async ({ request }) => {
-      logger.log('Тестирование защиты от SQL-инъекций...');
-      const response = await authAPI.login(
-        request,
-        "' OR '1'='1",
-        'password',
-        '12345'
-      );
-
-      expect(response.status).toBe(401);
-    });
-
-    test('XSS-payload в учетных данных', async ({ request }) => {
-      logger.log('Тестирование защиты от XSS...');
-      const response = await authAPI.login(
-        request,
-        '<script>alert("XSS")</script>',
-        'password',
-        '12345'
-      );
-
-      expect(response.status).toBe(401);
-    });
-
-    test('Вход с разрешенного Origin', async ({ request }) => {
-      logger.log('Тестирование входа с разрешенного хоста...');
-      const allowedOrigin = new URL(ENV.BASE_URL || ENV.API_BASE_URL).origin;
-      const response = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL,
-        { Origin: allowedOrigin }
-      );
-
-      expect(response.status).toBe(201);
-      expect(getAccessToken(response)).toBeTruthy();
-      expectPasswordIsNotExposed(response.data);
-      expectSensitiveFieldsAreNotExposed(response.data);
-    });
-
-    test('Несколько неверных логинов подряд не раскрывают пользователя и не приводят к 5xx', async ({ request }) => {
-      const attempts = [
-        { login: API_CONST.API_TEST_USERNAME, password: 'invalid_password_1', tabel: API_CONST.API_TEST_TABEL },
-        { login: API_CONST.API_TEST_USERNAME, password: 'invalid_password_2', tabel: API_CONST.API_TEST_TABEL },
-        { login: 'invalid_user', password: 'invalid_password_3', tabel: 'invalid_tabel' },
-      ];
-
-      for (const attempt of attempts) {
-        const response = await authAPI.login(request, attempt.login, attempt.password, attempt.tabel);
-        expectNoServerError(response);
+      test('Успешный вход устанавливает обе cookie и открывает сессию', async ({ request }) => {
+        await requireCookie(request, 'access_token');
+        await requireCookie(request, 'refresh_token');
+        await expectSession(request);
+      });
+      test('Неверный пароль для существующего пользователя', async ({ request }) => {
+        const response = await checkedLogin(request, API_CONST.API_TEST_USERNAME, 'invalid_password', API_CONST.API_TEST_TABEL);
         expectUnauthorizedOrForbidden(response);
-        expectPasswordIsNotExposed(response.data);
-      }
+        expectSafeBody(response.data);
+      });
+      test('Неверный табель для существующего пользователя', async ({ request }) => {
+        expectUnauthorizedOrForbidden(await checkedLogin(request, API_CONST.API_TEST_USERNAME, API_CONST.API_TEST_PASSWORD, 'invalid_tabel'));
+      });
+      test('Ответы не раскрывают существование пользователя', async ({ request }) => {
+        const existing = await checkedLogin(request, API_CONST.API_TEST_USERNAME, 'invalid_password', API_CONST.API_TEST_TABEL);
+        // The account is resolved by personnel number, not by the displayed name.
+        const unknown = await checkedLogin(request, 'invalid_user', 'invalid_password', 'invalid_tabel');
+        expectUnauthorizedOrForbidden(existing);
+        expectUnauthorizedOrForbidden(unknown);
+        expect(existing.status).toBe(unknown.status);
+        expectSafeBody(existing.data);
+        expectSafeBody(unknown.data);
+      });
+      test('Неудачный вход с некорректными учетными данными', async ({ request }) => {
+        expectUnauthorizedOrForbidden(await checkedLogin(request, 'invalid_user', 'invalid_password', 'invalid_tabel'));
+      });
+      test('Вход без указания учетных данных', async ({ request }) => {
+        expectStatusIn(await checkedLogin(request, '', '', ''), [400]);
+      });
+      test('Вход с частично пустыми учетными данными', async ({ request }) => {
+        for (const [user, password, tabel] of [
+          ['', API_CONST.API_TEST_PASSWORD, API_CONST.API_TEST_TABEL],
+          [API_CONST.API_TEST_USERNAME, '', API_CONST.API_TEST_TABEL],
+          [API_CONST.API_TEST_USERNAME, API_CONST.API_TEST_PASSWORD, ''],
+        ]) {
+          const response = await checkedLogin(request, user, password, tabel);
+          // Deployed ERP supports personnel-number/password login without a display name.
+          expectStatusIn(response, user === '' ? [201, 400, 401] : [400, 401]);
+          if (response.status === 201) {
+            await requireCookie(request, 'access_token');
+            await expectSession(request);
+          }
+          expectSafeBody(response.data);
+        }
+      });
+      test('Cookie сессии имеют безопасные flags', async ({ request }) => {
+        const cookies = (await request.storageState()).cookies;
+        for (const name of ['access_token', 'refresh_token']) {
+          const cookie = cookies.find(item => item.name === name);
+          expect(Boolean(cookie), `${name} is required`).toBe(true);
+          expect(cookie?.httpOnly, `${name} must be HttpOnly`).toBe(true);
+          expect(['Strict', 'Lax', 'None'].includes(cookie!.sameSite), `${name} must have SameSite`).toBe(true);
+          if (new URL(ENV.API_BASE_URL).protocol === 'https:') expect(cookie?.secure, `${name} must be Secure on HTTPS`).toBe(true);
+        }
+      });
+      for (const [title, user] of [
+        ['SQL-инъекция в учетных данных', "' OR '1'='1"],
+        ['XSS-payload в учетных данных', '<script>alert("XSS")</script>'],
+      ]) test(title, async ({ request }) => {
+        expectUnauthorizedOrForbidden(await checkedLogin(request, user, 'password', 'invalid_tabel'));
+      });
+      test('Вход с разрешенного Origin', async ({ request }) => {
+        const response = await loginWhenReady(request, { Origin: new URL(ENV.API_BASE_URL).origin });
+        expectStatusIn(response, [201]);
+        expectSafeBody(response.data);
+        await expectSession(request);
+      });
+      test('Учетные данные с пробелами по краям обрабатываются без серверных ошибок', async ({ request }) => {
+        const response = await checkedLogin(request, ` ${API_CONST.API_TEST_USERNAME} `,
+          ` ${API_CONST.API_TEST_PASSWORD} `, ` ${API_CONST.API_TEST_TABEL} `);
+        expectStatusIn(response, [201, 400, 401]);
+        expectSafeBody(response.data);
+      });
     });
 
-    test('Учетные данные с пробелами по краям обрабатываются без серверных ошибок', async ({ request }) => {
-      const response = await authAPI.login(
-        request,
-        ` ${API_CONST.API_TEST_USERNAME} `,
-        ` ${API_CONST.API_TEST_PASSWORD} `,
-        ` ${API_CONST.API_TEST_TABEL} `,
-      );
-
-      expectNoServerError(response);
-      expectStatusIn(response, [201, 400, 401]);
-      expectPasswordIsNotExposed(response.data);
-    });
-    });
-
-    test.describe('Проверка токена', () => {
-    test.describe.configure({ timeout: 60000 });
-
-    test('Проверка валидного токена', async ({ request }) => {
-      logger.log('Проверка валидного токена...');
-      const loginResponse = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL
-      );
-      
-      expect(loginResponse.status).toBe(201);
-      
-      const validToken = getAccessToken(loginResponse);
-      expect(validToken).toBeTruthy();
-      
-      const tokenResponse = await authAPI.getUserByToken(request, validToken as string);
-      expect(tokenResponse.status).toBe(201);
+    test.describe('Проверка cookie-сессии', () => {
+      test('Валидная access cookie открывает сессию', async ({ request }) => {
+        await loginWhenReady(request);
+        await expectSession(request);
+        await auth.logout(request);
+      });
+      for (const [title, value] of [
+        ['Невалидная access cookie отклоняется', 'invalid_access_token'],
+        ['Запрос без cookie отклоняется', ''],
+        ['Cookie с просроченным неподписанным JWT отклоняется', 'eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjF9.invalid_signature'],
+      ]) test(title, async ({ request }) => {
+        expectUnauthorizedOrForbidden(await auth.getSession(request, value));
+      });
+      test('Поврежденная access cookie отклоняется даже при валидной cookie в контексте', async ({ request }) => {
+        await loginWhenReady(request);
+        const access = await requireCookie(request, 'access_token');
+        expectUnauthorizedOrForbidden(await auth.getSession(request, `${access}tampered`));
+        await auth.logout(request);
+      });
+      test('Bearer без cookie не авторизует ERP-сессию', async ({ request }) => {
+        await loginWhenReady(request);
+        const access = await requireCookie(request, 'access_token');
+        const response = await request.get(ENV.API_BASE_URL + 'api/auth/session', {
+          headers: { Cookie: '', Authorization: `Bearer ${access}` },
+        });
+        expect([401, 403].includes(response.status()), 'Bearer alone must not authenticate ERP').toBe(true);
+        await auth.logout(request);
+      });
     });
 
-    test('Проверка невалидного токена', async ({ request }) => {
-      logger.log('Проверка невалидного токена...');
-      const response = await authAPI.getUserByToken(request, 'invalid_token_12345');
-
-      expectUnauthorizedOrForbidden(response);
-    });
-
-    test('Проверка без токена', async ({ request }) => {
-      logger.log('Проверка отказа без токена...');
-      const response = await authAPI.getUserByToken(request, '');
-
-      expectUnauthorizedOrForbidden(response);
-    });
-
-    test('Проверка просроченного токена', async ({ request }) => {
-      logger.log('Проверка просроченного токена...');
-      const response = await authAPI.getUserByToken(request, expiredJwtLikeToken);
-
-      expectUnauthorizedOrForbidden(response);
-    });
-
-    test('Проверка токена с измененным payload', async ({ request }) => {
-      logger.log('Проверка отказа для токена с измененным payload...');
-      const loginResponse = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL
-      );
-
-      expect(loginResponse.status).toBe(201);
-
-      const validToken = getAccessToken(loginResponse);
-      expect(validToken).toBeTruthy();
-
-      const response = await authAPI.getUserByToken(request, tamperToken(validToken as string));
-      expectUnauthorizedOrForbidden(response);
-    });
-
-    test('Обновление токенов с невалидным refresh токеном', async ({ request }) => {
-      logger.log('Тестирование обновления токена с невалидным refresh токеном...');
-      const response = await authAPI.refreshTokens(request, 'invalid_refresh_token');
-
-      expectUnauthorizedOrForbidden(response);
-    });
-
-    test('Обновление токенов без refresh cookie запрещено', async ({ request }) => {
-      logger.log('Проверка refresh без cookie...');
-      const response = await authAPI.refreshTokens(request);
-
-      expectUnauthorizedOrForbidden(response);
-    });
-
-    test('Успешное обновление токена с валидным refresh token', async ({ request }) => {
-      logger.log('Тестирование успешного обновления токена...');
-      let refreshResponse: AuthAPIResult | undefined;
-
-      for (let attempt = 0; attempt < 3; attempt++) {
-        const loginResponse = await authAPI.login(
-          request,
-          API_CONST.API_TEST_USERNAME,
-          API_CONST.API_TEST_PASSWORD,
-          API_CONST.API_TEST_TABEL
-        );
-
-        expect(loginResponse.status).toBe(201);
-        expect(getAccessToken(loginResponse)).toBeTruthy();
-
-        const refreshToken = getRefreshToken(loginResponse);
-        test.skip(!refreshToken, 'Login response не содержит refresh_token в body или Set-Cookie.');
-
-        refreshResponse = await authAPI.refreshTokens(request, refreshToken);
-        if (refreshResponse.status === 201) break;
-      }
-
-      expect(refreshResponse).toBeTruthy();
-      expect(refreshResponse!.status).toBe(201);
-
-      const newAccessToken = getAccessToken(refreshResponse!);
-      expect(newAccessToken).toBeTruthy();
-      const tokenCheck = await authAPI.getUserByToken(request, newAccessToken as string);
-      expect(tokenCheck.status).toBe(201);
-      expectPasswordIsNotExposed(refreshResponse!.data);
-      expectSensitiveFieldsAreNotExposed(refreshResponse!.data);
-    });
-
-    test('Повторное использование старого refresh token не приводит к 5xx', async ({ request }) => {
-      logger.log('Проверка повторного использования refresh token в пределах серверного grace period...');
-      const loginResponse = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL
-      );
-
-      expect(loginResponse.status).toBe(201);
-      const oldRefreshToken = getRefreshToken(loginResponse);
-      test.skip(!oldRefreshToken, 'Login response не содержит refresh_token в body или Set-Cookie.');
-
-      const refreshResponse = await authAPI.refreshTokens(request);
-      expect(refreshResponse.status).toBe(201);
-
-      const reusedOldRefreshTokenResponse = await authAPI.refreshTokens(request, oldRefreshToken);
-      expectNoServerError(reusedOldRefreshTokenResponse);
-      expectStatusIn(reusedOldRefreshTokenResponse, [201, 401]);
-      if (reusedOldRefreshTokenResponse.status === 201) {
-        expect(getAccessToken(reusedOldRefreshTokenResponse)).toBeTruthy();
-      }
-    });
+    test.describe('Обновление cookie', () => {
+      test('Невалидная refresh cookie отклоняется', async ({ request }) => {
+        expectUnauthorizedOrForbidden(await auth.refreshTokens(request, 'invalid_refresh_token'));
+      });
+      test('Refresh без cookie отклоняется', async ({ request }) => {
+        expectUnauthorizedOrForbidden(await auth.refreshTokens(request, ''));
+      });
+      test('Refresh использует cookie jar и сохраняет рабочую сессию', async ({ request }) => {
+        await loginWhenReady(request);
+        await requireCookie(request, 'refresh_token');
+        const refreshed = await auth.refreshTokens(request);
+        expectStatusIn(refreshed, [201]);
+        await requireCookie(request, 'access_token');
+        await requireCookie(request, 'refresh_token');
+        expectSafeBody(refreshed.data);
+        await expectSession(request);
+        await auth.logout(request);
+      });
+      test('Повтор старой refresh cookie обрабатывается в рамках grace period', async ({ request }) => {
+        await loginWhenReady(request);
+        const oldRefresh = await requireCookie(request, 'refresh_token');
+        expectStatusIn(await auth.refreshTokens(request), [201]);
+        const replay = await auth.refreshTokens(request, oldRefresh);
+        expectStatusIn(replay, [201, 401, 403]);
+        if (replay.status === 201) await expectSession(request);
+        await auth.logout(request);
+      });
     });
 
     test.describe('Выход', () => {
-    test.describe.configure({ timeout: 60000 });
-
-    test('Успешный выход', async ({ request }) => {
-      logger.log('Тестирование успешного выхода...');
-      const loginResponse = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL
-      );
-      
-      expect(loginResponse.status).toBe(201);
-      
-      const userId = extractUserId(loginResponse.data);
-      expect(userId).toBeTruthy();
-      
-      const logoutResponse = await authAPI.logout(request, userId as number);
-      expect(logoutResponse.status).toBe(201);
+      test('Logout использует текущую сессию и очищает обе cookie', async ({ request }) => {
+        await loginWhenReady(request);
+        expectStatusIn(await auth.logout(request), [201]);
+        expect(Boolean(await cookieValue(request, 'access_token')), 'Logout clears access cookie').toBe(false);
+        expect(Boolean(await cookieValue(request, 'refresh_token')), 'Logout clears refresh cookie').toBe(false);
+        expectUnauthorizedOrForbidden(await auth.getSession(request));
+      });
+      test('Выход без cookie отклоняется', async ({ request }) => {
+        expectUnauthorizedOrForbidden(await auth.logout(request));
+      });
+      test('Повторный logout не принимает завершённую сессию', async ({ request }) => {
+        await loginWhenReady(request);
+        expectStatusIn(await auth.logout(request), [201]);
+        expectUnauthorizedOrForbidden(await auth.logout(request));
+      });
+      test('Refresh cookie завершённой сессии отклоняется', async ({ request }) => {
+        await loginWhenReady(request);
+        const refresh = await requireCookie(request, 'refresh_token');
+        expectStatusIn(await auth.logout(request), [201]);
+        expectUnauthorizedOrForbidden(await auth.refreshTokens(request, refresh));
+      });
     });
 
-    test('Выход очищает серверную сессию без 5xx при последующей проверке access token', async ({ request }) => {
-      logger.log('Проверка поведения access token после выхода...');
-      const loginResponse = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL
-      );
-
-      expect(loginResponse.status).toBe(201);
-
-      const accessToken = getAccessToken(loginResponse);
-      const userId = extractUserId(loginResponse.data);
-      expect(accessToken).toBeTruthy();
-      expect(userId).toBeTruthy();
-
-      const logoutResponse = await authAPI.logout(request, userId as number);
-      expect(logoutResponse.status).toBe(201);
-
-      const tokenResponse = await authAPI.getUserByToken(request, accessToken as string);
-      expectNoServerError(tokenResponse);
-      expectStatusIn(tokenResponse, [201, 401]);
-      if (tokenResponse.status === 201) {
-        expect(tokenResponse.data?.ok).toBe(true);
-      }
-    });
-
-    test('Выход с невалидной сессией', async ({ request }) => {
-      logger.log('Тестирование выхода с невалидной сессией...');
-      const response = await authAPI.logout(request, 999999);
-
-      expectUnauthorizedOrForbidden(response);
-    });
-
-    test('Повторный logout той же сессии не приводит к 5xx', async ({ request }) => {
-      const loginResponse = await authAPI.login(
-        request,
-        API_CONST.API_TEST_USERNAME,
-        API_CONST.API_TEST_PASSWORD,
-        API_CONST.API_TEST_TABEL
-      );
-
-      expect(loginResponse.status).toBe(201);
-      const userId = extractUserId(loginResponse.data);
-      expect(userId).toBeTruthy();
-
-      const firstLogout = await authAPI.logout(request, userId as number);
-      expectNoServerError(firstLogout);
-      expect([201, 401]).toContain(firstLogout.status);
-
-      const secondLogout = await authAPI.logout(request, userId as number);
-      expectNoServerError(secondLogout);
-      expect([201, 401]).toContain(secondLogout.status);
-    });
-
-    test('Refresh token после выхода не приводит к 5xx', async ({ playwright }) => {
-      logger.log('Проверка поведения refresh token после выхода...');
-      const isolatedRequest = await playwright.request.newContext({ ignoreHTTPSErrors: true });
-
+    test('Повтор неверного пароля ограничивается и не блокирует следующие наборы', async ({ request }) => {
+      await loginWhenReady(request);
       try {
-        const loginResponse = await authAPI.login(
-          isolatedRequest,
-          API_CONST.API_TEST_USERNAME,
-          API_CONST.API_TEST_PASSWORD,
-          API_CONST.API_TEST_TABEL
-        );
-
-        expect(loginResponse.status).toBe(201);
-
-        const refreshToken = getRefreshToken(loginResponse);
-        const userId = extractUserId(loginResponse.data);
-        test.skip(!refreshToken, 'Login response не содержит refresh_token в body или Set-Cookie.');
-        expect(userId).toBeTruthy();
-
-        const logoutResponse = await authAPI.logout(isolatedRequest, userId as number);
-        expect(logoutResponse.status).toBe(201);
-
-        const refreshResponse = await authAPI.refreshTokens(isolatedRequest, refreshToken);
-        expectStatusIn(refreshResponse, [201, 401, 403]);
-        if (refreshResponse.status === 201) {
-          expect(getAccessToken(refreshResponse)).toBeTruthy();
-          expectPasswordIsNotExposed(refreshResponse.data);
-          expectSensitiveFieldsAreNotExposed(refreshResponse.data);
+        const statuses: number[] = [];
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const response = await auth.login(request, API_CONST.API_TEST_USERNAME, 'invalid_password', API_CONST.API_TEST_TABEL);
+          statuses.push(response.status);
+          expectSafeBody(response.data);
         }
+        expect(statuses).toEqual([401, 401, 429]);
+        const blocked = await auth.login(request, API_CONST.API_TEST_USERNAME, API_CONST.API_TEST_PASSWORD, API_CONST.API_TEST_TABEL);
+        expectStatusIn(blocked, [429], 'Correct credentials remain blocked during cooldown');
+        expectSafeBody(blocked.data);
       } finally {
-        await isolatedRequest.dispose();
+        // Restore the account after the real cooldown even if an assertion fails.
+        await loginWhenReady(request);
+        await auth.logout(request);
       }
-    });
     });
   });
 };

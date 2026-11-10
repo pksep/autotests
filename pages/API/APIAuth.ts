@@ -15,7 +15,7 @@ export class AuthAPI extends APIPageObject {
     tabel: string,
     additionalHeaders: Record<string, string> = {},
   ) {
-    logger.info(`Attempting login for user: ${login}`);
+    logger.info('Attempting cookie session login');
 
     // Use the correct endpoint and field names with compress header
     const response = await this.postWithJsonHeaders(
@@ -32,17 +32,17 @@ export class AuthAPI extends APIPageObject {
       },
     );
 
-    return await this.handleResponse(response, login);
+    return await this.handleResponse(response);
   }
 
-  private async handleResponse(response: any, username: string) {
+  private async handleResponse(response: any) {
     const status = response.status();
     const responseData = await this.parseJsonBody(response);
 
     if (response.ok()) {
-      logger.info(`Login successful for user: ${username}`);
+      logger.info('Cookie session login successful');
     } else {
-      logger.info(`Login failed for user: ${username}, status: ${status} - This is expected for defensive testing`);
+      logger.info(`Login returned HTTP ${status}`);
     }
 
     return {
@@ -55,22 +55,11 @@ export class AuthAPI extends APIPageObject {
     };
   }
 
-  async getUserByToken(request: APIRequestContext, token: string) {
-    logger.info(`Getting user by token`);
-
-    // Token validation endpoint returns a success status for a valid token and 401 for an invalid token.
-    const result = await this.apiRequest(request, 'POST', ENV.API_BASE_URL + 'api/auth/check', {
-      data: { token },
-      headers: { accept: '*/*' },
+  async getSession(request: APIRequestContext, accessCookie?: string) {
+    return this.apiRequest(request, 'GET', ENV.API_BASE_URL + 'api/auth/session', {
+      // undefined uses the context cookie jar; an empty string explicitly removes cookies.
+      headers: accessCookie === undefined ? {} : { Cookie: accessCookie ? `access_token=${accessCookie}` : '' },
     });
-
-    if (result.status >= 200 && result.status < 300) {
-      logger.info(`Successfully retrieved user by token`);
-    } else {
-      logger.info(`Failed to get user by token, status: ${result.status} - This is expected for defensive testing`);
-    }
-
-    return result;
   }
 
   /**
@@ -84,8 +73,8 @@ export class AuthAPI extends APIPageObject {
 
     const headers: Record<string, string> = {};
 
-    if (refreshToken) {
-      headers.Cookie = `refresh_token=${refreshToken}`;
+    if (refreshToken !== undefined) {
+      headers.Cookie = refreshToken ? `refresh_token=${refreshToken}` : '';
     }
 
     const response = await this.apiRequest(request, 'POST', ENV.API_BASE_URL + 'api/auth/refresh', {
@@ -102,22 +91,19 @@ export class AuthAPI extends APIPageObject {
   }
 
   /**
-   * Logout the user by invalidating the session
+   * Invalidate the session identified by the context cookies.
    * @param request APIRequestContext
-   * @param userId ID of the user to logout
    * @returns Response indicating logout success
    */
-  async logout(request: APIRequestContext, userId: number) {
-    logger.info(`Logging out user with ID: ${userId}`);
+  async logout(request: APIRequestContext) {
+    logger.info('Logging out the current cookie session');
 
-    const response = await this.apiRequest(request, 'POST', ENV.API_BASE_URL + 'api/auth/logout', {
-      data: { userId },
-    });
+    const response = await this.apiRequest(request, 'POST', ENV.API_BASE_URL + 'api/auth/logout');
 
     if (response.status >= 200 && response.status < 300) {
-      logger.info(`Logout successful for user ID: ${userId}`);
+      logger.info('Cookie session logout successful');
     } else {
-      logger.info(`Logout failed for user ID: ${userId}, status: ${response.status}`);
+      logger.info(`Logout returned HTTP ${response.status}`);
     }
 
     return response;
