@@ -3,16 +3,16 @@ import { CBEDAPI } from '../../pages/API/APICBED';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import {
-  captureApiResult,
   clientErrorCodes,
   expectApiContract,
   expectClientError,
-  expectEndpointReached,
+  expectMissingResource,
   expectNoServerError,
   expectPaginationContract,
   getCount,
   getRows,
   successCodes,
+  expectRowsResponse,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 import {
@@ -378,7 +378,7 @@ export const runCBEDAPINew = () => {
 
       expect(response.status).toBe(201);
       expect(getCount(response.data), JSON.stringify(response.data)).toBeGreaterThanOrEqual(0);
-      expect(Array.isArray(getRows(response.data)), JSON.stringify(response.data)).toBe(true);
+      expectRowsResponse(response.data);
     });
 
     test('пагинация поддерживает пустой результат со стабильной структурой', async ({ request }) => {
@@ -492,8 +492,8 @@ export const runCBEDAPINew = () => {
       const byId = await cbedAPI.getOneCBEDById(request, { id: 999999999, modelsInclude: [], attributes: [] }, accessToken);
       expectNoServerError(byId);
 
-      const drafts = await captureApiResult(() => cbedAPI.getDrafts(request, 999999999, accessToken));
-      expectEndpointReached(drafts);
+      const drafts = await cbedAPI.getDrafts(request, 999999999, accessToken);
+      expectMissingResource(drafts);
 
       const deleteResponse = await cbedAPI.banCBED(request, 999999999, testUserId, accessToken);
       expectClientError(deleteResponse);

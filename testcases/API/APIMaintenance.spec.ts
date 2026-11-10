@@ -1,85 +1,50 @@
 import { test, expect } from '@playwright/test';
-import { AssembleAPI } from '../../pages/API/APIAssemble';
-import { CBEDAPI } from '../../pages/API/APICBED';
 import { DeficitsAPI } from '../../pages/API/APIDeficits';
-import { DetailsAPI } from '../../pages/API/APIDetails';
 import { ProductionTasksAPI } from '../../pages/API/APIProductionTasks';
-import { ProductsAPI } from '../../pages/API/APIProducts';
 import { SettingsAPI } from '../../pages/API/APISettings';
 import { ShipmentsAPI } from '../../pages/API/APIShipments';
 import { WarehouseAPI } from '../../pages/API/APIWarehouse';
-import { captureApiResult, expectClientError, expectEndpointReached } from '../../lib/helpers/APIAssertions';
+import { expectErrorResponseContract, expectUnauthorizedOrForbidden } from '../../lib/helpers/APIAssertions';
 import { getAuthToken } from '../../lib/helpers/APITestUtils';
-import logger from '../../lib/utils/logger';
 
-const missingId = 999999999;
-
-const assembleAPI = new AssembleAPI(null);
-const cbedAPI = new CBEDAPI(null);
 const deficitsAPI = new DeficitsAPI(null);
-const detailsAPI = new DetailsAPI(null);
 const productionTasksAPI = new ProductionTasksAPI(null);
-const productsAPI = new ProductsAPI(null as any);
 const settingsAPI = new SettingsAPI(null as any);
 const shipmentsAPI = new ShipmentsAPI(null as any);
 const warehouseAPI = new WarehouseAPI(null as any);
 
 export const runMaintenanceAPINew = () => {
-  logger.info('Starting Maintenance API suite');
-
-  test.describe('Maintenance API: глобальные и потенциально тяжелые endpoint-ы', () => {
-    test.describe.configure({ timeout: 120000 });
-
-    let accessToken: string | undefined;
-
-    test.beforeAll(async ({ request }) => {
-      accessToken = await getAuthToken(request);
+  test.describe('Maintenance API: защита глобальных операций', () => {
+    // No login in this group: the request context must have an empty cookie jar.
+    test('запрещает пересчет дефицитов без авторизации', async ({ request }) => {
+      const response = await deficitsAPI.updateAllDeficits(request);
+      expectUnauthorizedOrForbidden(response);
+      expectErrorResponseContract(response);
     });
 
-    test('[maintenance] пересчеты дефицитов и производственных связей достигают endpoint', async ({ request }) => {
-      const responses = [
-        await captureApiResult(() => deficitsAPI.updateAllDeficits(request, accessToken)),
-        await captureApiResult(() => productionTasksAPI.updateAllTaskRelative(request, accessToken)),
-      ];
-
-      for (const response of responses) {
-        expectEndpointReached(response);
-      }
+    test('запрещает пересчет производственных связей без авторизации', async ({ request }) => {
+      const response = await productionTasksAPI.updateAllTaskRelative(request);
+      expectUnauthorizedOrForbidden(response);
+      expectErrorResponseContract(response);
     });
 
-    test('[maintenance] глобальная актуализация отгрузок достигает endpoint', async ({ request }) => {
-      const responses = [
-        await captureApiResult(() => shipmentsAPI.actualAllShipments(request, accessToken)),
-      ];
-
-      for (const response of responses) {
-        expectEndpointReached(response);
-      }
+    test('запрещает глобальную актуализацию отгрузок без авторизации', async ({ request }) => {
+      const response = await shipmentsAPI.actualAllShipments(request);
+      expectUnauthorizedOrForbidden(response);
+      expectErrorResponseContract(response);
     });
 
     test.skip('[maintenance] глобальный сброс резервов требует отдельной одноразовой базы', async ({ request }) => {
-      // reset_in_sets обнуляет резервы всех компонентов, сохраняя активные наборы.
-      // На общем dev этот вызов блокирует приходы существующих сборок.
+      const accessToken = await getAuthToken(request);
       const response = await warehouseAPI.resetInSets(request, accessToken);
       expect(response.status).toBe(200);
       expect(response.data).toBe(true);
     });
 
-    test('[maintenance] складские и settings операции достигают endpoint', async ({ request }) => {
-      const responses = [
-        await captureApiResult(() => settingsAPI.newDB(request, accessToken)),
-        await captureApiResult(() => assembleAPI.banComplect(request, missingId, accessToken)),
-        await captureApiResult(() => assembleAPI.updateResponsibleKit(request, missingId, missingId, accessToken)),
-      ];
-
-      for (const response of responses) {
-        expectEndpointReached(response);
-      }
-    });
-
-    test('[defensive] maintenance/settings отклоняет скачивание несуществующего dump без авторизации', async ({ request }) => {
+    test('запрещает скачивание dump без авторизации', async ({ request }) => {
       const response = await settingsAPI.downloadDb(request, 'api-negative-missing-dump.sql');
-      expectClientError(response, [401, 403, 404]);
+      expectUnauthorizedOrForbidden(response);
+      expectErrorResponseContract(response);
     });
   });
 };

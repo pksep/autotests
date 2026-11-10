@@ -15,6 +15,7 @@ import {
   getCount,
   getRows,
   successCodes,
+  expectRowsResponse,
 } from '../../lib/helpers/APIAssertions';
 import { getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
@@ -249,21 +250,24 @@ export const runUsersAPINew = () => {
       expect(lightUser, JSON.stringify(lightResponse.data)).toBeTruthy();
       expect(fullUser, JSON.stringify(fullResponse.data)).toBeTruthy();
       expect(Number(fullUser.id), JSON.stringify(fullUser)).toBe(fixtureUserId);
-      expect(Object.keys(fullUser!).length).toBeGreaterThanOrEqual(Object.keys(lightUser!).length);
+      expectUserShape(lightUser!);
+      expectUserShape(fullUser);
+      for (const field of ['id', 'login', 'tabel', 'initial', 'image', 'subdivision']) {
+        expect(lightUser!, field).toHaveProperty(field);
+        expect(fullUser, field).toHaveProperty(field, lightUser![field]);
+      }
+      expect(lightUser).not.toHaveProperty('roles');
+      expect(fullUser).toHaveProperty('rolesId', fixtureRoleId);
     });
 
-    test('возвращает пагинированный список активных пользователей с count и rows', async ({ request }) => {
-      const response = await postUsersPagination(request, userPaginationDto(), accessToken);
-
-      if (response.status === 401) {
-        expectNoSensitiveFields(response.data);
-        return;
-      }
+    test('возвращает созданного пользователя через пагинацию с count и rows', async ({ request }) => {
+      const response = await postUsersPagination(request, userPaginationDto({ searchSring: fixtureTabel }), accessToken);
 
       expectApiContract(response, { shape: 'pagination' });
       expect(response.status).toBe(201);
-      expect(getCount(response.data), JSON.stringify(response.data)).toBeGreaterThanOrEqual(0);
-      expect(Array.isArray(getRows(response.data)), JSON.stringify(response.data)).toBe(true);
+      expect(getCount(response.data), JSON.stringify(response.data)).toBe(1);
+      expectRowsResponse(response.data);
+      expect(getRows(response.data).map(row => Number(row.id))).toEqual([fixtureUserId]);
       expectNoSensitiveFields(response.data);
     });
 
@@ -274,11 +278,6 @@ export const runUsersAPINew = () => {
         accessToken,
       );
 
-      if (response.status === 401) {
-        expectNoSensitiveFields(response.data);
-        return;
-      }
-
       expectApiContract(response, { shape: 'pagination' });
       expect(response.status).toBe(201);
       expect(getCount(response.data), JSON.stringify(response.data)).toBe(0);
@@ -286,50 +285,40 @@ export const runUsersAPINew = () => {
       expectNoSensitiveFields(response.data);
     });
 
-    test('пагинация пользователей поддерживает граничные значения page/pageSize', async ({ request }) => {
+    test('пагинация пользователей возвращает первую страницу и пустую дальнюю', async ({ request }) => {
       const firstPage = await postUsersPagination(
         request,
-        userPaginationDto({ page: 1, pageSize: 1 }),
+        userPaginationDto({ page: 1, searchSring: fixtureTabel }),
         accessToken,
       );
-      if (firstPage.status === 401) {
-        expectNoSensitiveFields(firstPage.data);
-        return;
-      }
       expectApiContract(firstPage, { shape: 'pagination' });
       expect(firstPage.status).toBe(201);
-      expectPaginationContract(firstPage.data, 1);
+      expectPaginationContract(firstPage.data);
+      expect(getRows(firstPage.data).map(row => Number(row.id))).toEqual([fixtureUserId]);
       expectNoSensitiveFields(firstPage.data);
 
       const farPage = await postUsersPagination(
         request,
-        userPaginationDto({ page: 999999, pageSize: 5 }),
+        userPaginationDto({ page: 999999, searchSring: fixtureTabel }),
         accessToken,
       );
-      expectNoServerError(farPage);
-      if (!clientErrorCodes.includes(farPage.status)) {
-        expectApiContract(farPage, { shape: 'pagination' });
-        expect(successCodes).toContain(farPage.status);
-        expectPaginationContract(farPage.data, 5);
-      }
+      expect(farPage.status).toBe(201);
+      expectPaginationContract(farPage.data);
+      expect(getRows(farPage.data)).toEqual([]);
       expectNoSensitiveFields(farPage.data);
     });
 
-    test('возвращает существующего пользователя по id из списка или требует авторизацию', async ({ request }) => {
+    test('возвращает созданного пользователя по id', async ({ request }) => {
       const listResponse = await usersAPI.getAllUsersList(request, accessToken);
       expect(listResponse.status).toBe(200);
 
       const response = await usersAPI.getUserById(request, String(fixtureUserId), accessToken);
 
-      if (response.status === 401) {
-        expectNoSensitiveFields(response.data);
-        return;
-      }
-
       expectApiContract(response, { shape: 'object' });
       expect(response.status).toBe(201);
       expect(response.data).toBeTruthy();
       expectUserShape(response.data as UserLike);
+      expect(Number((response.data as UserLike).id)).toBe(fixtureUserId);
       expectNoSensitiveFields(response.data);
     });
 
@@ -367,23 +356,13 @@ export const runUsersAPINew = () => {
 
       const response = await postTabelUnique(request, { tabel: fixtureTabel }, accessToken);
 
-      if (response.status === 401) {
-        expectNoSensitiveFields(response.data);
-        return;
-      }
-
       expect(response.status).toBe(201);
-      expect(Number(response.data), JSON.stringify(response.data)).toBeGreaterThan(0);
+      expect(Number(response.data), JSON.stringify(response.data)).toBe(fixtureUserId);
     });
 
     test('возвращает нулевое значение для свободного табеля', async ({ request }) => {
       const freeTabel = uniqueApiSuffix('api-free');
       const response = await postTabelUnique(request, { tabel: freeTabel }, accessToken);
-
-      if (response.status === 401) {
-        expectNoSensitiveFields(response.data);
-        return;
-      }
 
       expect(response.status).toBe(201);
       expect(Number(response.data), JSON.stringify(response.data)).toBe(0);
@@ -414,11 +393,6 @@ export const runUsersAPINew = () => {
         archiveDto({ searchString: `api-users-archive-no-match-${uniqueApiSuffix('users')}` }),
         accessToken,
       );
-
-      if (response.status === 401) {
-        expectNoSensitiveFields(response.data);
-        return;
-      }
 
       expect(response.status).toBe(201);
       expect(Array.isArray(response.data), JSON.stringify(response.data)).toBe(true);
@@ -499,12 +473,9 @@ export const runUsersAPINew = () => {
       expect(listResponse.status).toBe(200);
       const response = await usersAPI.getUserById(request, String(fixtureUserId), accessToken);
 
-      if (response.status === 401) {
-        expectNoSensitiveFields(response.data);
-        return;
-      }
-
-      expectNoServerError(response);
+      expect(response.status).toBe(201);
+      expectUserShape(response.data as UserLike);
+      expect(Number((response.data as UserLike).id)).toBe(fixtureUserId);
       expectNoSensitiveFields(response.data);
     });
   });

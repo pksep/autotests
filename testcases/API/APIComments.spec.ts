@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { CommentsAPI } from '../../pages/API/APIComments';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
-import { clientErrorCodes, expectApiContract, expectNoServerError, expectClientError, getRows, successCodes } from '../../lib/helpers/APIAssertions';
+import { clientErrorCodes, expectApiContract, expectNoServerError, expectClientError, expectRowsResponse, getRows, successCodes } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
 const commentsAPI = new CommentsAPI(null);
@@ -73,7 +73,7 @@ export const runCommentsAPINew = () => {
       expectNoServerError(response);
       if (!clientErrorCodes.includes(response.status)) {
         expect(successCodes).toContain(response.status);
-        expect(Array.isArray(getRows(response.data)), JSON.stringify(response.data)).toBe(true);
+        expectRowsResponse(response.data);
       }
     });
 

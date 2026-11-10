@@ -14,6 +14,7 @@ import {
   getRows,
   serverErrorCodes,
   successCodes,
+  expectRowsResponse,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 import { expectRepeatOperationRejectedOrIdempotent } from '../../lib/helpers/APIDataInvariants';
@@ -672,7 +673,7 @@ export const runEquipmentAPINew = () => {
       const equipmentPagination = await equipmentAPI.getEquipmentPagination(request, equipmentPaginationDto(), accessToken);
       expect(equipmentPagination.status).toBe(201);
       expect(getCount(equipmentPagination.data), JSON.stringify(equipmentPagination.data)).toBeGreaterThanOrEqual(0);
-      expect(Array.isArray(getRows(equipmentPagination.data)), JSON.stringify(equipmentPagination.data)).toBe(true);
+      expectRowsResponse(equipmentPagination.data);
     });
 
     test('пагинация оборудования поддерживает пустой результат и граничные страницы', async ({ request }) => {

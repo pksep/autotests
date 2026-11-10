@@ -29,7 +29,7 @@ const formatBody = (data: unknown, maxLength = 1200) => {
   try {
     serialized = typeof data === 'string'
       ? data
-      : JSON.stringify(data, (key, value) => redactSensitiveValue(key, value));
+      : JSON.stringify(data, (key, value) => redactSensitiveValue(key, value)) ?? String(data);
   } catch {
     serialized = String(data);
   }
@@ -56,30 +56,12 @@ export const formatApiExpectation = (
 
 export const expectNoServerError = (response: ApiResult) => {
   expect(
-    serverErrorCodes.includes(response.status),
+    response.status >= 500,
     formatApiExpectation(
       response,
-      `HTTP status not in server error codes [${serverErrorCodes.join(', ')}]`,
+      'HTTP status below 500',
     ),
   ).toBe(false);
-};
-
-export const expectEndpointReached = (response: ApiResult | Error) => {
-  if (response instanceof Error) {
-    expect(response.message).toBeTruthy();
-    return;
-  }
-
-  expect(response.status).toBeGreaterThan(0);
-  expect(response.status).toBeLessThan(600);
-};
-
-export const captureApiResult = async (action: () => Promise<ApiResult>): Promise<ApiResult | Error> => {
-  try {
-    return await action();
-  } catch (error) {
-    return error instanceof Error ? error : new Error(String(error));
-  }
 };
 
 export const expectNotSuccessful = (response: ApiResult) => {
@@ -163,12 +145,24 @@ export const getCount = (data: unknown): number | undefined => {
   return typeof value === 'number' ? value : undefined;
 };
 
-export const expectPaginationContract = (data: unknown, pageSize?: number) => {
-  const count = getCount(data);
-  const rows = getRows(data);
+// Validate the original payload before getRows can normalize an unknown shape to [].
+export const expectRowsResponse = (data: unknown) => {
+  const hasRows = Array.isArray(data) || (
+    data !== null && typeof data === 'object' && (
+      Array.isArray((data as any).rows) || Array.isArray((data as any).data)
+    )
+  );
+  expect(hasRows, `Expected an array or an object with rows/data array; body: ${formatBody(data)}`).toBe(true);
+};
 
+export const expectPaginationContract = (data: unknown, pageSize?: number) => {
+  expectObjectResponse(data);
+  const count = getCount(data);
+  expect(Number.isInteger(count), `Expected an integer count/total; body: ${formatBody(data)}`).toBe(true);
   expect(count, JSON.stringify(data)).toBeGreaterThanOrEqual(0);
-  expect(Array.isArray(rows), JSON.stringify(data)).toBe(true);
+  expectRowsResponse(data);
+  expect(getRows(data).length, 'Returned rows cannot exceed the total count').toBeLessThanOrEqual(count!);
+  // Some ERP endpoints use a fixed page size. Check limits in endpoint-specific tests.
 };
 
 const formatSchemaIssues = (schema: ContractSchema, issues: { path: string; message: string }[]) =>

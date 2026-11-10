@@ -14,6 +14,7 @@ import {
   getRows,
   serverErrorCodes,
   successCodes,
+  expectRowsResponse,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 import { expectNonNegativeQuantities } from '../../lib/helpers/APIDataInvariants';
@@ -211,7 +212,7 @@ export const runWarehouseAPINew = () => {
           expect(successCodes).toContain(response.status);
           expectApiContract(response, { shape: 'pagination', schema: paginationOf(warehouseRemainResponseSchema) });
           expect(getCount(response.data), JSON.stringify(response.data)).toBeGreaterThanOrEqual(0);
-          expect(Array.isArray(getRows(response.data)), JSON.stringify(response.data)).toBe(true);
+          expectRowsResponse(response.data);
           expectNonNegativeQuantities(getRows<ApiRow>(response.data));
         }
       }
@@ -268,7 +269,7 @@ export const runWarehouseAPINew = () => {
         if (!clientErrorCodes.includes(response.status)) {
           expect(successCodes).toContain(response.status);
           expect(getCount(response.data), JSON.stringify(response.data)).toBeGreaterThanOrEqual(0);
-          expect(Array.isArray(getRows(response.data)), JSON.stringify(response.data)).toBe(true);
+          expectRowsResponse(response.data);
           expectSortedDescendingByKnownDate(getRows(response.data));
         }
       }

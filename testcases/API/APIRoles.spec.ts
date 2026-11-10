@@ -155,18 +155,24 @@ export const runRolesAPINew = () => {
       accessToken = await getAuthToken(request);
     });
 
-    test('возвращает список активных ролей', async ({ request }) => {
-      const response = await rolesAPI.getAllRoles(request, accessToken);
-
-      expectNoServerError(response);
-      if (clientErrorCodes.includes(response.status)) return;
-
-      expect(successCodes).toContain(response.status);
-      expect(Array.isArray(response.data), JSON.stringify(response.data)).toBe(true);
-      const rows = getRows<ApiRow>(response.data);
-      if (rows.length > 0) {
-        expectRoleShape(rows[0]);
-        expect(rows[0].ban, JSON.stringify(rows[0])).not.toBe(true);
+    test('возвращает созданную роль в списке активных ролей', async ({ request }) => {
+      const name = 'API Active Role ' + uniqueApiSuffix('role-list');
+      const fixture = await rolesAPI.createRole(request, { name, description: 'Active list fixture' }, 'api-roles', accessToken);
+      expect(successCodes).toContain(fixture.status);
+      const id = Number(fixture.data?.id);
+      expect(id).toBeGreaterThan(0);
+      try {
+        const response = await rolesAPI.getAllRoles(request, accessToken);
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.data), JSON.stringify(response.data)).toBe(true);
+        const role = getRows<ApiRow>(response.data).find(row => Number(row.id) === id);
+        expect(role, 'Created active role must be present in the list').toBeTruthy();
+        expectRoleShape(role!);
+        expect(role!.name).toBe(name);
+        expect(role!.ban).not.toBe(true);
+      } finally {
+        const cleanup = await rolesAPI.deleteRole(request, String(id), 'api-roles', accessToken);
+        expect(successCodes).toContain(cleanup.status);
       }
     });
 

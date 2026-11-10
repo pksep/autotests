@@ -4,16 +4,16 @@ import { ProductsAPI } from '../../pages/API/APIProducts';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import {
-  captureApiResult,
   clientErrorCodes,
   expectApiContract,
   expectClientError,
-  expectEndpointReached,
+  expectMissingResource,
   expectNoServerError,
   expectPaginationContract,
   getCount,
   getRows,
   successCodes,
+  expectRowsResponse,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 import { expectParentChildReference } from '../../lib/helpers/APIDataInvariants';
@@ -344,7 +344,7 @@ export const runAssembleAPINew = () => {
       if (!clientErrorCodes.includes(main.status)) {
         expect(successCodes).toContain(main.status);
         expect(getCount(main.data), JSON.stringify(main.data)).toBeGreaterThanOrEqual(0);
-        expect(Array.isArray(getRows(main.data)), JSON.stringify(main.data)).toBe(true);
+        expectRowsResponse(main.data);
         firstAssemble = getRows(main.data).find((row) => row.id);
       }
 
@@ -359,7 +359,7 @@ export const runAssembleAPINew = () => {
       expectNoServerError(complects);
       if (!clientErrorCodes.includes(complects.status)) {
         expect(successCodes).toContain(complects.status);
-        expect(Array.isArray(getRows(complects.data)), JSON.stringify(complects.data)).toBe(true);
+        expectRowsResponse(complects.data);
       }
     });
 
@@ -423,7 +423,7 @@ export const runAssembleAPINew = () => {
       expectNoServerError(kitsByAssembly);
       if (!clientErrorCodes.includes(kitsByAssembly.status)) {
         expect(successCodes).toContain(kitsByAssembly.status);
-        expect(Array.isArray(getRows(kitsByAssembly.data)) || Array.isArray(kitsByAssembly.data), JSON.stringify(kitsByAssembly.data)).toBe(true);
+        expectRowsResponse(kitsByAssembly.data);
       }
 
       const activeKits = await assembleAPI.getActiveKitsCountById(request, parent.id, parent.type, accessToken);
@@ -512,6 +512,11 @@ export const runAssembleAPINew = () => {
       expectClientError(noAuthCreate);
     });
 
+    test('смена ответственного отсутствующего набора возвращает ошибку отсутствующего объекта', async ({ request }) => {
+      const response = await assembleAPI.updateResponsibleKit(request, 999999999, 999999999, accessToken);
+      expectMissingResource(response, 'GET /api/assemble/complectkit/update_responsible/999999999/999999999');
+    });
+
     test('несуществующие assemble kit endpoints не приводят к серверным ошибкам', async ({ request }) => {
       const missingKit = await assembleAPI.getComplectKitById(request, 999999999, accessToken);
       expectNoServerError(missingKit);
@@ -519,11 +524,9 @@ export const runAssembleAPINew = () => {
       const missingKitsByAssembly = await assembleAPI.getComplectKitByAssembly(request, 999999999, accessToken);
       expectNoServerError(missingKitsByAssembly);
 
-      const banMissingComplect = await captureApiResult(() => assembleAPI.banComplect(request, 999999999, accessToken));
-      expectEndpointReached(banMissingComplect);
+      const banMissingComplect = await assembleAPI.banComplect(request, 999999999, accessToken);
+      expectMissingResource(banMissingComplect);
 
-      const updateMissingResponsible = await captureApiResult(() => assembleAPI.updateResponsibleKit(request, 999999999, 999999999, accessToken));
-      expectEndpointReached(updateMissingResponsible);
 
       const invalidCreateKit = await assembleAPI.createAssembleKit(request, invalidAssembleKitPayload(), accessToken);
       expectNoServerError(invalidCreateKit);

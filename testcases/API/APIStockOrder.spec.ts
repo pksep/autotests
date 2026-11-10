@@ -15,6 +15,7 @@ import {
   getRows,
   serverErrorCodes,
   successCodes,
+  expectRowsResponse,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 import {
@@ -625,7 +626,7 @@ export const runStockOrderAPINew = () => {
       expect(mainPagination.status).toBe(201);
       expectApiContract(mainPagination, { shape: 'pagination', schema: paginationOf(stockOrderResponseSchema) });
       expect(getCount(mainPagination.data), JSON.stringify(mainPagination.data)).toBeGreaterThanOrEqual(0);
-      expect(Array.isArray(getRows(mainPagination.data)), JSON.stringify(mainPagination.data)).toBe(true);
+      expectRowsResponse(mainPagination.data);
 
       const archivePagination = await stockOrderAPI.getPaginationByArchive(
         request,

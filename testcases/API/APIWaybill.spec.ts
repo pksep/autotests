@@ -9,6 +9,9 @@ import {
   expectNoServerError,
   getRows,
   successCodes,
+  expectRowsResponse,
+  expectArrayResponse,
+  expectObjectResponse,
 } from '../../lib/helpers/APIAssertions';
 import { getAuthToken } from '../../lib/helpers/APITestUtils';
 import { expectNonNegativeQuantities, expectRepeatOperationRejectedOrIdempotent } from '../../lib/helpers/APIDataInvariants';
@@ -32,8 +35,10 @@ const getWaybillCount = (data: unknown): number | undefined => {
 };
 
 const expectWaybillPaginationContract = (data: unknown) => {
+  expectObjectResponse(data);
+  expect(Number.isInteger(getWaybillCount(data)), JSON.stringify(data)).toBe(true);
   expect(getWaybillCount(data), JSON.stringify(data)).toBeGreaterThanOrEqual(0);
-  expect(Array.isArray(getRows(data)), JSON.stringify(data)).toBe(true);
+  expectRowsResponse(data);
 };
 
 export const runWaybillAPINew = () => {
@@ -51,10 +56,7 @@ export const runWaybillAPINew = () => {
     test('возвращает пагинацию накладных с count и rows', async ({ request }) => {
       const response = await waybillAPI.getWaybillPagination(request, paginationDto(), accessToken);
 
-      expectNoServerError(response);
-      if (clientErrorCodes.includes(response.status)) return;
-
-      expect(successCodes).toContain(response.status);
+      expect(response.status).toBe(201);
       expectWaybillPaginationContract(response.data);
       expectNonNegativeQuantities(getRows<ApiRow>(response.data));
     });
@@ -66,26 +68,34 @@ export const runWaybillAPINew = () => {
         accessToken,
       );
 
-      expectNoServerError(response);
-      if (clientErrorCodes.includes(response.status)) return;
-
-      expect(successCodes).toContain(response.status);
+      expect(response.status).toBe(201);
       expectWaybillPaginationContract(response.data);
       expect(getRows(response.data)).toEqual([]);
     });
 
-    test('возвращает последнюю накладную или null без серверной ошибки', async ({ request }) => {
+    test('возвращает последнюю накладную или null', async ({ request }) => {
       const response = await waybillAPI.getLastWaybill(request, accessToken);
-
-      expectNoServerError(response);
-      if (clientErrorCodes.includes(response.status)) return;
-      expect(successCodes).toContain(response.status);
+      expect(response.status).toBe(200);
+      const list = await waybillAPI.getWaybillPagination(request, paginationDto(), accessToken);
+      expect(list.status).toBe(201);
+      expectWaybillPaginationContract(list.data);
+      if (response.data === null) {
+        expect(getWaybillCount(list.data)).toBe(0);
+      } else {
+        expectObjectResponse(response.data);
+        expect(typeof response.data.name).toBe('string');
+        expect(Number(response.data?.id)).toBeGreaterThan(0);
+        const byId = await waybillAPI.getWaybillById(request, response.data.id, accessToken);
+        expect(byId.status).toBe(200);
+      expect(byId.data?.id).toBe(response.data.id);
+        expect(byId.data?.name).toBe(response.data.name);
+      }
     });
 
     test('читает существующую накладную из пагинации, если она есть', async ({ request }) => {
       const list = await waybillAPI.getWaybillPagination(request, paginationDto(), accessToken);
-      expectNoServerError(list);
-      test.skip(clientErrorCodes.includes(list.status), 'Waybill pagination is not available on this environment.');
+      expect(list.status).toBe(201);
+      expectWaybillPaginationContract(list.data);
 
       const waybill = getRows<ApiRow>(list.data).find((row) => row.id);
       test.skip(!waybill, 'No waybill with id is available on this environment.');
@@ -93,11 +103,9 @@ export const runWaybillAPINew = () => {
 
       const byId = await waybillAPI.getWaybillById(request, existingWaybill.id, accessToken);
       expectNoServerError(byId);
-      if (!clientErrorCodes.includes(byId.status)) {
-        expect(successCodes).toContain(byId.status);
+      expect(byId.status).toBe(200);
         expect(byId.data?.id, JSON.stringify(byId.data)).toBe(existingWaybill.id);
-        expectNonNegativeQuantities([byId.data]);
-      }
+      expectNonNegativeQuantities([byId.data]);
     });
 
   });
@@ -139,20 +147,24 @@ export const runWaybillAPINew = () => {
 
     test('обновляет описание существующей накладной и возвращает исходное значение', async ({ request }) => {
       const list = await waybillAPI.getWaybillPagination(request, paginationDto(), accessToken);
-      expectNoServerError(list);
-      test.skip(clientErrorCodes.includes(list.status), 'Waybill pagination is not available on this environment.');
+      expect(list.status).toBe(201);
+      expectWaybillPaginationContract(list.data);
 
       const waybill = getRows<ApiRow>(list.data).find((row) => row.id);
       test.skip(!waybill, 'No waybill with id is available on this environment.');
       const existingWaybill = waybill!;
-      const originalDescription = existingWaybill.description ?? '';
+      const original = await waybillAPI.getWaybillById(request, existingWaybill.id, accessToken);
+      expect(original.status).toBe(200);
+      expectArrayResponse(original.data?.documents);
+      const originalDocumentIds = original.data.documents.map((document: ApiRow) => Number(document.id));
+      const originalDescription = original.data?.description ?? '';
       const updatedDescription = `API waybill update probe ${Date.now()}`;
       const countBefore = getWaybillCount(list.data);
 
       try {
         const update = await waybillAPI.updateWaybill(
           request,
-          { waybillId: existingWaybill.id, description: updatedDescription, documentsIds: [] },
+          { waybillId: existingWaybill.id, description: updatedDescription, documentsIds: originalDocumentIds },
           accessToken,
         );
         expectNoServerError(update);
@@ -161,28 +173,25 @@ export const runWaybillAPINew = () => {
 
         const byId = await waybillAPI.getWaybillById(request, existingWaybill.id, accessToken);
         expectNoServerError(byId);
-        if (!clientErrorCodes.includes(byId.status)) {
-          expect(successCodes).toContain(byId.status);
-          expect(byId.data?.id, JSON.stringify(byId.data)).toBe(existingWaybill.id);
-          expect(byId.data?.description, JSON.stringify(byId.data)).toBe(updatedDescription);
-          expectNonNegativeQuantities([byId.data]);
-        }
+        expect(byId.status).toBe(200);
+        expect(byId.data?.id, JSON.stringify(byId.data)).toBe(existingWaybill.id);
+        expect(byId.data?.description, JSON.stringify(byId.data)).toBe(updatedDescription);
+        expectNonNegativeQuantities([byId.data]);
 
         const afterUpdateList = await waybillAPI.getWaybillPagination(request, paginationDto(), accessToken);
         expectNoServerError(afterUpdateList);
-        if (!clientErrorCodes.includes(afterUpdateList.status)) {
-          expect(successCodes).toContain(afterUpdateList.status);
-          const updatedRow = getRows<ApiRow>(afterUpdateList.data).find((row) => row.id === existingWaybill.id);
-          expect(updatedRow, JSON.stringify(afterUpdateList.data)).toBeTruthy();
-          expect(updatedRow?.description, JSON.stringify(updatedRow)).toBe(updatedDescription);
-          if (countBefore !== undefined) {
-            expect(getWaybillCount(afterUpdateList.data), JSON.stringify(afterUpdateList.data)).toBe(countBefore);
-          }
+        expect(afterUpdateList.status).toBe(201);
+        expectWaybillPaginationContract(afterUpdateList.data);
+        const updatedRow = getRows<ApiRow>(afterUpdateList.data).find((row) => row.id === existingWaybill.id);
+        expect(updatedRow, JSON.stringify(afterUpdateList.data)).toBeTruthy();
+        expect(updatedRow?.description, JSON.stringify(updatedRow)).toBe(updatedDescription);
+        if (countBefore !== undefined) {
+          expect(getWaybillCount(afterUpdateList.data), JSON.stringify(afterUpdateList.data)).toBe(countBefore);
         }
 
         const repeatUpdate = await waybillAPI.updateWaybill(
           request,
-          { waybillId: existingWaybill.id, description: updatedDescription, documentsIds: [] },
+          { waybillId: existingWaybill.id, description: updatedDescription, documentsIds: originalDocumentIds },
           accessToken,
         );
         expectNoServerError(repeatUpdate);
@@ -190,29 +199,29 @@ export const runWaybillAPINew = () => {
 
         const afterRepeatList = await waybillAPI.getWaybillPagination(request, paginationDto(), accessToken);
         expectNoServerError(afterRepeatList);
-        if (!clientErrorCodes.includes(afterRepeatList.status)) {
-          expect(successCodes).toContain(afterRepeatList.status);
-          const repeatedRows = getRows<ApiRow>(afterRepeatList.data).filter((row) => row.id === existingWaybill.id);
-          expect(repeatedRows.length, JSON.stringify(afterRepeatList.data)).toBe(1);
-          expect(repeatedRows[0]?.description, JSON.stringify(repeatedRows[0])).toBe(updatedDescription);
-          if (countBefore !== undefined) {
-            expect(getWaybillCount(afterRepeatList.data), JSON.stringify(afterRepeatList.data)).toBe(countBefore);
-          }
+        expect(afterRepeatList.status).toBe(201);
+        expectWaybillPaginationContract(afterRepeatList.data);
+        const repeatedRows = getRows<ApiRow>(afterRepeatList.data).filter((row) => row.id === existingWaybill.id);
+        expect(repeatedRows.length, JSON.stringify(afterRepeatList.data)).toBe(1);
+        expect(repeatedRows[0]?.description, JSON.stringify(repeatedRows[0])).toBe(updatedDescription);
+        if (countBefore !== undefined) {
+          expect(getWaybillCount(afterRepeatList.data), JSON.stringify(afterRepeatList.data)).toBe(countBefore);
         }
       } finally {
         const restore = await waybillAPI.updateWaybill(
           request,
-          { waybillId: existingWaybill.id, description: originalDescription, documentsIds: [] },
+          { waybillId: existingWaybill.id, description: originalDescription, documentsIds: originalDocumentIds },
           accessToken,
         );
         expectNoServerError(restore);
 
         const restoredById = await waybillAPI.getWaybillById(request, existingWaybill.id, accessToken);
         expectNoServerError(restoredById);
-        if (!clientErrorCodes.includes(restoredById.status)) {
-          expect(successCodes).toContain(restoredById.status);
-          expect(restoredById.data?.description ?? '', JSON.stringify(restoredById.data)).toBe(originalDescription);
-        }
+        expect(restoredById.status).toBe(200);
+        expect(restoredById.data?.description ?? '', JSON.stringify(restoredById.data)).toBe(originalDescription);
+        expectArrayResponse(restoredById.data?.documents);
+        expect(restoredById.data.documents.map((document: ApiRow) => Number(document.id)).sort((a: number, b: number) => a - b))
+          .toEqual([...originalDocumentIds].sort((a, b) => a - b));
       }
     });
 

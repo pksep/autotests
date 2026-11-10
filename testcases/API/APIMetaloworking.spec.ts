@@ -4,16 +4,17 @@ import { MetaloworkingAPI } from '../../pages/API/APIMetaloworking';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import {
-  captureApiResult,
   clientErrorCodes,
   expectApiContract,
   expectClientError,
-  expectEndpointReached,
+  expectValidationError,
+  expectErrorResponseContract,
   expectNoServerError,
   expectPaginationContract,
   getCount,
   getRows,
   successCodes,
+  expectRowsResponse,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 
@@ -259,7 +260,7 @@ export const runMetaloworkingAPINew = () => {
       if (!clientErrorCodes.includes(response.status)) {
         expect(successCodes).toContain(response.status);
         expect(getCount(response.data), JSON.stringify(response.data)).toBeGreaterThanOrEqual(0);
-        expect(Array.isArray(getRows(response.data)), JSON.stringify(response.data)).toBe(true);
+        expectRowsResponse(response.data);
         firstMetaloworking = getRows(response.data).find((row) => row.id);
       }
     });
@@ -385,8 +386,20 @@ export const runMetaloworkingAPINew = () => {
       const comback = await metaloworkingAPI.comback(request, 999999999, accessToken);
       expectApiContract(comback);
 
-      const shapeBid = await captureApiResult(() => metaloworkingAPI.createShapeBid(request, [], accessToken));
-      expectEndpointReached(shapeBid);
+    });
+
+    test('пустая заявка на заготовки отклоняется валидацией при наличии права создания', async ({ request }) => {
+      const shapeBid = await metaloworkingAPI.createShapeBid(request, [], accessToken);
+      if (shapeBid.status === 403) {
+        expect(shapeBid.data).toMatchObject({ code: 'PERMISSION_DENIED', requirementMode: 'anyOf' });
+        expect(shapeBid.data.requiredPermissions).toEqual([
+          { resource: 'production.metalworking', action: 'create' },
+          { resource: 'warehouse.metalworking-orders', action: 'create' },
+        ]);
+        test.skip(true, 'У тестовой учетной записи нет права создания заявки; проверка валидации не выполнена.');
+      }
+      expectValidationError(shapeBid);
+      expectErrorResponseContract(shapeBid);
     });
   });
 };

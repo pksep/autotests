@@ -6,11 +6,10 @@ import { ProductsAPI } from '../../pages/API/APIProducts';
 import { CompaniesAPI } from '../../pages/API/APICompanies';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import {
-  captureApiResult,
   clientErrorCodes,
   expectNoServerError,
   expectClientError,
-  expectEndpointReached,
+  expectRowsResponse,
   getRows,
   successCodes,
 } from '../../lib/helpers/APIAssertions';
@@ -185,8 +184,8 @@ const expectMaterialDeficitRowShape = (row: ApiRow) => {
 };
 
 const expectMaterialParentsContract = (data: unknown) => {
+  expectRowsResponse(data);
   const rows = getRows<ApiRow>(data);
-  expect(Array.isArray(rows), JSON.stringify(data)).toBe(true);
 
   const provider = rows.find((row) => row.type === 'provider');
   if (provider) {
@@ -200,8 +199,8 @@ const expectMaterialParentsContract = (data: unknown) => {
 };
 
 const expectMaterialShipmentsContract = (data: unknown) => {
+  expectRowsResponse(data);
   const rows = getRows<ApiRow>(data);
-  expect(Array.isArray(rows), JSON.stringify(data)).toBe(true);
 
   for (const row of rows) {
     expect(row.type, JSON.stringify(row)).toBeTruthy();
@@ -254,8 +253,9 @@ const createIsolatedProduct = async (
   request: any,
   suffix: string,
   accessToken?: string,
+  overrides: Record<string, unknown> = {},
 ): Promise<ApiRow & { id: number; designation: string }> => {
-  const payload = productPayload(suffix);
+  const payload = productPayload(suffix, overrides);
   const create = await productsAPI.createProduct(request, payload, accessToken);
   expect(successCodes, JSON.stringify(create.data)).toContain(create.status);
   expectNoServerError(create);
@@ -471,9 +471,35 @@ export const runDeficitsAPINew = () => {
       expectClientError(invalidUpdate);
     });
 
-    test('maintenance-пересчет дефицитов достигает endpoint', async ({ request }) => {
-      const response = await captureApiResult(() => deficitsAPI.updateAllDeficits(request, accessToken));
-      expectEndpointReached(response);
+    test('пересчет дефицитов учитывает минимальный остаток тестового изделия', async ({ request }) => {
+      const product = await createIsolatedProduct(request, uniqueApiSuffix('deficit-recalculate'), accessToken, {
+        characteristic: [
+          { ez: 'шт', name: 'Рекомендуемый остаток', znach: 5 },
+          { ez: 'шт', name: 'Минимальный остаток', znach: 3 },
+        ],
+      });
+      try {
+        const response = await deficitsAPI.updateAllDeficits(request, accessToken);
+        expect(response.status).toBe(200);
+        expect(response.data).toBe(true);
+        // Bull recalculates asynchronously: stock 0 - minimum 3 - orders 0 = deficit -3.
+        await expect.poll(async () => {
+          const current = await productsAPI.getProductById(request, product.id, accessToken);
+          expect(current.status).toBe(201);
+          expect(Number(current.data?.id)).toBe(product.id);
+          return {
+            minimum: current.data?.min_remaining,
+            stock: current.data?.quantity,
+            ordered: current.data?.shipments_kolvo,
+            deficit: current.data?.deficit,
+          };
+        }, { timeout: 45000, intervals: [500, 1000, 2000] }).toEqual({
+          minimum: 3, stock: 0, ordered: 0, deficit: -3,
+        });
+      } finally {
+        const archive = await productsAPI.deleteProduct(request, product.id, accessToken);
+        expect(successCodes).toContain(archive.status);
+      }
     });
 
   });

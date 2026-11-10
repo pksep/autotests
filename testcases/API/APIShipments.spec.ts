@@ -5,11 +5,9 @@ import { CompaniesAPI } from '../../pages/API/APICompanies';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import {
-  captureApiResult,
   clientErrorCodes,
   expectClientError,
   expectApiContract,
-  expectEndpointReached,
   expectErrorResponseContract,
   expectArrayResponse,
   expectMissingResource,
@@ -20,6 +18,7 @@ import {
   getRows,
   serverErrorCodes,
   successCodes,
+  expectRowsResponse,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 import { rollbackShChecksAndWait } from '../../lib/helpers/APIShipmentCleanup';
@@ -57,13 +56,11 @@ const shipmentsPaginationDto = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-const shipmentsListPaginationDto = (overrides: Record<string, unknown> = {}) => ({
-  page: 1,
-  attributes: [],
-  modelsInclude: [],
-  searchString: '',
-  ...overrides,
-});
+const shipmentsListPaginationDto = (overrides: Record<string, unknown> = {}) => {
+  const dto = { page: 1, attributes: [], modelsInclude: [], searchString: '', ...overrides };
+  // ShipmentsListPaginationSchema accepts JSON text and parses it on the server.
+  return { ...dto, modelsInclude: typeof dto.modelsInclude === 'string' ? dto.modelsInclude : JSON.stringify(dto.modelsInclude) };
+};
 
 const shCheckPaginationDto = (overrides: Record<string, unknown> = {}) => ({
   page: 1,
@@ -436,7 +433,7 @@ export const runShipmentsAPINew = () => {
         expect(successCodes).toContain(main.status);
         expectApiContract(main, { shape: 'pagination', schema: paginationOf(shipmentResponseSchema) });
         expect(getCount(main.data), JSON.stringify(main.data)).toBeGreaterThanOrEqual(0);
-        expect(Array.isArray(getRows(main.data)), JSON.stringify(main.data)).toBe(true);
+        expectRowsResponse(main.data);
         firstShipment = getRows(main.data).find((row) => row.id);
       }
 
@@ -446,12 +443,8 @@ export const runShipmentsAPINew = () => {
         shipmentsListPaginationDto(),
         accessToken,
       );
-      expectNoServerError(list);
-      if (!clientErrorCodes.includes(list.status)) {
-        expect(successCodes).toContain(list.status);
-        expectApiContract(list, { shape: 'pagination', schema: paginationOf(shipmentResponseSchema) });
-        expect(getCount(list.data), JSON.stringify(list.data)).toBeGreaterThanOrEqual(0);
-      }
+      expect(list.status).toBe(201);
+      expectApiContract(list, { shape: 'pagination', schema: paginationOf(shipmentResponseSchema) });
 
       const checks = await shipmentsAPI.getShCheckPagination(request, shCheckPaginationDto(), accessToken);
       expectNoServerError(checks);
@@ -615,7 +608,8 @@ export const runShipmentsAPINew = () => {
         }),
         accessToken,
       );
-      expectNoServerError(list);
+      expect(list.status).toBe(201);
+      expectPaginationContract(list.data);
     });
 
     test('пагинации отгрузок поддерживают граничные значения page/pageSize', async ({ request }) => {
@@ -637,38 +631,12 @@ export const runShipmentsAPINew = () => {
         shipmentsListPaginationDto({ page: 999999, pageSize: 5 }),
         accessToken,
       );
-      expectNoServerError(list);
-      if (!clientErrorCodes.includes(list.status)) {
-        expect(successCodes).toContain(list.status);
-        expectPaginationContract(list.data, 5);
-      }
+      expect(list.status).toBe(201);
+      expectPaginationContract(list.data);
+      expect(getRows(list.data)).toEqual([]);
     });
 
-    test('light/full пагинация отгрузок возвращает совместимые контракты', async ({ request }) => {
-      const light = await shipmentsAPI.getShipmentsListPagination(
-        request,
-        true,
-        shipmentsListPaginationDto({ page: 1, pageSize: 1 }),
-        accessToken,
-      );
-      const full = await shipmentsAPI.getShipmentsListPagination(
-        request,
-        false,
-        shipmentsListPaginationDto({ page: 1, pageSize: 1 }),
-        accessToken,
-      );
 
-      expectNoServerError(light);
-      expectNoServerError(full);
-      if (clientErrorCodes.includes(light.status) || clientErrorCodes.includes(full.status)) return;
-
-      expect(successCodes).toContain(light.status);
-      expect(successCodes).toContain(full.status);
-      const lightRow = getRows(light.data)[0];
-      const fullRow = getRows(full.data)[0];
-      if (!lightRow || !fullRow) return;
-      expect(Object.keys(fullRow).length).toBeGreaterThanOrEqual(Object.keys(lightRow).length);
-    });
   });
 
   test.describe.serial('Shipments API: безопасный жизненный цикл тестовой отгрузки', () => {
@@ -735,7 +703,7 @@ export const runShipmentsAPINew = () => {
       expectNoServerError(main);
       expect(successCodes, JSON.stringify(main.data)).toContain(main.status);
       expectApiContract(main, { shape: 'pagination', schema: paginationOf(shipmentResponseSchema) });
-      expect(Array.isArray(getRows(main.data)), JSON.stringify(main.data)).toBe(true);
+      expectRowsResponse(main.data);
       expectNonNegativeQuantities(getRows<ApiRow>(main.data));
 
       const list = await shipmentsAPI.getShipmentsListPagination(
@@ -744,7 +712,48 @@ export const runShipmentsAPINew = () => {
         shipmentsListPaginationDto({ searchString: '', shipmentIds: [createdShipmentId] }),
         accessToken,
       );
-      expectNoServerError(list);
+      expect(list.status).toBe(201);
+      expectPaginationContract(list.data);
+      expect(getRows(list.data).map(row => Number(row.id))).toEqual([createdShipmentId]);
+    });
+
+    test('light/full пагинация сохраняет значения полей созданной отгрузки', async ({ request }) => {
+      expect(createdShipmentId).toBeGreaterThan(0);
+      const dto = shipmentsListPaginationDto({ shipmentIds: [createdShipmentId] });
+      const light = await shipmentsAPI.getShipmentsListPagination(request, true, dto, accessToken);
+      const full = await shipmentsAPI.getShipmentsListPagination(request, false, dto, accessToken);
+      expect(light.status).toBe(201);
+      expect(full.status).toBe(201);
+      expectPaginationContract(light.data);
+      expectPaginationContract(full.data);
+      expect(getCount(light.data)).toBe(1);
+      expect(getCount(full.data)).toBe(1);
+      expect(getRows(light.data)).toHaveLength(1);
+      expect(getRows(full.data)).toHaveLength(1);
+      const lightRow = getRows(light.data)[0];
+      const fullRow = getRows(full.data)[0];
+      for (const field of ['id', 'number_order', 'date_shipments', 'warehouse_readiness_date']) {
+        expect(lightRow, field).toHaveProperty(field);
+        expect(fullRow, field).toHaveProperty(field, lightRow[field]);
+      }
+      expect(lightRow.id).toBe(createdShipmentId);
+      expect(lightRow).not.toHaveProperty('description');
+      expect(fullRow.description).toBe(initialDescription);
+      expect(Number(fullRow.productId)).toBe(Number(activeProduct!.id));
+    });
+
+    test('глобальная актуализация сохраняет изделие и количества тестовой отгрузки', async ({ request }) => {
+      expect(createdShipmentId).toBeGreaterThan(0);
+      const response = await shipmentsAPI.actualAllShipments(request, accessToken);
+      expect(response.status).toBe(200);
+      expect(response.data).toEqual({ raw: 'Пересчет прошел успешно' });
+      const current = await shipmentsAPI.getShipmentById(request, createdShipmentId!, accessToken);
+      expect(current.status).toBe(200);
+      expect(current.data?.id).toBe(createdShipmentId);
+      expect(Number(current.data?.productId)).toBe(Number(activeProduct!.id));
+      expect(current.data?.description).toBe(initialDescription);
+      expect(Number(current.data?.kol)).toBe(1);
+      expect(Number(current.data?.shipped)).toBe(0);
     });
 
     test('обновляет описание тестовой отгрузки', async ({ request }) => {
@@ -773,20 +782,16 @@ export const runShipmentsAPINew = () => {
 
       const listAfterUpdate = await shipmentsAPI.getShipmentsListPagination(
         request,
-        true,
-        shipmentsListPaginationDto({ searchString: updatedDescription, shipmentIds: [createdShipmentId] }),
+        false,
+        shipmentsListPaginationDto({ shipmentIds: [createdShipmentId] }),
         accessToken,
       );
-      expectNoServerError(listAfterUpdate);
-      if (!clientErrorCodes.includes(listAfterUpdate.status)) {
-        expect(successCodes, JSON.stringify(listAfterUpdate.data)).toContain(listAfterUpdate.status);
-        expect(
-          getRows<ApiRow>(listAfterUpdate.data).some(
-            (shipment) => Number(shipment.id) === createdShipmentId && shipment.description === updatedDescription,
-          ),
-          JSON.stringify(listAfterUpdate.data),
-        ).toBe(true);
-      }
+      expect(listAfterUpdate.status).toBe(201);
+      expectPaginationContract(listAfterUpdate.data);
+      expect(getRows<ApiRow>(listAfterUpdate.data)).toHaveLength(1);
+      expect(getRows<ApiRow>(listAfterUpdate.data)[0]).toMatchObject({
+        id: createdShipmentId, description: updatedDescription,
+      });
     });
 
     test('проверяет прикладные ручки на созданной отгрузке', async ({ request }) => {
@@ -986,8 +991,6 @@ export const runShipmentsAPINew = () => {
       const documents = await shipmentsAPI.getShipmentDocuments(request, 999999999, accessToken);
       expectNoServerError(documents);
 
-      const actualAll = await captureApiResult(() => shipmentsAPI.actualAllShipments(request, accessToken));
-      expectEndpointReached(actualAll);
 
       const setWarehouseDate = await shipmentsAPI.setWarehouseReadinessDate(
         request,

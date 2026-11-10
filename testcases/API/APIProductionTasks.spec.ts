@@ -10,12 +10,10 @@ import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import type { ApiResult } from '../../lib/helpers/APIAssertions';
 import {
-  captureApiResult,
   clientErrorCodes,
   expectApiContract,
   expectArrayResponse,
   expectClientError,
-  expectEndpointReached,
   expectErrorResponseContract,
   expectNoServerError,
   expectObjectResponse,
@@ -25,6 +23,7 @@ import {
   getRows,
   serverErrorCodes,
   successCodes,
+  expectRowsResponse,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 import { getProductionRequiredReadyDates } from '../../lib/helpers/ProductionRequiredReadyDates';
@@ -894,8 +893,8 @@ const expectNumericContract = (response: { status: number; data?: any }, min = 0
 };
 
 const getRequiredPageRowCount = (data: unknown, label: string): number => {
+  expectRowsResponse(data);
   const rows = getRows(data);
-  expect(Array.isArray(rows), `${label} should return pagination rows`).toBe(true);
   return rows.length;
 };
 
@@ -906,8 +905,8 @@ const getRequiredCount = (data: unknown, label: string): number => {
 };
 
 const getRequiredUniqueDetalIds = (data: unknown, label: string): number[] => {
+  expectRowsResponse(data);
   const rows = getRows<ApiRow>(data);
-  expect(Array.isArray(rows), `${label} should return pagination rows`).toBe(true);
 
   const detailIds = rows.map((row) => {
     const rawId = row.detalId ?? row.detal_id ?? row.detal?.id ?? row.detail?.id ?? row.entity?.id;
@@ -1245,6 +1244,16 @@ export const runProductionTasksAPINew = () => {
         expectNoServerError(byId);
         expect(Number(byId.data?.id), JSON.stringify(byId.data)).toBe(createdProductionTaskId);
 
+        // Global recalculation must be accepted and preserve the controlled task's operation relations.
+        const recalculate = await productionTasksAPI.updateAllTaskRelative(request, accessToken);
+        expect(recalculate.status).toBe(200);
+        expect(recalculate.data).toBe(true);
+        const afterRecalculate = await waitForCreatedTaskOperations(request, createdProductionTaskId, accessToken);
+        expect(afterRecalculate.status).toBe(200);
+        expect(Number(afterRecalculate.data?.id)).toBe(createdProductionTaskId);
+        expect(getOperationPosIds(afterRecalculate.data).sort((a, b) => a - b))
+          .toEqual(getOperationPosIds(byId.data).sort((a, b) => a - b));
+
         const createdOperationPosId = findOperationPosIdForTask(byId.data);
         expect(createdOperationPosId, JSON.stringify(byId.data)).toBeGreaterThan(0);
 
@@ -1437,7 +1446,7 @@ export const runProductionTasksAPINew = () => {
         expect(successCodes).toContain(list.status);
         expectApiContract(list, { shape: 'pagination', schema: paginationOf(productionTaskResponseSchema) });
         expect(getCount(list.data), JSON.stringify(list.data)).toBeGreaterThanOrEqual(0);
-        expect(Array.isArray(getRows(list.data)), JSON.stringify(list.data)).toBe(true);
+        expectRowsResponse(list.data);
       }
 
       const listWithOperations = await productionTasksAPI.getProductionTaskWithOperationsPaginate(
@@ -1615,26 +1624,34 @@ export const runProductionTasksAPINew = () => {
 
     test('возвращает агрегированные доски пользователей, оборудования и результаты работ', async ({ request }) => {
       for (const subdivision of ['Metaloworking', 'Assemble']) {
-        const byAllUsers = await productionTasksAPI.getProductionTaskByAllUsers(request, subdivision, accessToken);
-        expectNoServerError(byAllUsers);
-        if (!clientErrorCodes.includes(byAllUsers.status)) {
-          expect(successCodes).toContain(byAllUsers.status);
-          expect(Array.isArray(getRows(byAllUsers.data)) || Array.isArray(byAllUsers.data), JSON.stringify(byAllUsers.data)).toBe(true);
-        }
+        const response = await productionTasksAPI.getProductionTaskByAllUsers(request, subdivision, accessToken);
+        expect(response.status).toBe(200);
+        expectArrayResponse(response.data);
       }
 
-      const byAllEquipments = await productionTasksAPI.getProductionTaskByAllEquipments(request, undefined, accessToken);
-      expectNoServerError(byAllEquipments);
-      if (!clientErrorCodes.includes(byAllEquipments.status)) {
-        expect(successCodes).toContain(byAllEquipments.status);
-        expect(Array.isArray(getRows(byAllEquipments.data)) || Array.isArray(byAllEquipments.data), JSON.stringify(byAllEquipments.data)).toBe(true);
+      const equipment = await productionTasksAPI.getProductionTaskByAllEquipments(request, undefined, accessToken);
+      expect(equipment.status).toBe(200);
+      expectObjectResponse(equipment.data);
+      expectArrayResponse(equipment.data.unicalEquipmentsArray);
+      expectArrayResponse(equipment.data.operations);
+      for (const row of equipment.data.unicalEquipmentsArray) {
+        expect(Number(row.equipmentId)).toBeGreaterThan(0);
+        expect(typeof row.name).toBe('string');
+        expectObjectResponse(row.employment);
+        expectArrayResponse(row.currentEmployment);
+      }
+      for (const operation of equipment.data.operations) {
+        expect(Number(operation.id)).toBeGreaterThan(0);
+        expect(typeof operation.name).toBe('string');
       }
 
       const resultWorks = await productionTasksAPI.getResultWorks(request, resultWorksDto(), accessToken);
-      expectNoServerError(resultWorks);
-      if (!clientErrorCodes.includes(resultWorks.status)) {
-        expect(successCodes).toContain(resultWorks.status);
-        expect(resultWorks.data, JSON.stringify(resultWorks.data)).toBeTruthy();
+      expect(resultWorks.status).toBe(201);
+      expectArrayResponse(resultWorks.data);
+      for (const row of resultWorks.data) {
+        expect(Number(row.user?.id)).toBeGreaterThan(0);
+        expect(typeof row.tag).toBe('string');
+        expect(Number(row.entitiesCount)).toBeGreaterThanOrEqual(0);
       }
     });
 
@@ -1816,7 +1833,7 @@ export const runProductionTasksAPINew = () => {
       expectNoServerError(tasksByEntity);
       if (!clientErrorCodes.includes(tasksByEntity.status)) {
         expect(successCodes, JSON.stringify(tasksByEntity.data)).toContain(tasksByEntity.status);
-        expectArrayResponse(getRows(tasksByEntity.data).length ? getRows(tasksByEntity.data) : tasksByEntity.data);
+        expectRowsResponse(tasksByEntity.data);
       }
 
       const relativeDate = await productionTasksAPI.getRelativeDateForEntity(
@@ -2524,8 +2541,6 @@ export const runProductionTasksAPINew = () => {
       );
       expectClientError(invalidTOperations);
 
-      const updateAllTaskRelative = await captureApiResult(() => productionTasksAPI.updateAllTaskRelative(request, accessToken));
-      expectEndpointReached(updateAllTaskRelative);
     });
 
     test('невалидные мутации ПЗ отклоняются без серверных ошибок', async ({ request }) => {

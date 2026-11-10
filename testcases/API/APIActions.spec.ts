@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { ActionsAPI } from '../../pages/API/APIActions';
-import { ApiResult, clientErrorCodes, expectNoServerError, expectClientError, getRows, serverErrorCodes, successCodes } from '../../lib/helpers/APIAssertions';
+import { ApiResult, clientErrorCodes, expectNoServerError, expectClientError, expectRowsResponse, getRows, serverErrorCodes, successCodes } from '../../lib/helpers/APIAssertions';
 import { getAuthToken } from '../../lib/helpers/APITestUtils';
 import logger from '../../lib/utils/logger';
 
@@ -51,7 +51,7 @@ export const runActionsAPINew = () => {
       expectNoServerError(response);
       if (!clientErrorCodes.includes(response.status)) {
         expect(successCodes, JSON.stringify(response.data)).toContain(response.status);
-        expect(Array.isArray(getRows(response.data)), JSON.stringify(response.data)).toBe(true);
+        expectRowsResponse(response.data);
       }
     });
 

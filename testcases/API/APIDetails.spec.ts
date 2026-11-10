@@ -3,11 +3,9 @@ import { DetailsAPI } from '../../pages/API/APIDetails';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import {
-  captureApiResult,
   clientErrorCodes,
   expectApiContract,
   expectClientError,
-  expectEndpointReached,
   expectErrorResponseContract,
   expectArrayResponse,
   expectNoServerError,

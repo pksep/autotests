@@ -2,13 +2,12 @@ import { test, expect } from '@playwright/test';
 import { SettingsAPI } from '../../pages/API/APISettings';
 import logger from '../../lib/utils/logger';
 import {
-  captureApiResult,
   expectApiContract,
   expectArrayResponse,
   expectNoServerError,
   expectClientError,
   expectErrorResponseContract,
-  expectEndpointReached,
+  expectUnauthorizedOrForbidden,
   expectObjectResponse,
 } from '../../lib/helpers/APIAssertions';
 import { getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
@@ -138,9 +137,26 @@ export const runSettingsAPINew = () => {
       }
     });
 
-    test('maintenance endpoint создания новой БД достигается явно', async ({ request }) => {
-      const response = await captureApiResult(() => settingsAPI.newDB(request, accessToken));
-      expectEndpointReached(response);
+    test('создание резервной копии запрещено без авторизации и не меняет список копий', async ({ request, playwright }) => {
+      const before = await settingsAPI.getAllDB(request, accessToken);
+      expect(before.status).toBe(200);
+      expectArrayResponse(before.data);
+
+      // Backup creation can rotate existing files; never run it authenticated on shared dev.
+      const anonymous = await playwright.request.newContext({ storageState: { cookies: [], origins: [] } });
+      try {
+        const response = await settingsAPI.newDB(anonymous);
+        expectUnauthorizedOrForbidden(response);
+        expectErrorResponseContract(response);
+      } finally {
+        await anonymous.dispose();
+      }
+
+      const after = await settingsAPI.getAllDB(request, accessToken);
+      expect(after.status).toBe(200);
+      expectArrayResponse(after.data);
+      const names = (rows: any[]) => rows.map(row => row.name).sort();
+      expect(names(after.data)).toEqual(names(before.data));
     });
   });
 };

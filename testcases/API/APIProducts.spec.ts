@@ -3,11 +3,10 @@ import { ProductsAPI } from '../../pages/API/APIProducts';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import {
-  captureApiResult,
   clientErrorCodes,
   expectApiContract,
   expectClientError,
-  expectEndpointReached,
+  expectValidationError,
   expectErrorResponseContract,
   expectArrayResponse,
   expectNoServerError,
@@ -533,23 +532,26 @@ export const runProductsAPINew = () => {
       }
     });
 
-    test('создание изделия с минимально невалидным payload не приводит к серверной ошибке', async ({ request }) => {
-      const response = await productsAPI.createProduct(
-        request,
-        {
-          name: '',
-          articl: '',
-          responsible: '',
-          description: '',
-          designation: '',
-          docs: [],
-          techProcessID: 'null',
-          fileBase: [],
-        },
-        accessToken,
-      );
-
-      expectNoServerError(response);
+    test('создание изделия без обязательного имени отклоняется и не сохраняет объект', async ({ request }) => {
+      const payload: Record<string, any> = productPayload(uniqueApiSuffix('invalid-product'));
+      delete payload.name; // UpCreateProductDtoZod requires a string name; empty string is allowed by its schema.
+      let unexpectedId: number | undefined;
+      try {
+        const response = await productsAPI.createProduct(request, payload, accessToken);
+        unexpectedId = Number(getQueueData(response.data)?.id) || undefined;
+        const list = await productsAPI.getAllProducts(request, productPaginationDto({ searchString: payload.designation }), accessToken);
+        expect(list.status).toBe(201);
+        expectPaginationContract(list.data);
+        const created = getRows(list.data).find(row => row.designation === payload.designation);
+        unexpectedId ??= created?.id;
+        expectValidationError(response);
+        expect(created, 'Invalid product must not appear in active catalog').toBeUndefined();
+      } finally {
+        if (unexpectedId) {
+          const cleanup = await productsAPI.deleteProduct(request, unexpectedId, accessToken);
+          expect(successCodes).toContain(cleanup.status);
+        }
+      }
     });
 
     test('операции с несуществующим id не приводят к серверным ошибкам', async ({ request }) => {
@@ -561,15 +563,10 @@ export const runProductsAPINew = () => {
       if (successCodes.includes(specifications.status)) expectProductSpecificationsShape(specifications.data);
       if (clientErrorCodes.includes(specifications.status)) expectErrorResponseContract(specifications);
 
-      const operationInclude = await captureApiResult(() => productsAPI.searchProducts(request, { page: 0, pageSize: 1, searchString: '' }, accessToken));
-      expectEndpointReached(operationInclude);
-      if (!(operationInclude instanceof Error)) {
-        expectNoServerError(operationInclude);
-        if (!clientErrorCodes.includes(operationInclude.status)) {
-          expect(successCodes).toContain(operationInclude.status);
-          expect(operationInclude.data, JSON.stringify(operationInclude.data)).toBeTruthy();
-        }
-      }
+      const operationInclude = await productsAPI.searchProducts(request, productPaginationDto({ searchString: 'api-no-match-999999999' }), accessToken);
+      expect(operationInclude.status).toBe(201);
+      expectArrayResponse(operationInclude.data);
+      expect(operationInclude.data).toEqual([]);
 
       const deleteResponse = await productsAPI.deleteProduct(request, 999999999, accessToken);
       expectClientError(deleteResponse);

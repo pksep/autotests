@@ -4,12 +4,11 @@ import { EquipmentAPI } from '../../pages/API/APIEquipment';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import {
-  captureApiResult,
   clientErrorCodes,
   expectApiContract,
   expectNoServerError,
+  expectStatusIn,
   expectClientError,
-  expectEndpointReached,
   expectErrorResponseContract,
   expectPaginationContract,
   expectUnauthorizedOrForbidden,
@@ -441,16 +440,7 @@ export const runDocumentsAPINew = () => {
         expect(String(byId.data.ava_path), JSON.stringify(byId.data)).toContain(String(document.path).split('/').pop() || String(document.path));
       }
 
-      const avatarEndpoint = await documentsAPI.getAvatarByEntity(request, 'equipment', equipmentId as number, accessToken);
-      if (avatarEndpoint.status >= 500) {
-        logger.warn(`Documents avatar endpoint returned ${avatarEndpoint.status}; equipment document relation is already verified by id.`);
-        return;
-      }
-      if (!clientErrorCodes.includes(avatarEndpoint.status)) {
-        expect(successCodes).toContain(avatarEndpoint.status);
-        expect(avatarEndpoint.data?.idEntity, JSON.stringify(avatarEndpoint.data)).toBe(equipmentId);
-        expect(avatarEndpoint.data?.typeEntity, JSON.stringify(avatarEndpoint.data)).toBe('equipment');
-      }
+
     });
 
     test('архивирует прикрепленный документ с unpin=true и снимает связь с оборудованием', async ({ request }) => {
@@ -577,6 +567,15 @@ export const runDocumentsAPINew = () => {
 
     test.beforeAll(async ({ request }) => {
       accessToken = await getAuthToken(request);
+    });
+
+    test('avatar endpoint возвращает id и тип сущности', async ({ request }) => {
+      // The current controller returns route metadata, not an avatar file. Keep this contract
+      // separate from document relations so a broken endpoint cannot skip the serial flow.
+      const response = await documentsAPI.getAvatarByEntity(request, 'equipment', 999999999, accessToken);
+      expectStatusIn(response, [200]);
+      expect(Number(response.data?.idEntity), JSON.stringify(response.data)).toBe(999999999);
+      expect(response.data?.typeEntity, JSON.stringify(response.data)).toBe('equipment');
     });
 
     test('пагинация документов поддерживает пустой поиск и граничные страницы', async ({ request }) => {

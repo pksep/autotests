@@ -10,6 +10,7 @@ import {
   getCount,
   getRows,
   successCodes,
+  expectRowsResponse,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 import { expectRepeatOperationRejectedOrIdempotent } from '../../lib/helpers/APIDataInvariants';
@@ -136,7 +137,7 @@ export const runBuyerAPINew = () => {
       expectNoServerError(light);
       if (!clientErrorCodes.includes(light.status)) {
         expect(successCodes).toContain(light.status);
-        expect(Array.isArray(getRows(light.data)) || Array.isArray(light.data), JSON.stringify(light.data)).toBe(true);
+        expectRowsResponse(light.data);
       }
 
       const include = await buyerAPI.getInclude(request, buyerId as number, { includes: ['documents'] }, accessToken);
