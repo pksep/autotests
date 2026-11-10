@@ -230,6 +230,14 @@ export class ProductionTasksAPI extends APIPageObject {
     });
   }
 
+  /** Per-resource override; 0 is a day off, 960 is the maximum duration. */
+  async setResourceWorkday(request: APIRequestContext, dto: unknown, accessToken?: string) {
+    return this.apiRequest(request, 'POST', this.base() + '/resource-workday', {
+      data: dto,
+      accessToken: this.token(accessToken),
+    });
+  }
+
   async getTOperationList(request: APIRequestContext, query: Record<string, unknown>, accessToken?: string) {
     const qs = new URLSearchParams(query as any).toString();
     return this.apiRequest(request, 'GET', this.base() + '/toperations-list' + (qs ? `?${qs}` : ''), {

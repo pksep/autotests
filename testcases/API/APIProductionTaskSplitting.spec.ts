@@ -526,7 +526,7 @@ export const runProductionTaskSplittingAPI = () => {
         expect(snapshot(await read(request))).toEqual(before);
       });
 
-      test('сохраняет выполненное количество при разделении и удалении доли и запрещает его перенос', async ({ request }) => {
+      test('распределяет выполненное количество по началу работ и сохраняет при удалении доли', async ({ request }) => {
         const mark = await marks.createMark(request, {
           oper_id: operationId, user_id: userIds[0], kol: 2, brak: false,
           description: name, date_build: new Date().toISOString(), production_task_id: currentTaskId,
@@ -542,11 +542,40 @@ export const runProductionTaskSplittingAPI = () => {
         const before = snapshot(marked!);
         rejected(await tasks.splitOperationPosition(request, operation(currentTask).id, resource(1, 9), token), 409);
         expect(snapshot(await read(request))).toEqual(before);
-        const saved = await splitOperation(request, resource(1, 3));
-        const shares = activeAssignments(saved);
-        expect(shares.map(a => Number(a.quantity))).toEqual([7, 3]);
-        expect(shares.map(a => Number(a.count_created))).toEqual([2, 0]);
-        expect(Number(operation(saved).count_created)).toBe(2);
+        await splitOperation(request, resource(1, 3));
+        let shares: Row[] = [];
+        try {
+          // A changed work start queues mark redistribution after commit.
+          // Poll reads only; never repeat the split or create another mark.
+          await expect(async () => {
+            const saved = await read(request);
+            shares = activeAssignments(saved);
+            expect(shares.map(a => Number(a.quantity))).toEqual([7, 3]);
+            for (const share of shares) {
+              if (share.start_time != null) {
+                expect(Number.isFinite(Date.parse(share.start_time)),
+                  `Доля ${share.id} должна иметь корректную дату начала работ`).toBe(true);
+              }
+            }
+            const byWorkStart = [...shares].sort((a, b) => {
+              const aStart = a.start_time == null ? Infinity : Date.parse(a.start_time);
+              const bStart = b.start_time == null ? Infinity : Date.parse(b.start_time);
+              return aStart - bStart || Number(a.priority) - Number(b.priority) || Number(a.id) - Number(b.id);
+            });
+            expect(byWorkStart.map(a => Number(a.count_created)),
+              'Выполненные 2 шт. относятся к доле с более ранним началом; при равных датах — по порядку добавления',
+            ).toEqual([2, 0]);
+            expect(Number(operation(saved).count_created)).toBe(2);
+          }).toPass({ timeout: 10000, intervals: [500] });
+        } finally {
+          await test.info().attach('assignment-work-start-order', {
+            body: Buffer.from(JSON.stringify(shares.map(a => ({
+              id: a.id, priority: a.priority, start_time: a.start_time,
+              quantity: a.quantity, count_created: a.count_created,
+            })), null, 2)),
+            contentType: 'application/json',
+          });
+        }
         const merged = await splitOperation(request, { removeAssignmentIds: [shares[1].id] });
         expect(activeAssignments(merged).map(a => Number(a.quantity))).toEqual([10]);
         expect(activeAssignments(merged).map(a => Number(a.count_created))).toEqual([2]);
