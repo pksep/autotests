@@ -5,6 +5,7 @@ import { EquipmentAPI } from '../../pages/API/APIEquipment';
 import { MetaloworkingAPI } from '../../pages/API/APIMetaloworking';
 import { ProductionTasksAPI } from '../../pages/API/APIProductionTasks';
 import { UsersAPI } from '../../pages/API/APIUsers';
+import { OperationAPI } from '../../pages/API/APIOperation';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import type { ApiResult } from '../../lib/helpers/APIAssertions';
@@ -27,6 +28,7 @@ import {
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 import { getProductionRequiredReadyDates } from '../../lib/helpers/ProductionRequiredReadyDates';
+import { selectLifecycleEquipment } from '../../lib/helpers/ProductionLifecycleEquipment';
 import { expectArchivedOnlyInArchiveSelection, expectRepeatOperationRejectedOrIdempotent } from '../../lib/helpers/APIDataInvariants';
 import {
   paginationOf,
@@ -45,6 +47,7 @@ type LifecycleSource = {
   quantity: number;
   availableQuantity: number;
   equipmentId?: number;
+  operationEquipmentIds?: number[];
   operations: ApiRow[];
 };
 
@@ -52,6 +55,7 @@ const productionTasksAPI = new ProductionTasksAPI(null);
 const equipmentAPI = new EquipmentAPI(null);
 const metaloworkingAPI = new MetaloworkingAPI(null);
 const usersAPI = new UsersAPI(null as any);
+const operationAPI = new OperationAPI(null);
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -961,36 +965,68 @@ const findLifecycleSource = async (
   accessToken?: string,
 ): Promise<LifecycleSource | undefined> => {
   const types = preferredTypeWork ? [preferredTypeWork] : (['ass', 'metall'] as const);
+  const equipmentByType = new Map<number, number[]>();
 
   for (const typeWork of types) {
-    const plan = await productionTasksAPI.getPlanForProductionTask(
-      request,
-      planDto({ workingType: typeWork, pageSize: 20 }),
-      accessToken,
-    );
-    expectNoServerError(plan);
+    let scannedRows = 0;
+    for (let page = 0; ; page++) {
+      const plan = await productionTasksAPI.getPlanForProductionTask(
+        request,
+        planDto({ workingType: typeWork, page }),
+        accessToken,
+      );
+      expectNoServerError(plan);
 
-    const row = getRows<ApiRow>(plan.data).find((item) => {
-      const available = Number(item.maxAvailable ?? item.myQuantity ?? 0);
-      return item.id && available >= 1 && item.entity?.techProcesses?.operations?.some((operation: ApiRow) => !operation.ban && operation.id);
-    });
-    if (!row) continue;
+      expect(successCodes, JSON.stringify(plan.data)).toContain(plan.status);
+      const rows = getRows<ApiRow>(plan.data);
+      if (!rows.length) break;
+      scannedRows += rows.length;
 
-    const operations = (row.entity.techProcesses.operations as ApiRow[])
-      .filter((operation) => !operation.ban).sort((left, right) => Number(left.idx) - Number(right.idx));
-    const operationId = Number(operations[0].id);
+      for (const row of rows) {
+        const available = Number(row.maxAvailable ?? row.myQuantity ?? 0);
+        if (!row.id || available < 1 || !row.entity?.techProcesses?.operations?.some((operation: ApiRow) => !operation.ban && operation.id)) continue;
 
-    const availableQuantity = Number(row.myQuantity || row.maxAvailable || 1);
+        const operations = (row.entity.techProcesses.operations as ApiRow[])
+          .filter((operation) => !operation.ban).sort((left, right) => Number(left.idx) - Number(right.idx));
+        const operationId = Number(operations[0].id);
+        let operationEquipmentIds: number[] | undefined;
+        if (typeWork === 'metall') {
+          // The plan only includes users; load the eligible machines from each operation type.
+          const candidates: number[][] = [];
+          for (const operation of operations) {
+            const typeId = Number(operation.typeOperation?.id);
+            if (!equipmentByType.has(typeId)) {
+              const type = await operationAPI.getTypeOperationById(request, {
+                id: typeId, modelInclude: ['equipment'],
+              }, accessToken);
+              expectNoServerError(type);
+              expect(successCodes, JSON.stringify(type.data)).toContain(type.status);
+              equipmentByType.set(typeId, getRows<ApiRow>(type.data?.equipments)
+                .filter(equipment => !equipment.ban).map(equipment => Number(equipment.id)));
+            }
+            candidates.push(equipmentByType.get(typeId)!);
+          }
+          operationEquipmentIds = selectLifecycleEquipment(candidates);
+          if (!operationEquipmentIds) continue;
+        }
 
-    return {
-      typeWork,
-      entityId: Number(row.id),
-      operationId,
-      quantity: 1,
-      availableQuantity: Math.max(1, Math.floor(availableQuantity)),
-      equipmentId: findNumberByKeys(row, ['equipment_id', 'equipmentId']),
-      operations: JSON.parse(JSON.stringify(operations)),
-    };
+        const availableQuantity = Number(row.myQuantity || row.maxAvailable || 1);
+
+        return {
+          typeWork,
+          entityId: Number(row.id),
+          operationId,
+          quantity: 1,
+          availableQuantity: Math.max(1, Math.floor(availableQuantity)),
+          equipmentId: operationEquipmentIds?.[0] ?? findNumberByKeys(row, ['equipment_id', 'equipmentId']),
+          operationEquipmentIds,
+          operations: JSON.parse(JSON.stringify(operations)),
+        };
+      }
+
+      const count = getCount(plan.data);
+      if (count !== undefined && scannedRows >= count) break;
+    }
   }
 
   return undefined;
@@ -1022,14 +1058,21 @@ const createProductionTaskPayload = (
   ],
 });
 
-const lifecycleOperationAssignments = (source: LifecycleSource, employeeId: number) =>
-  source.operations.map((operation) => ({
+const lifecycleOperationAssignments = (source: LifecycleSource, employeeId: number) => {
+  if (source.typeWork === 'metall') {
+    const equipmentIds = source.operationEquipmentIds ?? [];
+    expect(equipmentIds.length, 'Each metal operation must have its own selected machine').toBe(source.operations.length);
+    expect(equipmentIds.every(id => Number.isInteger(id) && id > 0), 'Selected machine IDs must be valid').toBe(true);
+    expect(new Set(equipmentIds).size, 'A machine cannot repeat within a production position').toBe(equipmentIds.length);
+  }
+  return source.operations.map((operation, index) => ({
     operationId: Number(operation.id),
     employeeId: Number(operation.typeOperation?.users?.[0]?.id || employeeId),
     equipmentId: source.typeWork === 'metall'
-      ? Number(operation.typeOperation?.equipments?.[0]?.id || source.equipmentId) || null
+      ? source.operationEquipmentIds?.[index] ?? null
       : null,
   }));
+};
 
 const productionOperationPosPayload = (
   source: LifecycleSource,
