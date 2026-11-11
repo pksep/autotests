@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<fb version="0.19.6" size="403835">
+<fb version="0.19.6" size="403834">
   <f>
     <added t="I">8</added>
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">92.098910832</seconds>
+    <seconds t="F">78.341286343</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-11-11T16:36:54Z</when>
+    <when t="T">2026-11-11T23:04:09Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -27209,18 +27209,6 @@
     <when t="T">2026-11-09T12:06:42Z</when>
   </f>
   <f>
-    <_id t="I">2171</_id>
-    <_job t="I">107142</_job>
-    <_time t="T">2026-11-09T12:08:31Z</_time>
-    <_version t="S">0.19.16/0.61.1/0.17.11!0.17.23</_version>
-    <analyzers t="I">18</analyzers>
-    <text t="S">The average number of builds per week (137.0) is decreasing (R=-0.45).
-The average number of commits per week (0.0) is decreasing (R=-0.61).
-The average number of releases per month (0.0) is staying still.</text>
-    <what t="S">assessment</what>
-    <when t="T">2026-11-09T12:08:31Z</when>
-  </f>
-  <f>
     <_id t="I">2173</_id>
     <_job t="I">42820185339</_job>
     <_time t="T">2026-11-10T12:59:07Z</_time>
@@ -27251,19 +27239,6 @@ The average number of releases per month (0.0) is staying still.</text>
     <when t="T">2026-11-10T13:01:06Z</when>
   </f>
   <f>
-    <_id t="I">2175</_id>
-    <_job t="I">43059616701</_job>
-    <_time t="T">2026-11-11T16:35:25Z</_time>
-    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
-    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
-    <events_were_scanned t="I">26829093620</events_were_scanned>
-    <latest_issue_was_found t="I">529</latest_issue_was_found>
-    <min_pull_was_found t="I">529</min_pull_was_found>
-    <repository t="I">935866864</repository>
-    <what t="S">iterate</what>
-    <where t="S">github</where>
-  </f>
-  <f>
     <_id t="I">2176</_id>
     <_job t="I">43059616701</_job>
     <_time t="T">2026-11-11T16:35:28Z</_time>
@@ -27280,5 +27255,30 @@ The average number of releases per month (0.0) is staying still.</text>
     <total_stars t="I">1</total_stars>
     <what t="S">dimensions-of-terrain</what>
     <when t="T">2026-11-11T16:35:28Z</when>
+  </f>
+  <f>
+    <_id t="I">2177</_id>
+    <_job t="I">108043</_job>
+    <_time t="T">2026-11-11T16:37:16Z</_time>
+    <_version t="S">0.19.16/0.61.1/0.17.11!0.17.23</_version>
+    <analyzers t="I">18</analyzers>
+    <text t="S">The average number of builds per week (137.0) is decreasing (R=-0.45).
+The average number of commits per week (0.0) is decreasing (R=-0.61).
+The average number of releases per month (0.0) is staying still.</text>
+    <what t="S">assessment</what>
+    <when t="T">2026-11-11T16:37:16Z</when>
+  </f>
+  <f>
+    <_id t="I">2178</_id>
+    <_job t="I">43116579522</_job>
+    <_time t="T">2026-11-11T23:02:53Z</_time>
+    <_version t="S">0.19.6/0.60.0/0.17.11</_version>
+    <earliest_issue_was_found t="I">1</earliest_issue_was_found>
+    <events_were_scanned t="I">26877187772</events_were_scanned>
+    <latest_issue_was_found t="I">529</latest_issue_was_found>
+    <min_pull_was_found t="I">529</min_pull_was_found>
+    <repository t="I">935866864</repository>
+    <what t="S">iterate</what>
+    <where t="S">github</where>
   </f>
 </fb>
