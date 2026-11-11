@@ -47,10 +47,39 @@ run-autotests-now:
   allow_failure: true
   script:
     - |
-      set -e
+      set -eu
       JOB_NAME="autotests-manual-${CI_PIPELINE_ID}"
       kubectl create job "$JOB_NAME" --from=cronjob/autotests-nightly -n "$ENVIRONMENT"
-      kubectl wait --for=condition=complete --timeout=2h job/"$JOB_NAME" -n "$ENVIRONMENT"
+      # Leave time for cleanup before the runner's one-hour job timeout.
+      DEADLINE=$(( $(date +%s) + 3300 ))
+      NEXT_PROGRESS=0
+      while :; do
+        CONDITIONS=$(kubectl get job "$JOB_NAME" -n "$ENVIRONMENT" --request-timeout=20s \
+          -o jsonpath='{range .status.conditions[?(@.status=="True")]}{.type}{" "}{end}')
+        case " $CONDITIONS " in
+          *" Failed "*)
+            echo "ERROR: $ENVIRONMENT/$JOB_NAME failed; tests or report delivery returned an error."
+            kubectl get pods -n "$ENVIRONMENT" -l "job-name=$JOB_NAME" \
+              --request-timeout=20s \
+              -o 'custom-columns=NAME:.metadata.name,PHASE:.status.phase,EXIT_CODE:.status.containerStatuses[*].state.terminated.exitCode' || true
+            exit 1
+            ;;
+          *" Complete "*)
+            echo "Autotests completed successfully: $ENVIRONMENT/$JOB_NAME"
+            exit 0
+            ;;
+        esac
+        NOW=$(date +%s)
+        if [ "$NOW" -ge "$DEADLINE" ]; then
+          echo "ERROR: timed out waiting for $ENVIRONMENT/$JOB_NAME; the Kubernetes Job was not deleted."
+          exit 1
+        fi
+        if [ "$NOW" -ge "$NEXT_PROGRESS" ]; then
+          echo "Waiting for autotests: $ENVIRONMENT/$JOB_NAME (Complete or Failed)"
+          NEXT_PROGRESS=$(( NOW + 30 ))
+        fi
+        sleep 5
+      done
 
 backup-prod:
   rules:
