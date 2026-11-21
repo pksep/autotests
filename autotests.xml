@@ -5,10 +5,10 @@
     <cycles t="I">1</cycles>
     <deleted t="I">8</deleted>
     <inserted t="I">8</inserted>
-    <seconds t="F">20.396594614</seconds>
+    <seconds t="F">73.610958342</seconds>
     <version t="S">0.60.0</version>
     <what t="S">judges-summary</what>
-    <when t="T">2026-11-21T00:57:52Z</when>
+    <when t="T">2026-11-21T08:46:44Z</when>
   </f>
   <f>
     <_id t="I">1</_id>
@@ -27369,18 +27369,6 @@
     <when t="T">2026-11-18T13:29:11Z</when>
   </f>
   <f>
-    <_id t="I">2197</_id>
-    <_job t="I">110060</_job>
-    <_time t="T">2026-11-18T13:31:02Z</_time>
-    <_version t="S">0.19.16/0.61.1/0.17.11!0.17.23</_version>
-    <analyzers t="I">18</analyzers>
-    <text t="S">The average number of builds per week (137.0) is decreasing (R=-0.45).
-The average number of commits per week (0.0) is decreasing (R=-0.61).
-The average number of releases per month (0.0) is staying still.</text>
-    <what t="S">assessment</what>
-    <when t="T">2026-11-18T13:31:02Z</when>
-  </f>
-  <f>
     <_id t="I">2199</_id>
     <_job t="I">44613871719</_job>
     <_time t="T">2026-11-19T20:58:30Z</_time>
@@ -27440,5 +27428,17 @@ The average number of releases per month (0.0) is staying still.</text>
     <total_stars t="I">1</total_stars>
     <what t="S">dimensions-of-terrain</what>
     <when t="T">2026-11-21T00:57:36Z</when>
+  </f>
+  <f>
+    <_id t="I">2203</_id>
+    <_job t="I">110471</_job>
+    <_time t="T">2026-11-21T00:58:14Z</_time>
+    <_version t="S">0.19.16/0.61.1/0.17.11!0.17.23</_version>
+    <analyzers t="I">18</analyzers>
+    <text t="S">The average number of builds per week (137.0) is decreasing (R=-0.45).
+The average number of commits per week (0.0) is decreasing (R=-0.61).
+The average number of releases per month (0.0) is staying still.</text>
+    <what t="S">assessment</what>
+    <when t="T">2026-11-21T00:58:14Z</when>
   </f>
 </fb>
