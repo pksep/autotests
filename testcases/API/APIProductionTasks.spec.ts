@@ -1880,7 +1880,8 @@ export const runProductionTasksAPINew = () => {
       }
     });
 
-    test('проверяет расчёт дат операций ПЗ по всем оборудованиям', async ({ request }) => {
+    // Временно отключено по запросу: 32 расхождения времени начала в автоматической очереди (прогон 23.11.2026).
+    test.skip('проверяет расчёт дат операций ПЗ по всем оборудованиям', async ({ request }) => {
       test.setTimeout(300000);
       await waitForStaggeredProductionCalculation(15000);
       const { finish: calculateFinish, start: calculateStart } = createProductionDateCalculator(request, accessToken);

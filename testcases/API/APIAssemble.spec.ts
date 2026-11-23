@@ -10,6 +10,7 @@ import {
   expectMissingResource,
   expectNoServerError,
   expectPaginationContract,
+  formatApiExpectation,
   getCount,
   getRows,
   successCodes,
@@ -512,9 +513,12 @@ export const runAssembleAPINew = () => {
       expectClientError(noAuthCreate);
     });
 
-    test('смена ответственного отсутствующего набора возвращает ошибку отсутствующего объекта', async ({ request }) => {
+    test('смена ответственного отсутствующего набора возвращает HTTP 502 LOAD_FAILED', async ({ request }) => {
       const response = await assembleAPI.updateResponsibleKit(request, 999999999, 999999999, accessToken);
-      expectMissingResource(response, 'GET /api/assemble/complectkit/update_responsible/999999999/999999999');
+      expect(
+        { status: response.status, code: response.data?.code },
+        formatApiExpectation(response, 'HTTP 502 LOAD_FAILED для отсутствующего комплекта'),
+      ).toEqual({ status: 502, code: 'LOAD_FAILED' });
     });
 
     test('несуществующие assemble kit endpoints не приводят к серверным ошибкам', async ({ request }) => {

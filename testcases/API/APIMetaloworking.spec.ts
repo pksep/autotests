@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { DetailsAPI } from '../../pages/API/APIDetails';
 import { MetaloworkingAPI } from '../../pages/API/APIMetaloworking';
+import { OperationAPI } from '../../pages/API/APIOperation';
 import { API_CONST } from '../../lib/Constants/APIConstants';
 import logger from '../../lib/utils/logger';
 import {
@@ -27,6 +28,7 @@ type ApiRow = Record<string, any>;
 
 const detailsAPI = new DetailsAPI(null);
 const metaloworkingAPI = new MetaloworkingAPI(null);
+const operationAPI = new OperationAPI(null);
 const testUserId = API_CONST.API_TEST_TABEL;
 
 const getQueueData = (data: any): any => {
@@ -59,15 +61,14 @@ const metaloworkingPaginationDto = (overrides: Record<string, unknown> = {}) => 
   ...overrides,
 });
 
-const metaloworkingOperationPaginationDto = (overrides: Record<string, unknown> = {}) => ({
+const metaloworkingOperationPaginationDto = (operationId: number, overrides: Record<string, unknown> = {}) => ({
   page: 0,
-  operationId: null,
   searchString: '',
-  status: 'all',
+  status: 'Все',
   byParents: byParents(),
-  byOrder: byOrder(),
   sort: [],
   ...overrides,
+  operationId,
 });
 
 const metaloworkingComingDto = (overrides: Record<string, unknown> = {}) => ({
@@ -265,50 +266,59 @@ export const runMetaloworkingAPINew = () => {
       }
     });
 
-    test('возвращает приход и операции металлообработки без серверных ошибок', async ({ request }) => {
+    const existingMetalOperationId = async (request: Parameters<typeof operationAPI.getTypeOperations>[0]) => {
+      const types = await operationAPI.getTypeOperations(request, true, accessToken);
+      expectApiContract(types, { shape: 'array' });
+      const type = getRows<ApiRow>(types.data).find(row => row.metaloworking === true && row.ban !== true && Number(row.id) > 0);
+      expect(type, 'Для проверки списка нужен действующий тип операции металлообработки').toBeTruthy();
+      return Number(type!.id);
+    };
+
+    test('возвращает страницы прихода, операций и комплектации металлообработки', async ({ request }) => {
+      const operationId = await existingMetalOperationId(request);
       const coming = await metaloworkingAPI.getComingPagination(request, metaloworkingComingDto(), accessToken);
       expectApiContract(coming, { shape: 'pagination' });
 
       const operations = await metaloworkingAPI.getOperationPagination(
         request,
-        metaloworkingOperationPaginationDto(),
+        metaloworkingOperationPaginationDto(operationId),
         accessToken,
       );
       expectApiContract(operations, { shape: 'pagination' });
 
       const complectation = await metaloworkingAPI.getComplectationOperationPagination(
         request,
-        metaloworkingOperationPaginationDto(),
+        metaloworkingOperationPaginationDto(operationId),
         accessToken,
       );
       expectApiContract(complectation, { shape: 'pagination' });
     });
 
-    test('пагинации металлообработки поддерживают граничные значения page/pageSize', async ({ request }) => {
+    test('пагинации металлообработки возвращают пустую далёкую страницу', async ({ request }) => {
+      const operationId = await existingMetalOperationId(request);
       const main = await metaloworkingAPI.getPagination(
         request,
-        metaloworkingPaginationDto({ page: 0, pageSize: 1 }),
+        metaloworkingPaginationDto({ page: 999999 }),
         accessToken,
       );
       expectNoServerError(main);
-      if (!clientErrorCodes.includes(main.status)) {
-        expect(successCodes).toContain(main.status);
-        expectPaginationContract(main.data, 1);
-      }
+      expect(successCodes).toContain(main.status);
+      expectPaginationContract(main.data);
+      expect(getRows(main.data)).toEqual([]);
 
       const operations = await metaloworkingAPI.getOperationPagination(
         request,
-        metaloworkingOperationPaginationDto({ page: 999999, pageSize: 5 }),
+        metaloworkingOperationPaginationDto(operationId, { page: 999999 }),
         accessToken,
       );
       expectNoServerError(operations);
-      if (!clientErrorCodes.includes(operations.status)) {
-        expect(successCodes).toContain(operations.status);
-        expectPaginationContract(operations.data, 5);
-      }
+      expect(successCodes).toContain(operations.status);
+      expectPaginationContract(operations.data);
+      expect(getRows(operations.data)).toEqual([]);
     });
 
-    test('пагинации прихода и операций поддерживают пустой поиск', async ({ request }) => {
+    test('пагинации прихода и операций возвращают count=0 при поиске без совпадений', async ({ request }) => {
+      const operationId = await existingMetalOperationId(request);
       const noMatch = 'api-metaloworking-no-match-999999999';
       const coming = await metaloworkingAPI.getComingPagination(
         request,
@@ -316,24 +326,22 @@ export const runMetaloworkingAPINew = () => {
         accessToken,
       );
       expectNoServerError(coming);
-      if (!clientErrorCodes.includes(coming.status)) {
-        expect(successCodes).toContain(coming.status);
-        expectPaginationContract(coming.data);
-      }
+      expect(successCodes).toContain(coming.status);
+      expectPaginationContract(coming.data);
+      expect(getCount(coming.data)).toBe(0);
+      expect(getRows(coming.data)).toEqual([]);
 
       const operations = await metaloworkingAPI.getOperationPagination(
         request,
-        metaloworkingOperationPaginationDto({ searchString: noMatch }),
+        metaloworkingOperationPaginationDto(operationId, { searchString: noMatch }),
         accessToken,
       );
       expectNoServerError(operations);
-      if (!clientErrorCodes.includes(operations.status)) {
-        expect(successCodes).toContain(operations.status);
-        expectPaginationContract(operations.data);
-      }
+      expect(successCodes).toContain(operations.status);
+      expectPaginationContract(operations.data);
+      expect(getCount(operations.data)).toBe(0);
+      expect(getRows(operations.data)).toEqual([]);
     });
-
-
   });
 
   test.describe('Metaloworking API: defensive-сценарии', () => {

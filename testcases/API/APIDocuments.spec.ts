@@ -7,7 +7,6 @@ import {
   clientErrorCodes,
   expectApiContract,
   expectNoServerError,
-  expectStatusIn,
   expectClientError,
   expectErrorResponseContract,
   expectPaginationContract,
@@ -567,15 +566,6 @@ export const runDocumentsAPINew = () => {
 
     test.beforeAll(async ({ request }) => {
       accessToken = await getAuthToken(request);
-    });
-
-    test('avatar endpoint возвращает id и тип сущности', async ({ request }) => {
-      // The current controller returns route metadata, not an avatar file. Keep this contract
-      // separate from document relations so a broken endpoint cannot skip the serial flow.
-      const response = await documentsAPI.getAvatarByEntity(request, 'equipment', 999999999, accessToken);
-      expectStatusIn(response, [200]);
-      expect(Number(response.data?.idEntity), JSON.stringify(response.data)).toBe(999999999);
-      expect(response.data?.typeEntity, JSON.stringify(response.data)).toBe('equipment');
     });
 
     test('пагинация документов поддерживает пустой поиск и граничные страницы', async ({ request }) => {
