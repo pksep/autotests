@@ -48,8 +48,16 @@ import { runWarehouseAPINew } from './testcases/API/APIWarehouse.spec';
 import { runWaybillAPINew } from './testcases/API/APIWaybill.spec';
 import { runWaybillProviderFlowAPI } from './testcases/API/APIWaybillProviderFlow.spec';
 import { runHealthChecksAPINew } from './testcases/API/APIHealthChecks.spec';
+import { runPercentagesAPI } from './testcases/API/APIPercentages.spec';
 
 const apiSuitesByModule = {
+  percentages_api: {
+    description: 'Проценты страниц и модальных окон: операции, комплектация, ПЗ и отгрузка.',
+    tests: [{
+      test: runPercentagesAPI,
+      description: 'Проверяет формулы по отметкам и свободным остаткам, контекст ПЗ и необходимое количество без изменения данных.',
+    }],
+  },
   auth_api: {
     description: 'Набор тестов Auth API для проверки эндпоинтов аутентификации.',
     tests: [
@@ -741,6 +749,7 @@ function collectApiTests(keys: readonly ApiSuiteKey[]) {
 const allApiSuiteKeys = Object.keys(apiSuitesByModule).filter((key) => key !== 'all_api_tests') as ApiSuiteKey[];
 
 const apiFunctionalSuiteKeys = [
+  'percentages_api',
   'assemble_api',
   'cbed_api',
   'comments_api',
@@ -773,6 +782,7 @@ const apiFunctionalSuiteKeys = [
 ] as const satisfies readonly ApiSuiteKey[];
 
 const apiContractSuiteKeys = [
+  'percentages_api',
   'actions_api',
   'actions_chain_api',
   'assemble_api',
@@ -813,6 +823,7 @@ const apiContractSuiteKeys = [
 ] as const satisfies readonly ApiSuiteKey[];
 
 const apiNegativeSuiteKeys = [
+  'percentages_api',
   'actions_chain_api',
   'assemble_api',
   'cbed_api',
@@ -870,6 +881,7 @@ const apiSmokeSuiteKeys = [
 ] as const satisfies readonly ApiSuiteKey[];
 
 const apiSerialHeavySuiteKeys = [
+  'percentages_api',
   'assemble_api',
   'maintenance_api',
   'metaloworking_api',

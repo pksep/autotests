@@ -4,6 +4,8 @@ import { runProductionWorkCalendarAPI } from './APIProductionWorkCalendar.spec';
 import { EquipmentAPI } from '../../pages/API/APIEquipment';
 import { MetaloworkingAPI } from '../../pages/API/APIMetaloworking';
 import { ProductionTasksAPI } from '../../pages/API/APIProductionTasks';
+import { RecalculationQueueAPI } from '../../pages/API/APIRecalculationQueue';
+import { recalculationWatermark, waitForNewGlobalRecalculation } from '../../lib/helpers/ProductionRecalculation';
 import { UsersAPI } from '../../pages/API/APIUsers';
 import { OperationAPI } from '../../pages/API/APIOperation';
 import { API_CONST } from '../../lib/Constants/APIConstants';
@@ -24,6 +26,7 @@ import {
   serverErrorCodes,
   successCodes,
   expectRowsResponse,
+  expectStatusIn,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 import { getProductionRequiredReadyDates } from '../../lib/helpers/ProductionRequiredReadyDates';
@@ -1244,16 +1247,6 @@ export const runProductionTasksAPINew = () => {
         expectNoServerError(byId);
         expect(Number(byId.data?.id), JSON.stringify(byId.data)).toBe(createdProductionTaskId);
 
-        // Global recalculation must be accepted and preserve the controlled task's operation relations.
-        const recalculate = await productionTasksAPI.updateAllTaskRelative(request, accessToken);
-        expect(recalculate.status).toBe(200);
-        expect(recalculate.data).toBe(true);
-        const afterRecalculate = await waitForCreatedTaskOperations(request, createdProductionTaskId, accessToken);
-        expect(afterRecalculate.status).toBe(200);
-        expect(Number(afterRecalculate.data?.id)).toBe(createdProductionTaskId);
-        expect(getOperationPosIds(afterRecalculate.data).sort((a, b) => a - b))
-          .toEqual(getOperationPosIds(byId.data).sort((a, b) => a - b));
-
         const createdOperationPosId = findOperationPosIdForTask(byId.data);
         expect(createdOperationPosId, JSON.stringify(byId.data)).toBeGreaterThan(0);
 
@@ -1433,6 +1426,59 @@ export const runProductionTasksAPINew = () => {
 
     test('создает, обновляет и архивирует тестовое ПЗ металлообработки на контролируемых данных', async ({ request }) => {
       await runLifecycleScenario(request, 'metall');
+    });
+
+    // Глобальный пересчёт исключён из API-регрессии.
+    test.skip('глобальный пересчёт успешно завершается и сохраняет состав тестового ПЗ', async ({ request }) => {
+      test.setTimeout(120000);
+      const queue = new RecalculationQueueAPI(null);
+      const source = await findLifecycleSource(request, 'ass', accessToken);
+      expect(source, 'Нужна строка плана сборки с операциями для собственного ПЗ').toBeTruthy();
+      let taskId: number | undefined;
+      try {
+        const created = await productionTasksAPI.createProductionTask(request,
+          createProductionTaskPayload(source!, firstUserId as number, uniqueApiSuffix('pt-recalc')), accessToken);
+        taskId = Number(getQueueData(created.data)?.id);
+        expectStatusIn(created, successCodes);
+        expect(taskId).toBeGreaterThan(0);
+        const before = await waitForCreatedTaskOperations(request, taskId, accessToken);
+        expectStatusIn(before, [200]);
+        for (const pos of before.data.production_operation_pos) {
+          expect(Number(pos.id)).toBeGreaterThan(0);
+          expect(Number(pos.quantity)).toBeGreaterThan(0);
+          expect(pos.operation_positions.length).toBeGreaterThan(0);
+          for (const op of pos.operation_positions) {
+            expect(Number(op.id)).toBeGreaterThan(0);
+            expect(Number(op.operation_id)).toBeGreaterThan(0);
+          }
+        }
+        const watermark = recalculationWatermark(await queue.list(request, accessToken));
+        const accepted = await productionTasksAPI.updateAllTaskRelative(request, accessToken);
+        expectStatusIn(accepted, [200]);
+        expect(accepted.data).toBe(true);
+        // The endpoint does not return jobId. A new successful GLOBAL job covers
+        // this already-created task, even if another caller enqueued that job.
+        // Do not claim exact request correlation or wait for unrelated queues.
+        const completed = await waitForNewGlobalRecalculation({ watermark,
+          list: () => queue.list(request, accessToken),
+          read: id => queue.job(request, id, accessToken),
+        });
+        await test.info().attach('global-recalculation', {
+          body: JSON.stringify({ taskId, ...completed }), contentType: 'application/json',
+        });
+        const after = await productionTasksAPI.getProductionTaskById(request, taskId, accessToken);
+        expectStatusIn(after, [200]);
+        expect(Number(after.data.id)).toBe(taskId);
+        expect(after.data.description).toBe(before.data.description);
+        const composition = (task: ApiRow) => task.production_operation_pos.map((pos: ApiRow) => ({
+          id: Number(pos.id), quantity: Number(pos.quantity),
+          operations: pos.operation_positions.map((op: ApiRow) => ({ id: Number(op.id), operationId: Number(op.operation_id) }))
+            .sort((a: ApiRow, b: ApiRow) => a.id - b.id),
+        })).sort((a: ApiRow, b: ApiRow) => a.id - b.id);
+        expect(composition(after.data)).toEqual(composition(before.data));
+      } finally {
+        if (taskId) expectStatusIn(await productionTasksAPI.banProductionTask(request, taskId, accessToken), successCodes);
+      }
     });
 
     test('возвращает список и список с операциями без серверных ошибок', async ({ request }) => {

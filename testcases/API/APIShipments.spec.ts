@@ -19,6 +19,7 @@ import {
   serverErrorCodes,
   successCodes,
   expectRowsResponse,
+  expectStatusIn,
 } from '../../lib/helpers/APIAssertions';
 import { eventually, getAuthToken, uniqueApiSuffix } from '../../lib/helpers/APITestUtils';
 import { rollbackShChecksAndWait } from '../../lib/helpers/APIShipmentCleanup';
@@ -811,7 +812,9 @@ export const runShipmentsAPINew = () => {
       expect(successCodes, JSON.stringify(attributesResponse.data)).toContain(attributesResponse.status);
       const attributeRow = getRows<ApiRow>(attributesResponse.data).find((row) => Number(row.id) === shipmentId);
       expect(attributeRow, JSON.stringify(attributesResponse.data)).toBeTruthy();
-      expectRowHasOnlyAllowedAttributes(attributeRow as ApiRow, attributes);
+      // Reading status also computes warehouse availability in the shipment model hook.
+      expectRowHasOnlyAllowedAttributes(attributeRow as ApiRow, [...attributes, 'available_ready_to_ship_quantity']);
+      expect(attributeRow!.available_ready_to_ship_quantity).toBe(0);
 
       const itemsByEntity = await shipmentsAPI.getItemsByEntity(
         request,
@@ -872,12 +875,17 @@ export const runShipmentsAPINew = () => {
         accessToken,
       );
       expectNoServerError(readyToShipTrue);
-      if (successCodes.includes(readyToShipTrue.status)) {
-        expect(readyToShipTrue.data?.status, JSON.stringify(readyToShipTrue.data)).toBe('Готово к отгрузке');
-      } else {
-        expect([409], JSON.stringify(readyToShipTrue.data)).toContain(readyToShipTrue.status);
-        expect(String(readyToShipTrue.data?.message || ''), JSON.stringify(readyToShipTrue.data)).toContain('На складе нет доступного количества');
-      }
+      // This fixture owns an empty product without warehouse stock. The API
+      // accepts the request and keeps the order unready when availability is zero.
+      expectStatusIn(readyToShipTrue, [200]);
+      expect(Number(readyToShipTrue.data?.id)).toBe(shipmentId);
+      expect(readyToShipTrue.data?.status, JSON.stringify(readyToShipTrue.data)).toBe('Заказано');
+      expect(readyToShipTrue.data?.available_ready_to_ship_quantity).toBe(0);
+      expect(readyToShipTrue.data?.ready_to_ship_quantity ?? 0).toBe(0);
+      const persisted = await shipmentsAPI.getShipmentById(request, shipmentId, accessToken);
+      expectStatusIn(persisted, [200]);
+      expect(persisted.data?.status).toBe('Заказано');
+      expect(persisted.data?.ready_to_ship_quantity ?? 0).toBe(0);
 
     });
 
